@@ -5,6 +5,7 @@ import {
   optionalString,
   optionalText,
   parseDate,
+  parseSearchQuery,
   requiredBoolean,
   requiredInt,
   requiredString,
@@ -72,10 +73,12 @@ export const parseProductInput = (raw: unknown): ProductInput => {
   };
 };
 
-/** Query string of `GET /products`: an empty `type` means no filter. */
+/** Query string of `GET /products`: an empty `type` means no filter, `q` is the search text. */
 export const parseProductFilter = (query: Record<string, unknown>): ProductFilter => {
   const { type } = query;
-  if (type === undefined || type === '') return {};
+  const search = parseSearchQuery(query.q);
+  const filter: ProductFilter = search === undefined ? {} : { query: search };
+  if (type === undefined || type === '') return filter;
   if (typeof type !== 'string') return bad('type must be a single string');
-  return { type };
+  return { ...filter, type };
 };

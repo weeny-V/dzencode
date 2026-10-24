@@ -8,8 +8,11 @@ import { startTransition, useId, useOptimistic } from 'react';
 import { withParam } from '@/shared/lib/searchParams';
 
 interface TypeFilterProps {
-  /** Type names for the options. */
-  types: readonly string[];
+  /** Type names for the options; `undefined` while they load (the select is disabled meanwhile). */
+  types?: readonly string[];
+  /** Loading the names failed: the select stays disabled and a button offers to try again. */
+  failed?: boolean;
+  onRetry?: () => void;
   /** The type currently applied; empty means all. */
   selected: string;
 }
@@ -20,7 +23,7 @@ interface TypeFilterProps {
  * change is animated like a page change. The select shows the new choice at once (optimistically) and does not
  * wait for the server round trip.
  */
-export function TypeFilter({ types, selected }: TypeFilterProps) {
+export function TypeFilter({ types, failed = false, onRetry, selected }: TypeFilterProps) {
   const id = useId();
   const router = useRouter();
   const pathname = usePathname();
@@ -36,6 +39,7 @@ export function TypeFilter({ types, selected }: TypeFilterProps) {
         id={id}
         className="type-filter__select"
         value={value}
+        disabled={!types}
         onChange={(event) => {
           const type = event.target.value;
           startTransition(() => {
@@ -47,12 +51,18 @@ export function TypeFilter({ types, selected }: TypeFilterProps) {
         }}
       >
         <option value="">Все</option>
-        {types.map((type) => (
+        {/* While the names load, the chosen type from the address still has to be an option to show it. */}
+        {(types ?? (selected ? [selected] : [])).map((type) => (
           <option key={type} value={type}>
             {type}
           </option>
         ))}
       </select>
+      {failed && !types && (
+        <button type="button" className="type-filter__retry" onClick={onRetry}>
+          Не удалось загрузить типы. Повторить
+        </button>
+      )}
     </div>
   );
 }

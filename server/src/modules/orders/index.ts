@@ -7,7 +7,7 @@ import { createOrdersService } from './orders.service.js';
 
 interface OrdersModuleDeps {
   pool: Pool;
-  products: Pick<ProductsService, 'listByOrder' | 'summarizeByOrder'>;
+  products: Pick<ProductsService, 'listByOrder' | 'summarizeByOrder' | 'findOrderIdsByQuery'>;
 }
 
 export const createOrdersModule = ({ pool, products }: OrdersModuleDeps) => {

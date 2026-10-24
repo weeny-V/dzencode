@@ -4,16 +4,16 @@ Base URL: `http://localhost:4000`. Request and response bodies are JSON, dates a
 
 The data shape follows `docs/task-materials/app.js`: `camelCase` fields, a product has a `price[]` array and a nested `guarantee { start, end }`, the product type is a string.
 
-| Method and path      | What it does                                                                   | Success | Errors   |
-| -------------------- | ------------------------------------------------------------------------------ | ------- | -------- |
-| `GET /health`        | Service status                                                                 | 200     |          |
-| `GET /orders`        | List of orders (newest first) with `productsCount` and `totals` per currency   | 200     |          |
-| `GET /orders/:id`    | An order with all its products                                                 | 200     | 400, 404 |
-| `POST /orders`       | Create an order: `title` (required), `description`, `date` (defaults to "now") | 201     | 400      |
-| `DELETE /orders/:id` | Delete an order together with its products and their prices                    | 204     | 400, 404 |
-| `GET /products`      | All products; filter by type: `?type=Monitors`                                 | 200     | 400      |
-| `POST /products`     | Create a product (body below)                                                  | 201     | 400      |
-| `GET /product-types` | Type dictionary for the filter: `[{ id, name }]`                               | 200     |          |
+| Method and path      | What it does                                                                                    | Success | Errors   |
+| -------------------- | ----------------------------------------------------------------------------------------------- | ------- | -------- |
+| `GET /health`        | Service status                                                                                  | 200     |          |
+| `GET /orders`        | List of orders (newest first) with `productsCount` and `totals` per currency; search: `?q=text` | 200     | 400      |
+| `GET /orders/:id`    | An order with all its products                                                                  | 200     | 400, 404 |
+| `POST /orders`       | Create an order: `title` (required), `description`, `date` (defaults to "now")                  | 201     | 400      |
+| `DELETE /orders/:id` | Delete an order together with its products and their prices                                     | 204     | 400, 404 |
+| `GET /products`      | All products; filter by type `?type=Monitors`, search `?q=text`                                 | 200     | 400      |
+| `POST /products`     | Create a product (body below)                                                                   | 201     | 400      |
+| `GET /product-types` | Type dictionary for the filter: `[{ id, name }]`                                                | 200     |          |
 
 ## Examples
 
@@ -57,6 +57,17 @@ The data shape follows `docs/task-materials/app.js`: `camelCase` fields, a produ
 Optional fields of `POST /products`: `photo`, `specification`, `date` (defaults to "now"). The response contains the created product in the same shape as an item of `GET /products` (which already includes `orderTitle`).
 
 `GET /products?type=Unknown` returns an empty array, not an error. The type is compared case-insensitively (`monitors` finds `Monitors`), a repeated parameter `?type=a&type=b` gives 400.
+
+## Search (`q`)
+
+`GET /orders?q=text` and `GET /products?q=text` keep the items that contain the text. The match is a case-insensitive substring (the column collation is `utf8mb4_0900_ai_ci`, so letter case and accents do not matter); `%` and `_` are plain characters, not wildcards. The text is trimmed, a blank `q` means no search, a repeated `?q=a&q=b` or a text longer than 100 characters gives 400.
+
+| Endpoint        | Where the text is looked for                                                                                                                                      |
+| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET /orders`   | The order title, or the title or serial number of any of its products. A found order is returned whole: `productsCount` and `totals` still count all its products |
+| `GET /products` | The product title, the serial number, the type name and the title of the order. Combines with `?type=` (both must match)                                          |
+
+The serial number is matched as the lists print it, `SN-12345671`, so `sn-1234` finds it.
 
 `totals` are summed over the currencies that the order's products have; an order without products returns `productsCount: 0` and an empty `totals`.
 

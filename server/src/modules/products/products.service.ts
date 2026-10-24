@@ -19,6 +19,9 @@ export const createProductsService = ({ repository, productTypes }: ProductsServ
 
   listByOrder: (orderId: number): Promise<Product[]> => repository.list({ orderId }),
 
+  /** Orders that have a product matching the search text (by its title or serial number). */
+  findOrderIdsByQuery: (query: string): Promise<number[]> => repository.findOrderIdsByQuery(query),
+
   summarizeByOrder: (): Promise<Map<number, OrderProductsSummary>> => repository.summarizeByOrder(),
 
   async create(input: ProductInput): Promise<Product> {

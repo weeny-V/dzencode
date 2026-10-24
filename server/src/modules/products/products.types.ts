@@ -45,6 +45,8 @@ export interface ProductFilter {
   /** Product type name, e.g. `Monitors`. */
   type?: string;
   orderId?: number;
+  /** Search text: found in the title, the `SN-` serial number, the type name or the order title. */
+  query?: string;
 }
 
 /** What orders need to know about their products. */

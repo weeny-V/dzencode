@@ -1,5 +1,6 @@
 import type { ResultSetHeader, RowDataPacket } from 'mysql2/promise';
 
+import { containsPattern } from '../../shared/db/like.js';
 import type { Pool } from '../../shared/db/pool.js';
 import type { Order, OrderInput } from './orders.types.js';
 
@@ -13,10 +14,24 @@ const toOrder = ({ id, title, description, date }: OrderRow): Order => ({
 });
 
 export const createOrdersRepository = (pool: Pool) => ({
-  /** Newest first. */
-  async list(): Promise<Order[]> {
+  /**
+   * Newest first. With a search, an order is kept when its title contains the text or its id is one of
+   * `matchingIds` (the orders whose products matched; the products module finds them).
+   */
+  async list(search?: { query: string; matchingIds: readonly number[] }): Promise<Order[]> {
+    let where = '';
+    const params: (string | number[])[] = [];
+    if (search) {
+      where = 'WHERE title LIKE ?';
+      params.push(containsPattern(search.query));
+      if (search.matchingIds.length > 0) {
+        where += ' OR id IN (?)';
+        params.push([...search.matchingIds]);
+      }
+    }
     const [rows] = await pool.query<OrderRow[]>(
-      'SELECT id, title, description, date FROM orders ORDER BY date DESC, id DESC',
+      `SELECT id, title, description, date FROM orders ${where} ORDER BY date DESC, id DESC`,
+      params,
     );
     return rows.map(toOrder);
   },

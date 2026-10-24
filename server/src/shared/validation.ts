@@ -110,3 +110,17 @@ export const parseId = (value: string | undefined): number => {
   const id = value !== undefined && /^[1-9]\d*$/.test(value) ? Number(value) : NaN;
   return Number.isSafeInteger(id) && id <= MAX_INT ? id : bad('id must be a positive integer');
 };
+
+/** Longest search text; the client input has the same limit. */
+export const MAX_SEARCH_LENGTH = 100;
+
+/** The `q` query parameter of the list endpoints: no value or a blank one means no search. */
+export const parseSearchQuery = (value: unknown): string | undefined => {
+  if (value === undefined) return undefined;
+  if (typeof value !== 'string') return bad('q must be a single string');
+  const text = value.trim();
+  if (Array.from(text).length > MAX_SEARCH_LENGTH) {
+    return bad(`q must be at most ${MAX_SEARCH_LENGTH} characters`);
+  }
+  return text === '' ? undefined : text;
+};

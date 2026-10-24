@@ -11,10 +11,12 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@reduxjs/toolkit": "^2.13.0",
     "bootstrap": "^5.3.8",
     "next": "^16.4.2",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
+    "react-redux": "^9.3.0",
     "sass": "^1.106.1"
   },
   "devDependencies": {
