@@ -1,20 +1,14 @@
 import { parseSearch, type SearchParams } from '@/shared/lib/searchParams';
 
-import { getOrder, listOrders } from '../../data';
 import { parseOrderId } from '../../searchParams';
-import { OrdersPage } from '../OrdersPage';
+import { OrdersContainer } from '../OrdersContainer';
 
-/** The content of the `/orders` route: loads the data for the address and hands it to the page. */
+/**
+ * The content of the `/orders` route. It reads the address on the server and hands the result to the container,
+ * which loads the data in the browser (prefetching it on the server is stage 6).
+ */
 export async function OrdersRoute({ searchParams }: { searchParams: SearchParams }) {
   const params = await searchParams;
-  const orderId = parseOrderId(params.order);
-  const query = parseSearch(params.q);
 
-  return (
-    <OrdersPage
-      orders={listOrders(query)}
-      selected={orderId === undefined ? undefined : getOrder(orderId)}
-      query={query}
-    />
-  );
+  return <OrdersContainer selectedId={parseOrderId(params.order)} query={parseSearch(params.q)} />;
 }

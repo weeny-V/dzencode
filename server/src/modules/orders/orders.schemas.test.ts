@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { parseOrderInput } from './orders.schemas.js';
+import { parseOrderFilter, parseOrderInput } from './orders.schemas.js';
 
 describe('parseOrderInput', () => {
   it('fills optional fields', () => {
@@ -22,5 +22,20 @@ describe('parseOrderInput', () => {
 
   it('requires an object body', () => {
     expect(() => parseOrderInput(undefined)).toThrow('body must be an object');
+  });
+});
+
+describe('parseOrderFilter', () => {
+  it('reads the search text, trimmed', () => {
+    expect(parseOrderFilter({ q: '  Order ' })).toEqual({ query: 'Order' });
+  });
+
+  it('treats a missing or blank search as no filter', () => {
+    expect(parseOrderFilter({})).toEqual({});
+    expect(parseOrderFilter({ q: '' })).toEqual({});
+  });
+
+  it('rejects a repeated parameter', () => {
+    expect(() => parseOrderFilter({ q: ['a', 'b'] })).toThrow('q must be a single string');
   });
 });

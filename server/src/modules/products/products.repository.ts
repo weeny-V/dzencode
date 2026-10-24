@@ -1,6 +1,7 @@
 import type { ResultSetHeader, RowDataPacket } from 'mysql2/promise';
 
 import { asForeignKeyViolation } from '../../shared/db/errors.js';
+import { containsPattern } from '../../shared/db/like.js';
 import type { Pool } from '../../shared/db/pool.js';
 import { withTransaction } from '../../shared/db/transaction.js';
 import type {
@@ -48,6 +49,13 @@ interface TotalRow extends RowDataPacket {
   isDefault: number;
 }
 
+/** The serial number as the lists print it (`SN-123`), so a visitor can search for what they see. */
+const SERIAL_LABEL_SQL = "CONCAT('SN-', p.serial_number)";
+
+interface OrderIdRow extends RowDataPacket {
+  orderId: number;
+}
+
 export const createProductsRepository = (pool: Pool) => ({
   async list(filter: ProductFilter = {}): Promise<Product[]> {
     // Only fixed fragments are concatenated; every value goes through a `?` placeholder.
@@ -64,6 +72,13 @@ export const createProductsRepository = (pool: Pool) => ({
     if (filter.orderId !== undefined) {
       conditions.push('p.order_id = ?');
       params.push(filter.orderId);
+    }
+    if (filter.query !== undefined) {
+      conditions.push(
+        `(p.title LIKE ? OR ${SERIAL_LABEL_SQL} LIKE ? OR t.name LIKE ? OR o.title LIKE ?)`,
+      );
+      const pattern = containsPattern(filter.query);
+      params.push(pattern, pattern, pattern, pattern);
     }
     const where = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
 
@@ -150,6 +165,18 @@ export const createProductsRepository = (pool: Pool) => ({
     } catch (error) {
       throw asForeignKeyViolation(error) ?? error;
     }
+  },
+
+  /** Ids of the orders that have a product whose title or serial number contains the text. */
+  async findOrderIdsByQuery(query: string): Promise<number[]> {
+    const pattern = containsPattern(query);
+    const [rows] = await pool.query<OrderIdRow[]>(
+      `SELECT DISTINCT p.order_id AS orderId
+         FROM products p
+        WHERE p.title LIKE ? OR ${SERIAL_LABEL_SQL} LIKE ?`,
+      [pattern, pattern],
+    );
+    return rows.map((row) => row.orderId);
   },
 
   /** Product count and price totals per order, for the orders list. */

@@ -10,6 +10,20 @@
     color: $color-muted;
   }
 
+  &__retry {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: $color-danger;
+    font-size: 0.75rem;
+    text-decoration: underline;
+    cursor: pointer;
+
+    &:hover {
+      color: $color-text;
+    }
+  }
+
   &__select {
     min-width: 13rem;
     height: 2.2rem;

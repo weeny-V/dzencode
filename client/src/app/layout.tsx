@@ -6,6 +6,8 @@ import type { ReactNode } from 'react';
 
 import { AppShell } from '@/features/app-shell';
 
+import { StoreProvider } from './StoreProvider';
+
 // Self-hosted at build time; `--font-main` is read by the Bootstrap font variable in shared/styles/_tokens.scss.
 const montserrat = Montserrat({
   subsets: ['latin', 'cyrillic'],
@@ -27,7 +29,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="ru" className={montserrat.variable}>
       <body>
-        <AppShell>{children}</AppShell>
+        <StoreProvider>
+          <AppShell>{children}</AppShell>
+        </StoreProvider>
       </body>
     </html>
   );

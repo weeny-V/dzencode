@@ -37,6 +37,46 @@ describe('GET /orders', () => {
   });
 });
 
+describe('GET /orders?q=', () => {
+  const ids = async (query: Record<string, string>) => {
+    const res = await request(app).get('/orders').query(query);
+    return { status: res.status, ids: (res.body as OrderSummary[]).map((order) => order.id) };
+  };
+
+  it('finds an order by its title, ignoring letter case', async () => {
+    expect(await ids({ q: 'order b' })).toEqual({ status: 200, ids: [2] });
+  });
+
+  it('finds the orders of a product by its title', async () => {
+    // "Monitor" is in the titles of products 1 (order 1) and 3 (order 2); the order titles do not match.
+    expect(await ids({ q: 'monitor' })).toEqual({ status: 200, ids: [2, 1] });
+  });
+
+  it('finds the order of a product by the serial number as the lists print it', async () => {
+    expect(await ids({ q: 'sn-222' })).toEqual({ status: 200, ids: [1] });
+  });
+
+  it('does not look at the product type, only at titles and serial numbers', async () => {
+    expect(await ids({ q: 'laptops' })).toEqual({ status: 200, ids: [] });
+  });
+
+  it('keeps the whole order: the counts and totals do not shrink to the matched products', async () => {
+    const res = await request(app).get('/orders').query({ q: 'laptop' });
+
+    expect((res.body as OrderSummary[]).map((order) => order.productsCount)).toEqual([2]);
+  });
+
+  it('treats % and _ as plain characters', async () => {
+    expect(await ids({ q: '%' })).toEqual({ status: 200, ids: [] });
+    expect(await ids({ q: 'Order_' })).toEqual({ status: 200, ids: [] });
+  });
+
+  it('returns everything for a blank search and 400 for a repeated one', async () => {
+    expect((await ids({ q: '  ' })).ids).toEqual([3, 2, 1]);
+    expect((await request(app).get('/orders?q=a&q=b')).status).toBe(400);
+  });
+});
+
 describe('GET /orders/:id', () => {
   it('returns the order with its products', async () => {
     const res = await request(app).get('/orders/1');

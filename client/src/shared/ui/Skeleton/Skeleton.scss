@@ -1,0 +1,46 @@
+@use 'tokens' as *;
+
+// The bar shimmers: a lighter band sweeps over it. `prefers-reduced-motion` stops it (see _base.scss).
+.skeleton {
+  display: block;
+  width: var(--skeleton-width, 100%);
+  height: var(--skeleton-height, 1em);
+  border-radius: $radius;
+  background: linear-gradient(
+    90deg,
+    $color-thumb-display 25%,
+    $color-bg 50%,
+    $color-thumb-display 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.4s linear infinite;
+}
+
+@keyframes skeleton-shimmer {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: -100% 0;
+  }
+}
+
+.list-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  &__row {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    padding: 0.7rem 1.4rem;
+    border: 1px solid $color-border;
+    border-radius: $radius;
+    background: $color-surface;
+    @include stagger;
+  }
+}

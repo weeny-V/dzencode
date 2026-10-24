@@ -29,6 +29,7 @@ const setup = (create: ProductsRepository['create']) => {
   const repository: ProductsRepository = {
     list,
     create: createMock,
+    findOrderIdsByQuery: () => Promise.resolve([]),
     summarizeByOrder: () => Promise.resolve(new Map()),
   };
   const productTypes = {

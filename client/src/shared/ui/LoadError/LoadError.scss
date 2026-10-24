@@ -1,0 +1,21 @@
+@use 'tokens' as *;
+
+.load-error {
+  padding: 2rem 1.5rem;
+  border: 1px solid $color-border;
+  border-radius: $radius;
+  background: $color-surface;
+  text-align: center;
+
+  &__title {
+    margin: 0 0 0.4rem;
+    font-weight: 700;
+  }
+
+  &__message {
+    margin: 0 0 1.2rem;
+    color: $color-text-subtle;
+    font-size: 0.85rem;
+    overflow-wrap: anywhere;
+  }
+}

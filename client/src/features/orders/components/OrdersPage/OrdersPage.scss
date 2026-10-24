@@ -13,6 +13,19 @@
     margin: 0;
     padding: 0;
     list-style: none;
+    transition: opacity $transition;
+
+    // The previous rows stay while the answer to a new search is on its way.
+    &--refreshing {
+      opacity: 0.55;
+      pointer-events: none;
+    }
+  }
+
+  &__empty {
+    margin: 0;
+    padding: 2rem 0;
+    color: $color-muted;
   }
 
   // On wide screens the panel sits next to a narrow list; below that it goes under the full list.

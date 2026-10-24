@@ -7,6 +7,7 @@ import {
   optionalText,
   parseDate,
   parseId,
+  parseSearchQuery,
   requiredInt,
   requiredString,
 } from './validation.js';
@@ -124,5 +125,27 @@ describe('optionalDate', () => {
 
   it('rejects an invalid date', () => {
     expect(() => optionalDate({ date: 'yesterday' }, 'date')).toThrow('date must be an ISO 8601');
+  });
+});
+
+describe('parseSearchQuery', () => {
+  it('trims the text', () => {
+    expect(parseSearchQuery('  sn-123 ')).toBe('sn-123');
+  });
+
+  it('treats a missing or blank value as no search', () => {
+    expect(parseSearchQuery(undefined)).toBeUndefined();
+    expect(parseSearchQuery('')).toBeUndefined();
+    expect(parseSearchQuery('   ')).toBeUndefined();
+  });
+
+  it('rejects a repeated parameter and an object', () => {
+    expect(() => parseSearchQuery(['a', 'b'])).toThrow(ValidationError);
+    expect(() => parseSearchQuery({ a: 'b' })).toThrow(ValidationError);
+  });
+
+  it('limits the length in characters', () => {
+    expect(parseSearchQuery('я'.repeat(100))).toHaveLength(100);
+    expect(() => parseSearchQuery('я'.repeat(101))).toThrow(ValidationError);
   });
 });

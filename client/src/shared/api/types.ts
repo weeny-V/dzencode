@@ -20,6 +20,12 @@ export interface Product {
   date: string;
 }
 
+/** An item of `GET /product-types`. */
+export interface ProductType {
+  id: number;
+  name: string;
+}
+
 /** An item of `GET /orders`. */
 export interface OrderSummary {
   id: number;

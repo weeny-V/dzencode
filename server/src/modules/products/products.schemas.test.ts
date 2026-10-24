@@ -121,4 +121,17 @@ describe('parseProductFilter', () => {
   it('rejects a repeated parameter', () => {
     expect(() => parseProductFilter({ type: ['a', 'b'] })).toThrow('type must be a single string');
   });
+
+  it('reads the search text, trimmed, next to the type', () => {
+    expect(parseProductFilter({ q: ' SN-12 ' })).toEqual({ query: 'SN-12' });
+    expect(parseProductFilter({ q: 'dell', type: 'Monitors' })).toEqual({
+      query: 'dell',
+      type: 'Monitors',
+    });
+  });
+
+  it('treats a blank search as no search and rejects a repeated one', () => {
+    expect(parseProductFilter({ q: '  ' })).toEqual({});
+    expect(() => parseProductFilter({ q: ['a', 'b'] })).toThrow('q must be a single string');
+  });
 });

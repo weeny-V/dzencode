@@ -42,6 +42,34 @@ describe('GET /products', () => {
     expect((res.body as Product[]).map((product) => product.id)).toEqual([1, 3]);
   });
 
+  it('searches the title, the serial number, the type and the order title', async () => {
+    const found = async (q: string) =>
+      ((await request(app).get('/products').query({ q })).body as Product[]).map(
+        (product) => product.id,
+      );
+
+    expect(await found('laptop')).toEqual([2]);
+    expect(await found('SN-333')).toEqual([3]);
+    expect(await found('monitors')).toEqual([1, 3]);
+    expect(await found('order b')).toEqual([3]);
+    expect(await found('nothing like this')).toEqual([]);
+  });
+
+  it('combines the search with the type filter', async () => {
+    const res = await request(app).get('/products').query({ type: 'Monitors', q: 'order a' });
+
+    expect((res.body as Product[]).map((product) => product.id)).toEqual([1]);
+  });
+
+  it('treats % and _ as plain characters', async () => {
+    expect((await request(app).get('/products').query({ q: '%' })).body).toEqual([]);
+    expect((await request(app).get('/products').query({ q: 'Monitor_1' })).body).toEqual([]);
+  });
+
+  it('rejects a repeated search parameter', async () => {
+    expect((await request(app).get('/products?q=a&q=b')).status).toBe(400);
+  });
+
   it('rejects a repeated type parameter', async () => {
     const res = await request(app).get('/products?type=a&type=b');
 

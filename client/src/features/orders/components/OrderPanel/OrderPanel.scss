@@ -72,6 +72,11 @@
     color: $color-muted;
   }
 
+  // The skeleton or the error that stands in for the products while they load.
+  &__state {
+    padding: 0.5rem 1.4rem 1.6rem;
+  }
+
   &__list {
     margin: 0;
     padding: 0;

@@ -13,6 +13,11 @@ export interface OrderInput {
   date: Date;
 }
 
+export interface OrderFilter {
+  /** Search text: found in the order title or in the title or serial number of one of its products. */
+  query?: string;
+}
+
 /** An order in the list: product count and price totals are filled from the products module. */
 export interface OrderSummary extends Order, OrderProductsSummary {}
 
