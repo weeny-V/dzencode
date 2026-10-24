@@ -58,6 +58,17 @@
     }
   }
 
+  // A plain label on a white page (forms): a grey pill on hover.
+  &--ghost {
+    background: transparent;
+    color: $color-muted;
+
+    &:hover:not(:disabled) {
+      background: $color-bg;
+      color: $color-text;
+    }
+  }
+
   // A plain label on the green bar of a dialog: it gets a translucent pill on hover.
   &--text {
     background: transparent;

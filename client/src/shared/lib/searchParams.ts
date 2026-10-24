@@ -28,3 +28,9 @@ export const withParam = (current: URLSearchParams, key: string, value: string):
   const text = next.toString();
   return text ? `?${text}` : '';
 };
+
+/** `?order=2`: a positive integer of up to ten digits. Anything else (or a repeated key) is ignored. */
+export const parsePositiveInt = (value: string | string[] | undefined): number | undefined => {
+  if (typeof value !== 'string' || !/^[1-9]\d{0,9}$/.test(value)) return undefined;
+  return Number(value);
+};

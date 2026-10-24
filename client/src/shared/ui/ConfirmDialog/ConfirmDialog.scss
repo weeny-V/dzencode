@@ -1,0 +1,11 @@
+@use 'tokens' as *;
+
+.confirm-dialog {
+  &__error {
+    margin: 0;
+    padding: 0 2.25rem 1.1rem;
+    color: $color-danger;
+    font-size: 0.85rem;
+    overflow-wrap: anywhere;
+  }
+}

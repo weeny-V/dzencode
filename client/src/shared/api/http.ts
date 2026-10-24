@@ -34,3 +34,16 @@ export async function request<T>(path: string, init?: RequestInit): Promise<T> {
   if (res.status === 204) return undefined as T;
   return (await res.json()) as T;
 }
+
+/** `POST` with a JSON body; the answer is parsed like in `request`. */
+export const postJson = <T>(path: string, body: unknown, signal?: AbortSignal): Promise<T> =>
+  request<T>(path, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+    signal,
+  });
+
+/** `DELETE`; the API answers 204 without a body. */
+export const deleteRequest = (path: string, signal?: AbortSignal): Promise<void> =>
+  request<void>(path, { method: 'DELETE', signal });

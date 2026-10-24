@@ -1,5 +1,5 @@
-import { request } from '@/shared/api/http';
-import type { Product, ProductType } from '@/shared/api/types';
+import { deleteRequest, postJson, request } from '@/shared/api/http';
+import type { NewProduct, OrderSummary, Product, ProductType } from '@/shared/api/types';
 import { toQuery } from '@/shared/lib/searchParams';
 
 export interface ProductsFilter {
@@ -19,4 +19,24 @@ export const getProducts = (
 export const getProductTypes = async (signal?: AbortSignal): Promise<string[]> => {
   const types = await request<ProductType[]>('/product-types', { signal });
   return types.map((type) => type.name);
+};
+
+/** `POST /products`: the created product comes back in the shape of a list item. */
+export const postProduct = (product: NewProduct, signal?: AbortSignal): Promise<Product> =>
+  postJson<Product>('/products', product, signal);
+
+/** `DELETE /products/:id`: removes the product together with its prices. */
+export const removeProduct = (id: number, signal?: AbortSignal): Promise<void> =>
+  deleteRequest(`/products/${id}`, signal);
+
+/** An order as the "Приход" select of the product form offers it. */
+export interface OrderOption {
+  id: number;
+  title: string;
+}
+
+/** `GET /orders`, reduced to what the select needs (the newest orders come first). */
+export const getOrderOptions = async (signal?: AbortSignal): Promise<OrderOption[]> => {
+  const orders = await request<OrderSummary[]>('/orders', { signal });
+  return orders.map(({ id, title }) => ({ id, title }));
 };

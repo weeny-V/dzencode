@@ -3,13 +3,15 @@ import { describe, expect, it, vi } from 'vitest';
 
 import type { OrderDetails, OrderSummary } from '@/shared/api/types';
 
-import { getOrder, getOrders } from '../api/orders';
-import { fetchOrder, fetchOrders, ordersReducer } from './ordersSlice';
+import { getOrder, getOrders, postOrder, removeOrder } from '../api/orders';
+import { createOrder, deleteOrder, fetchOrder, fetchOrders, ordersReducer } from './ordersSlice';
 
 vi.mock('../api/orders');
 
 const getOrdersMock = vi.mocked(getOrders);
 const getOrderMock = vi.mocked(getOrder);
+const postOrderMock = vi.mocked(postOrder);
+const removeOrderMock = vi.mocked(removeOrder);
 
 const makeStore = () => configureStore({ reducer: { orders: ordersReducer } });
 
@@ -140,5 +142,105 @@ describe('order details', () => {
       orderId: 9,
       error: 'Order not found',
     });
+  });
+});
+
+describe('creating an order', () => {
+  it('sends the order and answers with the created one', async () => {
+    postOrderMock.mockResolvedValueOnce(summary(5));
+    const store = makeStore();
+
+    const result = await store.dispatch(createOrder({ title: 'Order 5', description: null }));
+
+    expect(postOrderMock).toHaveBeenCalledWith(
+      { title: 'Order 5', description: null },
+      expect.any(AbortSignal),
+    );
+    expect(createOrder.fulfilled.match(result) && result.payload).toEqual(summary(5));
+  });
+
+  it('answers with the reason when the API refuses', async () => {
+    postOrderMock.mockRejectedValueOnce(new Error('title is required'));
+    const store = makeStore();
+
+    const result = await store.dispatch(createOrder({ title: '', description: null }));
+
+    expect(createOrder.rejected.match(result) && result.error.message).toBe('title is required');
+  });
+});
+
+describe('deleting an order', () => {
+  const withRows = async () => {
+    getOrdersMock.mockResolvedValueOnce([summary(3), summary(2), summary(1)]);
+    getOrderMock.mockResolvedValueOnce(details(2));
+    const store = makeStore();
+    await store.dispatch(fetchOrders(''));
+    await store.dispatch(fetchOrder(2));
+    return store;
+  };
+
+  it('drops the order from the list and from the panel', async () => {
+    const store = await withRows();
+    removeOrderMock.mockResolvedValueOnce();
+
+    await store.dispatch(deleteOrder(2));
+
+    expect(removeOrderMock).toHaveBeenCalledWith(2, expect.any(AbortSignal));
+    expect(store.getState().orders.list.data?.map((order) => order.id)).toEqual([3, 1]);
+    expect(store.getState().orders.details.data).toBeUndefined();
+  });
+
+  it('keeps the panel of another order', async () => {
+    const store = await withRows();
+    removeOrderMock.mockResolvedValueOnce();
+
+    await store.dispatch(deleteOrder(3));
+
+    expect(store.getState().orders.details.data?.id).toBe(2);
+  });
+
+  it('keeps everything when the API refuses', async () => {
+    const store = await withRows();
+    removeOrderMock.mockRejectedValueOnce(new Error('Order not found'));
+
+    const result = await store.dispatch(deleteOrder(2));
+
+    expect(deleteOrder.rejected.match(result) && result.error.message).toBe('Order not found');
+    expect(store.getState().orders.list.data).toHaveLength(3);
+    expect(store.getState().orders.details.data?.id).toBe(2);
+  });
+});
+
+describe('a request that was already on its way when an order was deleted', () => {
+  it('does not bring the deleted order back into the list', async () => {
+    getOrdersMock.mockResolvedValueOnce([summary(3), summary(2), summary(1)]);
+    const store = makeStore();
+    await store.dispatch(fetchOrders(''));
+
+    // A reload starts, then order 2 is deleted, then the reload answers with the rows it saw before.
+    const late = deferred<OrderSummary[]>();
+    getOrdersMock.mockReturnValueOnce(late.promise);
+    const reload = store.dispatch(fetchOrders(''));
+    removeOrderMock.mockResolvedValueOnce();
+    await store.dispatch(deleteOrder(2));
+    late.resolve([summary(3), summary(2), summary(1)]);
+    await reload;
+
+    expect(store.getState().orders.list.data?.map((order) => order.id)).toEqual([3, 1]);
+    expect(store.getState().orders.list.status).toBe('succeeded');
+  });
+
+  it('does not show the deleted order in the panel when its answer comes late', async () => {
+    const late = deferred<OrderDetails>();
+    getOrderMock.mockReturnValueOnce(late.promise);
+    const store = makeStore();
+    const request = store.dispatch(fetchOrder(2));
+
+    removeOrderMock.mockResolvedValueOnce();
+    await store.dispatch(deleteOrder(2));
+    late.resolve(details(2));
+    await request;
+
+    expect(store.getState().orders.details.data).toBeUndefined();
   });
 });

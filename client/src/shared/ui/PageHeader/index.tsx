@@ -1,5 +1,6 @@
 import './PageHeader.scss';
 
+import Link from 'next/link';
 import type { ReactNode } from 'react';
 
 import { PlusIcon } from '../icons';
@@ -10,25 +11,18 @@ interface PageHeaderProps {
   count?: number;
   /** Extra controls next to the title, e.g. filters. */
   children?: ReactNode;
-  /** Label for the round green button. Without `addLabel` the button is not shown. */
-  addLabel?: string;
+  /** The round green "+" button: its label (for screen readers and the tooltip) and the page it opens. */
+  add?: { label: string; href: string };
 }
 
 /** Title row of a page: the round "+" button, `Title / count` and optional controls. */
-export function PageHeader({ title, count, children, addLabel }: PageHeaderProps) {
+export function PageHeader({ title, count, children, add }: PageHeaderProps) {
   return (
     <header className="page-header">
-      {addLabel && (
-        // Adding is built in stage 5, so the button is only drawn for now.
-        <button
-          type="button"
-          className="page-header__add"
-          disabled
-          aria-label={`${addLabel} (скоро)`}
-          title={`${addLabel}: скоро`}
-        >
+      {add && (
+        <Link href={add.href} className="page-header__add" aria-label={add.label} title={add.label}>
           <PlusIcon />
-        </button>
+        </Link>
       )}
       <h1 className="page-header__title">
         {title}

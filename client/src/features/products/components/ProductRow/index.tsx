@@ -6,7 +6,7 @@ import type { CSSProperties } from 'react';
 import type { Product } from '@/shared/api/types';
 import { formatNumericDate } from '@/shared/lib/date';
 import { DateStack } from '@/shared/ui/DateStack';
-import { TrashIcon } from '@/shared/ui/icons';
+import { DeleteIconButton } from '@/shared/ui/DeleteIconButton';
 import { PriceStack } from '@/shared/ui/PriceStack';
 import { ProductThumb } from '@/shared/ui/ProductThumb';
 
@@ -14,10 +14,12 @@ interface ProductRowProps {
   product: Product;
   /** Position in the list: rows appear one after another (see `stagger` in _transitions.scss). */
   index: number;
+  /** The trash icon was pressed: ask the visitor to confirm. */
+  onDelete: (product: Product) => void;
 }
 
 /** One product in the products table. */
-export function ProductRow({ product, index }: ProductRowProps) {
+export function ProductRow({ product, index, onDelete }: ProductRowProps) {
   return (
     <li className="product-row" style={{ '--i': index } as CSSProperties}>
       <ProductThumb />
@@ -48,16 +50,10 @@ export function ProductRow({ product, index }: ProductRowProps) {
 
       <DateStack iso={product.date} />
 
-      {/* Deleting products is not part of this stage; the icon is drawn as in the design. */}
-      <button
-        type="button"
-        className="product-row__delete"
-        disabled
-        aria-label={`Удалить продукт ${product.title}`}
-        title="Удаление продуктов: скоро"
-      >
-        <TrashIcon />
-      </button>
+      <DeleteIconButton
+        label={`Удалить продукт ${product.title}`}
+        onClick={() => onDelete(product)}
+      />
     </li>
   );
 }

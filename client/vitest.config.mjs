@@ -8,13 +8,15 @@ import { defineConfig } from 'vitest/config';
 process.env.TZ = 'Pacific/Kiritimati';
 
 export default defineConfig({
+  // Test files may contain JSX.
+  esbuild: { jsx: 'automatic' },
   resolve: {
     // Same `@/` alias as in tsconfig.json.
     alias: { '@': path.resolve(import.meta.dirname, 'src') },
   },
   test: {
-    // Pure functions only for now: no DOM needed.
+    // No DOM: components are rendered to a string (`renderToStaticMarkup`) and the markup is checked.
     environment: 'node',
-    include: ['src/**/*.test.ts'],
+    include: ['src/**/*.test.{ts,tsx}'],
   },
 });

@@ -167,6 +167,12 @@ export const createProductsRepository = (pool: Pool) => ({
     }
   },
 
+  /** Prices of the product are removed by `ON DELETE CASCADE`. Returns whether the product existed. */
+  async remove(id: number): Promise<boolean> {
+    const [result] = await pool.query<ResultSetHeader>('DELETE FROM products WHERE id = ?', [id]);
+    return result.affectedRows > 0;
+  },
+
   /** Ids of the orders that have a product whose title or serial number contains the text. */
   async findOrderIdsByQuery(query: string): Promise<number[]> {
     const pattern = containsPattern(query);

@@ -12,7 +12,10 @@ interface OrdersContainerProps {
 
 /** Takes the orders from the store (the hook keeps them in step with the address) and hands them to the page. */
 export function OrdersContainer({ selectedId, query }: OrdersContainerProps) {
-  const { orders, refreshing, error, retryList, panel, retryPanel } = useOrders(selectedId, query);
+  const { orders, refreshing, error, retryList, panel, retryPanel, deletion } = useOrders(
+    selectedId,
+    query,
+  );
 
   return (
     <OrdersPage
@@ -23,6 +26,7 @@ export function OrdersContainer({ selectedId, query }: OrdersContainerProps) {
       selectedId={selectedId}
       panel={panel}
       onRetryPanel={retryPanel}
+      deletion={deletion}
       query={query}
     />
   );

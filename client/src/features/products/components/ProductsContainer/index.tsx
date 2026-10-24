@@ -1,5 +1,8 @@
 'use client';
 
+import type { Product } from '@/shared/api/types';
+import { useDialogTarget } from '@/shared/hooks/useDialogTarget';
+
 import { ProductsPage } from '../ProductsPage';
 import { useProducts } from './useProducts';
 
@@ -15,6 +18,8 @@ export function ProductsContainer({ typeParam, query }: ProductsContainerProps) 
   const { products, refreshing, error, retry, types, typesFailed, retryTypes, selectedType } =
     useProducts(typeParam, query);
 
+  const deletion = useDialogTarget<Product>();
+
   return (
     <ProductsPage
       products={products}
@@ -25,6 +30,7 @@ export function ProductsContainer({ typeParam, query }: ProductsContainerProps) 
       typesFailed={typesFailed}
       onRetryTypes={retryTypes}
       selectedType={selectedType}
+      deletion={deletion}
       query={query}
     />
   );

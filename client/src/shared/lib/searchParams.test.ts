@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { parseSearch, toQuery, withParam } from './searchParams';
+import { parsePositiveInt, parseSearch, toQuery, withParam } from './searchParams';
 
 describe('parseSearch', () => {
   it('trims a single value', () => {
@@ -49,5 +49,21 @@ describe('withParam', () => {
   it('does not change the object it was given', () => {
     withParam(current, 'q', 'abc');
     expect(current.toString()).toBe('order=2&type=Monitors');
+  });
+});
+
+describe('parsePositiveInt', () => {
+  it('reads a positive integer', () => {
+    expect(parsePositiveInt('2')).toBe(2);
+    expect(parsePositiveInt('1234567890')).toBe(1_234_567_890);
+  });
+
+  it.each(['', '0', '-1', '1.5', '007', 'abc', ' 2', '12345678901'])('ignores %j', (value) => {
+    expect(parsePositiveInt(value)).toBeUndefined();
+  });
+
+  it('ignores a missing or repeated parameter', () => {
+    expect(parsePositiveInt(undefined)).toBeUndefined();
+    expect(parsePositiveInt(['1', '2'])).toBeUndefined();
   });
 });
