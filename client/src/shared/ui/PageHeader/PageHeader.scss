@@ -1,0 +1,55 @@
+@use 'tokens' as *;
+
+.page-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem 1.25rem;
+  margin-bottom: 3rem;
+
+  &__add {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 2.4rem;
+    height: 2.4rem;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: $color-primary;
+    color: $color-surface;
+    font-size: 1rem;
+    box-shadow: 0 4px 10px rgba($color-primary-dark, 0.45);
+    cursor: pointer;
+    transition: transform $transition;
+
+    &:hover:not(:disabled) {
+      transform: scale(1.06);
+    }
+
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 0.85;
+    }
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 1.75rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    color: $color-text;
+  }
+
+  &__count {
+    font-weight: 700;
+  }
+
+  &__controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem 1.5rem;
+    margin-left: 0.5rem;
+  }
+}

@@ -1,0 +1,19 @@
+@use 'tokens' as *;
+
+.no-results {
+  margin: 0;
+  padding: 2rem 0;
+  color: $color-muted;
+  // Words of a long query may be one long unbreakable string.
+  overflow-wrap: anywhere;
+
+  &__reset {
+    color: $color-primary-text;
+    border-bottom: 1px solid currentcolor;
+    transition: color $transition;
+
+    &:hover {
+      color: $color-text;
+    }
+  }
+}

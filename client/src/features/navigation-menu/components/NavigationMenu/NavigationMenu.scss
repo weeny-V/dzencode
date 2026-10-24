@@ -1,0 +1,129 @@
+@use 'tokens' as *;
+
+.nav-menu {
+  view-transition-name: shell-sidebar;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: $sidebar-width;
+  padding: 1.5rem 0 2rem;
+  background: $color-surface;
+  box-shadow: $shadow-soft;
+
+  // Small screens: a drawer that slides in from the left, under the top bar so the menu button stays reachable.
+  position: fixed;
+  top: $topbar-height;
+  bottom: 0;
+  left: 0;
+  transform: translateX(-100%);
+  // `visibility` flips only after the slide-out has finished, otherwise the closing animation is cut off.
+  transition:
+    transform $transition,
+    visibility 0s linear 0.2s;
+  visibility: hidden;
+
+  &--open {
+    transform: none;
+    visibility: visible;
+    transition:
+      transform $transition,
+      visibility 0s;
+  }
+
+  @include desktop {
+    position: relative;
+    top: auto;
+    grid-column: 1;
+    grid-row: 2;
+    // Full height of the content area, like the white column in the design.
+    align-self: stretch;
+    padding-top: 2.5rem;
+    transform: none;
+    visibility: visible;
+    transition: none;
+  }
+
+  &__profile {
+    position: relative;
+    margin-bottom: 3.6rem;
+  }
+
+  &__avatar {
+    display: grid;
+    place-items: end center;
+    width: 5.9rem;
+    height: 5.9rem;
+    border-radius: 50%;
+    background: $color-avatar;
+    overflow: hidden;
+
+    svg {
+      width: 100%;
+      height: 100%;
+      fill: $color-surface;
+    }
+  }
+
+  &__settings {
+    position: absolute;
+    right: -0.55rem;
+    bottom: -0.2rem;
+    display: grid;
+    place-items: center;
+    width: 2.3rem;
+    height: 2.3rem;
+    border-radius: 50%;
+    background: $color-surface;
+    box-shadow: $shadow-soft;
+    color: $color-muted;
+    font-size: 1.05rem;
+    transition: color $transition;
+
+    &:hover {
+      color: $color-primary-dark;
+    }
+  }
+
+  &__footer {
+    margin-top: auto;
+    padding-top: 2rem;
+  }
+
+  &__list {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  &__link {
+    position: relative;
+    display: inline-block;
+    padding-bottom: 0.25rem;
+    color: $color-text-nav;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    transition: color $transition;
+
+    &:hover {
+      color: $color-primary-text;
+    }
+  }
+
+  // The underline of the active item; it moves between items through a view transition (see index.tsx).
+  &__indicator {
+    position: absolute;
+    right: 0;
+    bottom: -3px;
+    left: 0;
+    height: 3px;
+    border-radius: 2px;
+    background: $color-primary;
+  }
+}

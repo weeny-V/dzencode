@@ -1,12 +1,6 @@
-import { ApiStatus } from '@/features/api-status';
+import { redirect } from 'next/navigation';
 
-// Stage 0 placeholder: proves the client builds and can reach the API.
+// The app opens on the orders page.
 export default function Home() {
-  return (
-    <main style={{ padding: 32, fontFamily: 'system-ui, sans-serif' }}>
-      <h1>Inventory</h1>
-      <p>Orders &amp; Products — scaffold</p>
-      <ApiStatus />
-    </main>
-  );
+  redirect('/orders');
 }

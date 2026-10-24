@@ -1,0 +1,95 @@
+@use 'tokens' as *;
+
+// The row is a grid so that columns line up from row to row.
+$columns: 3rem minmax(9rem, 2fr) 6.5rem 4rem 7.5rem 8rem minmax(8rem, 1.3fr) 6.5rem 1.5rem;
+
+.product-row {
+  display: grid;
+  grid-template-columns: $columns;
+  align-items: center;
+  gap: 0.75rem;
+  // Fits the content width of a 1366px laptop screen; narrower screens scroll sideways.
+  min-width: 62rem;
+  padding: 0.7rem 1.1rem;
+  border: 1px solid $color-border;
+  border-radius: $radius;
+  background: $color-surface;
+  font-size: 0.85rem;
+  color: $color-muted;
+  transition: box-shadow $transition;
+  @include stagger;
+
+  &:hover {
+    box-shadow: $shadow-card;
+  }
+
+  &__main {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    min-width: 0;
+  }
+
+  &__title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    border-bottom: 1px solid $color-border;
+    color: $color-text-nav;
+  }
+
+  &__serial {
+    font-size: 0.7rem;
+    color: $color-text-subtle;
+  }
+
+  &__type {
+    font-size: 0.8rem;
+  }
+
+  &__state {
+    color: $color-text-nav;
+
+    &--used {
+      color: $color-muted;
+    }
+  }
+
+  &__guarantee {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    font-size: 0.75rem;
+    white-space: nowrap;
+  }
+
+  &__order {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    border-bottom: 1px solid $color-border;
+    color: $color-muted;
+    line-height: 1.3;
+    justify-self: start;
+
+    &:hover {
+      color: $color-primary-text;
+    }
+  }
+
+  &__delete {
+    display: grid;
+    place-items: center;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: $color-subtle;
+    font-size: 1rem;
+
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 0.7;
+    }
+  }
+}

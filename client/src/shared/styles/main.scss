@@ -1,0 +1,5 @@
+// Global entry point, imported once in app/layout.tsx.
+// Component styles (BEM blocks) live next to their components and are imported by them.
+@use 'bootstrap';
+@use 'base';
+@use 'transitions';

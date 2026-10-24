@@ -1,0 +1,25 @@
+@use 'tokens' as *;
+
+.product-thumb {
+  flex: none;
+
+  &__screen {
+    fill: $color-muted;
+  }
+
+  &__display {
+    fill: $color-thumb-display;
+  }
+
+  &__chart {
+    fill: none;
+    stroke: $color-primary;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  &__stand {
+    fill: $color-muted;
+  }
+}

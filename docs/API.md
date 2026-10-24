@@ -1,21 +1,21 @@
 # REST API
 
-Базовый адрес: `http://localhost:4000`. Тело запросов и ответов JSON, даты в формате ISO 8601 (UTC). Ошибки приходят как `{ "error": "..." }`.
+Base URL: `http://localhost:4000`. Request and response bodies are JSON, dates are ISO 8601 (UTC). Errors come as `{ "error": "..." }`.
 
-Форма данных повторяет `docs/task-materials/app.js`: поля в `camelCase`, у продукта массив `price[]` и вложенный `guarantee { start, end }`, тип продукта строкой.
+The data shape follows `docs/task-materials/app.js`: `camelCase` fields, a product has a `price[]` array and a nested `guarantee { start, end }`, the product type is a string.
 
-| Метод и путь         | Что делает                                                                           | Успех | Ошибки   |
-| -------------------- | ------------------------------------------------------------------------------------ | ----- | -------- |
-| `GET /health`        | Статус сервиса                                                                       | 200   |          |
-| `GET /orders`        | Список приходов (новые сверху) с `productsCount` и суммами `totals` по валютам       | 200   |          |
-| `GET /orders/:id`    | Приход со всеми продуктами                                                           | 200   | 400, 404 |
-| `POST /orders`       | Создать приход: `title` (обязательно), `description`, `date` (по умолчанию «сейчас») | 201   | 400      |
-| `DELETE /orders/:id` | Удалить приход вместе с продуктами и их ценами                                       | 204   | 400, 404 |
-| `GET /products`      | Все продукты; фильтр по типу: `?type=Monitors`                                       | 200   | 400      |
-| `POST /products`     | Создать продукт (тело ниже)                                                          | 201   | 400      |
-| `GET /product-types` | Справочник типов для фильтра: `[{ id, name }]`                                       | 200   |          |
+| Method and path      | What it does                                                                   | Success | Errors   |
+| -------------------- | ------------------------------------------------------------------------------ | ------- | -------- |
+| `GET /health`        | Service status                                                                 | 200     |          |
+| `GET /orders`        | List of orders (newest first) with `productsCount` and `totals` per currency   | 200     |          |
+| `GET /orders/:id`    | An order with all its products                                                 | 200     | 400, 404 |
+| `POST /orders`       | Create an order: `title` (required), `description`, `date` (defaults to "now") | 201     | 400      |
+| `DELETE /orders/:id` | Delete an order together with its products and their prices                    | 204     | 400, 404 |
+| `GET /products`      | All products; filter by type: `?type=Monitors`                                 | 200     | 400      |
+| `POST /products`     | Create a product (body below)                                                  | 201     | 400      |
+| `GET /product-types` | Type dictionary for the filter: `[{ id, name }]`                               | 200     |          |
 
-## Примеры
+## Examples
 
 `GET /orders`
 
@@ -54,25 +54,25 @@
 }
 ```
 
-Необязательные поля `POST /products`: `photo`, `specification`, `date` (по умолчанию «сейчас»). Ответ содержит созданный продукт в том же виде, что элемент `GET /products` (там уже есть `orderTitle`).
+Optional fields of `POST /products`: `photo`, `specification`, `date` (defaults to "now"). The response contains the created product in the same shape as an item of `GET /products` (which already includes `orderTitle`).
 
-`GET /products?type=Unknown` возвращает пустой массив, а не ошибку. Тип сравнивается без учёта регистра (`monitors` найдёт `Monitors`), повторённый параметр `?type=a&type=b` даёт 400.
+`GET /products?type=Unknown` returns an empty array, not an error. The type is compared case-insensitively (`monitors` finds `Monitors`), a repeated parameter `?type=a&type=b` gives 400.
 
-Суммы `totals` считаются по тем валютам, которые заданы у продуктов прихода; приход без продуктов возвращает `productsCount: 0` и пустой `totals`.
+`totals` are summed over the currencies that the order's products have; an order without products returns `productsCount: 0` and an empty `totals`.
 
-## Правила и ограничения входных данных
+## Input rules and limits
 
-Ошибка входных данных это всегда 400 с понятным сообщением в `error`; 500 означает сбой сервера. Ограничения повторяют колонки базы.
+A problem with the input is always a 400 with a readable message in `error`; a 500 means a server failure. The limits mirror the database columns.
 
-| Поле                               | Правило                                                                                                                                                                                                          |
-| ---------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Даты (`date`, `guarantee.*`)       | Только ISO 8601: `2017-06-29`, `2017-06-29T12:09:33Z`, `2017-06-29 12:09:33`, со смещением `+03:00`. Дата без часового пояса считается UTC, миллисекунды отбрасываются (хранятся целые секунды). Годы 1000–9999. |
-| `guarantee.end`                    | Не раньше `guarantee.start` (проверяют и API, и база)                                                                                                                                                            |
-| `serialNumber`, `order`            | Целое от 1 до 2 147 483 647                                                                                                                                                                                      |
-| `title`, `photo`, `type`           | Строка, не больше 255 символов (`type` не больше 100)                                                                                                                                                            |
-| `description`, `specification`     | Строка, не больше 65 535 байт (эмодзи занимает 4 байта)                                                                                                                                                          |
-| `price[].value`                    | Число от 0 до 9 999 999 999,99, не больше двух знаков после запятой (лишние знаки не округляем, а отклоняем)                                                                                                     |
-| `price[].symbol`                   | Код валюты до 8 символов; приводится к верхнему регистру, `usd` и `USD` это одна валюта                                                                                                                          |
-| `price[]`                          | Непустой массив, ровно одна цена с `isDefault: true`, валюты не повторяются                                                                                                                                      |
-| `type`, `order` в `POST /products` | Должны существовать (`/product-types`, `/orders`)                                                                                                                                                                |
-| Тело запроса                       | Не больше 100 КБ, иначе 413; невалидный JSON даёт 400                                                                                                                                                            |
+| Field                               | Rule                                                                                                                                                                                                                  |
+| ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Dates (`date`, `guarantee.*`)       | ISO 8601 only: `2017-06-29`, `2017-06-29T12:09:33Z`, `2017-06-29 12:09:33`, with an offset such as `+03:00`. A date without a time zone is UTC, milliseconds are dropped (whole seconds are stored). Years 1000–9999. |
+| `guarantee.end`                     | Not earlier than `guarantee.start` (checked by both the API and the database)                                                                                                                                         |
+| `serialNumber`, `order`             | An integer from 1 to 2,147,483,647                                                                                                                                                                                    |
+| `title`, `photo`, `type`            | A string of at most 255 characters (`type` at most 100)                                                                                                                                                               |
+| `description`, `specification`      | A string of at most 65,535 bytes (an emoji takes 4 bytes)                                                                                                                                                             |
+| `price[].value`                     | A number from 0 to 9,999,999,999.99 with at most two decimal places (extra decimals are rejected, not rounded)                                                                                                        |
+| `price[].symbol`                    | A currency code of up to 8 characters; upper-cased, so `usd` and `USD` are the same currency                                                                                                                          |
+| `price[]`                           | A non-empty array, exactly one price with `isDefault: true`, no repeated currencies                                                                                                                                   |
+| `type`, `order` in `POST /products` | Must exist (`/product-types`, `/orders`)                                                                                                                                                                              |
+| Request body                        | At most 100 KB, otherwise 413; invalid JSON gives 400                                                                                                                                                                 |

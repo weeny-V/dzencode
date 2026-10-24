@@ -1,0 +1,12 @@
+// Only the parts of Bootstrap 5 that this app uses: the reset (reboot, with its CSS variables) and the
+// `visually-hidden` helpers. Our components are written as BEM blocks next to their React components.
+// Need the grid, containers or utilities in a layout? Import them here, they are not pulled in by default.
+@import 'bootstrap/scss/functions';
+@import 'tokens';
+@import 'bootstrap/scss/variables';
+@import 'bootstrap/scss/variables-dark';
+@import 'bootstrap/scss/maps';
+@import 'bootstrap/scss/mixins';
+@import 'bootstrap/scss/root';
+@import 'bootstrap/scss/reboot';
+@import 'bootstrap/scss/helpers/visually-hidden';

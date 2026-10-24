@@ -1,0 +1,163 @@
+@use 'tokens' as *;
+
+.order-panel {
+  // The product rows adapt to the panel's own width, not the screen's.
+  container-type: inline-size;
+  position: relative;
+  border: 1px solid $color-border;
+  border-radius: $radius;
+  background: $color-surface;
+
+  &__close {
+    position: absolute;
+    top: -1.2rem;
+    right: -1.2rem;
+    z-index: 2;
+    display: grid;
+    place-items: center;
+    width: 2.7rem;
+    height: 2.7rem;
+    border-radius: 50%;
+    background: $color-surface;
+    color: $color-muted;
+    font-size: 1.1rem;
+    box-shadow: $shadow-soft;
+    transition: color $transition;
+
+    &:hover {
+      color: $color-text;
+    }
+  }
+
+  &__header {
+    padding: 2.2rem 2.4rem 1.2rem;
+  }
+
+  &__title {
+    margin: 0 0 1.4rem;
+    font-size: 1.25rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    line-height: 1.35;
+  }
+
+  &__add {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: $color-primary-text;
+    font-size: 0.78rem;
+    letter-spacing: 0.04em;
+
+    svg {
+      width: 1.2rem;
+      height: 1.2rem;
+      padding: 0.2rem;
+      border-radius: 50%;
+      background: $color-primary;
+      color: $color-surface;
+    }
+
+    &:disabled {
+      cursor: not-allowed;
+    }
+  }
+
+  &__empty {
+    margin: 0;
+    padding: 1.5rem 2.4rem 2.4rem;
+    color: $color-muted;
+  }
+
+  &__list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  &__product {
+    display: grid;
+    grid-template-columns: 0.7rem 3rem minmax(0, 1fr) 7rem 2rem;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.5rem 1.4rem 0.5rem 1.6rem;
+    border-top: 1px solid $color-bg;
+    transition: box-shadow $transition;
+    @include stagger;
+
+    &:hover {
+      box-shadow: $shadow-soft;
+    }
+  }
+
+  &__dot {
+    width: 0.55rem;
+    height: 0.55rem;
+    border-radius: 50%;
+    background: $color-lime;
+
+    &--used {
+      background: $color-text-nav;
+    }
+  }
+
+  &__product-main {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    min-width: 0;
+  }
+
+  &__product-title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    border-bottom: 1px solid $color-border;
+    color: $color-text-nav;
+    font-size: 0.85rem;
+  }
+
+  &__product-serial {
+    font-size: 0.7rem;
+    color: $color-text-subtle;
+  }
+
+  &__product-type {
+    font-size: 0.8rem;
+    color: $color-muted;
+  }
+
+  &__product-delete {
+    display: grid;
+    place-items: center;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: $color-subtle;
+    font-size: 1rem;
+
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 0.7;
+    }
+  }
+}
+
+// A narrow panel drops the type column, so the product name keeps its room.
+@container (max-width: 34rem) {
+  .order-panel__product {
+    grid-template-columns: 0.7rem 3rem minmax(0, 1fr) 2rem;
+    padding-right: 1rem;
+  }
+
+  .order-panel__product-type {
+    display: none;
+  }
+
+  .order-panel__header {
+    padding: 1.6rem 1.4rem 1rem;
+  }
+}

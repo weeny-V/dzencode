@@ -1,38 +1,38 @@
-# Тестовое задание: SPA «Orders & Products» — уровень Middle
+# Test task: "Orders & Products" SPA, Middle level
 
-Исходные материалы: [task-materials/](task-materials/) (PDF, `app.js`, скриншоты).
+Source materials: [task-materials/](task-materials/) (PDF, `app.js`, screenshots). The original task text is in Russian.
 
-## База для всех уровней
+## Base for all levels
 
-- Redux (глобальное состояние), компонентный подход, роутинг между страницами.
-- Анимации при переходах между роутами и компонентами.
-- ES6+, сторонние библиотеки разрешены.
-- Git: репозиторий со ссылкой на сдачу, понятный `README.md` (установка, запуск).
-- WebSocket (Socket.io): счётчик активных вкладок приложения в реальном времени.
-- Вёрстка по скринам: БЭМ + Bootstrap.
-- REST (Axios/Fetch), формы с валидацией.
-- Docker: приложение со всем окружением в контейнере.
-- Деплой на хостинг/VDS (проверяется тестировщиком по чек-листу).
-- Файл схемы БД, открываемый в MySQL Workbench.
-- Самопроверка: поднять проект «с нуля» по README.
+- Redux (global state), a component approach, routing between pages.
+- Animations on transitions between routes and components.
+- ES6+, third-party libraries are allowed.
+- Git: a repository with a link for submission, a clear `README.md` (installation, run).
+- WebSocket (Socket.io): a live counter of the open tabs of the app.
+- Markup from the screenshots: BEM + Bootstrap.
+- REST (Axios/Fetch), forms with validation.
+- Docker: the app with its whole environment in a container.
+- Deployment to a hosting/VDS (checked by a tester against a checklist).
+- A DB schema file that opens in MySQL Workbench.
+- Self-check: bring the project up "from scratch" by following the README.
 
-## Экраны и компоненты
+## Screens and components
 
-| Компонент          | Что делает                                                                                                                                                                                                                        |
-| ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **NavigationMenu** | Роут-ссылки на Orders и Products                                                                                                                                                                                                  |
-| **TopMenu**        | Дата и время в реальном времени (правый верхний угол) + счётчик активных сессий (Socket.io)                                                                                                                                       |
-| **Orders**         | Список приходов: название, количество продуктов, дата в двух форматах, сумма цен продуктов в двух валютах, кнопка удаления → попап подтверждения. Клик по приходу открывает рядом панель с его продуктами (закрывается крестиком) |
-| **Products**       | Все продукты + фильтр по типу (1 select). Поля: название, тип, даты гарантии в разных форматах, цена в разных валютах, название прихода                                                                                           |
+| Component          | What it does                                                                                                                                                                                                                                                                       |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **NavigationMenu** | Route links to Orders and Products                                                                                                                                                                                                                                                 |
+| **TopMenu**        | Live date and time (top right corner) plus the counter of active sessions (Socket.io)                                                                                                                                                                                              |
+| **Orders**         | List of orders ("приходы"): title, number of products, the date in two formats, the sum of the product prices in two currencies, a delete button that opens a confirmation popup. A click on an order opens a panel with its products next to the list (it is closed with a cross) |
+| **Products**       | All products plus a filter by type (one select). Fields: title, type, guarantee dates in different formats, price in different currencies, the title of the order                                                                                                                  |
 
-Модель данных (из `app.js`): `Order 1—N Product`; у продукта `price[]` (value, symbol, isDefault), `guarantee {start, end}`, `isNew`, `serialNumber`, `type`, `specification`, `photo`, `date`.
+Data model (from `app.js`): `Order 1—N Product`; a product has `price[]` (value, symbol, isDefault), `guarantee {start, end}`, `isNew`, `serialNumber`, `type`, `specification`, `photo`, `date`.
 
-> В `app.js` есть синтаксическая ошибка (нет запятой после `specification`). Это пример данных, не код для запуска.
+> `app.js` has a syntax error (a comma is missing after `specification`). It is a data sample, not code to run.
 
-## Junior+ (входит в Middle)
+## Junior+ (included in Middle)
 
-TypeScript · SSR (Next.js) · Unit-тесты · i18n · JWT · Web Storage · Lazy Loading · Charts · Maps
+TypeScript · SSR (Next.js) · Unit tests · i18n · JWT · Web Storage · Lazy Loading · Charts · Maps
 
-## Middle (сверх Junior+)
+## Middle (on top of Junior+)
 
-Graph (на выбор) · GraphQL · Web Workers · PWA · Event-Driven Architecture · FrontEnd Optimization · Task Runners (npm scripts) · Интеграционные и функциональные тесты
+Graph (of your choice) · GraphQL · Web Workers · PWA · Event-Driven Architecture · FrontEnd Optimization · Task Runners (npm scripts) · Integration and functional tests

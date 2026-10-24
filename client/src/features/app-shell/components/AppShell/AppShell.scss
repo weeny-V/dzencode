@@ -1,0 +1,54 @@
+@use 'tokens' as *;
+
+.app-shell {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: $topbar-height 1fr;
+  min-height: 100vh;
+
+  @include desktop {
+    grid-template-columns: $sidebar-width minmax(0, 1fr);
+  }
+
+  &__skip {
+    position: absolute;
+    top: 0.5rem;
+    left: 0.5rem;
+    z-index: 100;
+    padding: 0.5rem 1rem;
+    border-radius: $radius;
+    background: $color-surface;
+    box-shadow: $shadow-soft;
+  }
+
+  &__content {
+    grid-column: 1;
+    grid-row: 2;
+    min-width: 0;
+    padding: 2rem $page-gutter 3rem;
+
+    @include desktop {
+      grid-column: 2;
+      // Modest side gutters, so that wide tables fit on laptop screens...
+      padding: 4.2rem clamp($page-gutter, 4vw, 4.5rem) 4rem;
+    }
+
+    // ...and the generous gutters of the design on really wide screens.
+    @media (min-width: $bp-extra-wide) {
+      padding-right: 163px;
+      padding-left: $page-gutter-lg;
+    }
+  }
+
+  // Dims the page behind the open drawer on small screens.
+  &__scrim {
+    position: fixed;
+    inset: $topbar-height 0 0;
+    z-index: 25;
+    background: $color-overlay;
+
+    @include desktop {
+      display: none;
+    }
+  }
+}
