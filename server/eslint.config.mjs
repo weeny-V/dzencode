@@ -7,6 +7,7 @@ import { sharedConfig } from '../eslint.shared.mjs';
 // Module boundaries (see docs/CODING_RULES.md):
 // - mysql2 is used only by repositories, the pool and transactions (other files may import its types);
 // - express is used only by routes, the composition root and shared/http (services stay HTTP-free);
+// - the Socket.io server is created only in src/realtime.ts (other files may import its types);
 // - a module reaches into another module only through that module's index.ts.
 const mysql = {
   group: ['mysql2', 'mysql2/*'],
@@ -16,6 +17,11 @@ const mysql = {
 const express = {
   group: ['express', 'express/*'],
   message: 'Express belongs to *.routes.ts, app.ts and shared/http/; keep services HTTP-free.',
+};
+const socketIo = {
+  group: ['socket.io', 'socket.io/*'],
+  allowTypeImports: true,
+  message: 'The Socket.io server is created only in src/realtime.ts; modules use its types.',
 };
 const siblingInternals = {
   regex: '^\\.\\./[^./]+/[^/]+\\.(repository|routes|schemas|service|types)(\\.js)?$',
@@ -66,24 +72,29 @@ export default tseslint.config(
   },
 
   // Later blocks override earlier ones for the files they match, so each lists its full pattern set.
-  { files: sources, ignores: notTests, rules: restrict(mysql, express) },
+  { files: sources, ignores: notTests, rules: restrict(mysql, express, socketIo) },
+  { files: ['src/realtime.ts'], rules: restrict(mysql, express) },
   {
     files: ['src/modules/**/*.ts'],
     ignores: notTests,
-    rules: restrict(mysql, express, siblingInternals),
+    rules: restrict(mysql, express, socketIo, siblingInternals),
   },
   {
     files: ['src/modules/**/*.repository.ts'],
     ignores: notTests,
-    rules: restrict(express, siblingInternals),
+    rules: restrict(express, socketIo, siblingInternals),
   },
   {
     files: ['src/modules/**/*.routes.ts'],
     ignores: notTests,
-    rules: restrict(mysql, siblingInternals),
+    rules: restrict(mysql, socketIo, siblingInternals),
   },
-  { files: ['src/shared/db/**/*.ts'], ignores: notTests, rules: restrict(express) },
-  { files: ['src/shared/http/**/*.ts', 'src/app.ts'], ignores: notTests, rules: restrict(mysql) },
+  { files: ['src/shared/db/**/*.ts'], ignores: notTests, rules: restrict(express, socketIo) },
+  {
+    files: ['src/shared/http/**/*.ts', 'src/app.ts'],
+    ignores: notTests,
+    rules: restrict(mysql, socketIo),
+  },
 
   ...sharedConfig,
 );

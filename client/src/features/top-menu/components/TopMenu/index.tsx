@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Suspense } from 'react';
 
+import { SessionsCounter } from '@/features/sessions';
 import { formatClockDate, formatTime, formatWeekday } from '@/shared/lib/date';
 import { ClockIcon, MenuIcon, ShieldLogo } from '@/shared/ui/icons';
 
@@ -50,6 +51,10 @@ export function TopMenu({ menuOpen, navigationId, onMenuToggle, searchEnabled }:
         <Suspense fallback={<SearchFieldPlaceholder />}>
           <SearchField key={pathname} enabled={searchEnabled} />
         </Suspense>
+      </div>
+
+      <div className="top-menu__sessions">
+        <SessionsCounter />
       </div>
 
       <div className="top-menu__clock">

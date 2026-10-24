@@ -79,11 +79,15 @@
     }
   }
 
+  // Pushes the counter and the clock to the right edge.
+  &__sessions {
+    margin-left: auto;
+  }
+
   &__clock {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    margin-left: auto;
     font-size: 0.75rem;
     color: $color-text;
   }

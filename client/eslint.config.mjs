@@ -78,6 +78,26 @@ export default defineConfig([
     },
   },
 
+  {
+    // The Socket.io client is a network layer like fetch: only api/ opens connections.
+    files: ['src/**/*.{ts,tsx}'],
+    ignores: ['src/**/api/**'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            {
+              name: 'socket.io-client',
+              allowTypeImports: true,
+              message: 'Connections to the server live in api/ folders.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+
   // Later blocks override earlier ones for the files they match, so each lists its full pattern set.
   { files: ['src/app/**/*.{ts,tsx}'], rules: restrict(deepFeature) },
 
