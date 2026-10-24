@@ -5,11 +5,39 @@ import tseslint from 'typescript-eslint';
 
 import { sharedConfig } from '../eslint.shared.mjs';
 
-// Layers go top-down: app -> components -> hooks -> api -> config (see docs/CODING_RULES.md).
-// Cross-layer imports use the `@/` alias, so patterns match on the layer folder name.
-const layerImports = (patterns) => ({
+// Layers (see docs/CODING_RULES.md): app -> features -> shared.
+// Inside a feature: components -> hooks -> api. Cross-layer imports use the `@/` alias,
+// imports inside one feature are relative, so patterns can match on folder names.
+const restrict = (...patterns) => ({
   '@typescript-eslint/no-restricted-imports': ['error', { patterns }],
 });
+
+const app = {
+  group: ['@/app', '@/app/*'],
+  message: 'Nothing imports from app/: it only composes.',
+};
+const features = {
+  group: ['@/features', '@/features/*'],
+  message: 'shared/ is the lowest layer and knows nothing about features.',
+};
+const deepFeature = {
+  group: ['@/features/*/*'],
+  message: "Import another feature only through its index.ts ('@/features/<name>').",
+};
+const components = {
+  group: ['**/components', '**/components/*'],
+  message: 'Lower layers must not import components.',
+};
+const hooks = {
+  group: ['**/hooks', '**/hooks/*'],
+  message: 'api/ and config/ must not import hooks.',
+};
+const api = { group: ['**/api', '**/api/*'], message: 'config/ must not import api/.' };
+const apiForComponents = {
+  group: ['**/api', '**/api/*'],
+  allowTypeImports: true,
+  message: 'Components get data from hooks; only types may come from api/.',
+};
 
 export default defineConfig([
   ...nextVitals,
@@ -27,69 +55,55 @@ export default defineConfig([
 
   {
     files: ['src/**/*.{ts,tsx}'],
-    ignores: ['src/config/env.ts'],
+    ignores: ['src/shared/config/env.ts'],
     rules: {
       'no-restricted-properties': [
         'error',
         {
           object: 'process',
           property: 'env',
-          message: 'Read environment variables only in src/config/env.ts.',
+          message: 'Read environment variables only in src/shared/config/env.ts.',
         },
       ],
     },
   },
   {
     files: ['src/**/*.{ts,tsx}'],
-    ignores: ['src/api/**'],
+    ignores: ['src/**/api/**'],
     rules: {
       'no-restricted-globals': [
         'error',
-        { name: 'fetch', message: 'Network requests live in src/api/.' },
+        { name: 'fetch', message: 'Network requests live in api/ folders.' },
       ],
     },
   },
 
+  // Later blocks override earlier ones for the files they match, so each lists its full pattern set.
+  { files: ['src/app/**/*.{ts,tsx}'], rules: restrict(deepFeature) },
+
+  // Feature files that sit outside the layers below (index.ts, types, store).
+  { files: ['src/features/**/*.{ts,tsx}'], rules: restrict(app, deepFeature) },
   {
     // Components get data from hooks. A hook next to its component (use*.ts) may call api/.
-    files: ['src/components/**/*.{ts,tsx}'],
+    files: ['src/features/*/components/**/*.{ts,tsx}'],
     ignores: ['**/use*.ts'],
-    rules: layerImports([
-      {
-        group: ['**/api', '**/api/*'],
-        allowTypeImports: true,
-        message: 'Components get data from hooks; only types may come from api/.',
-      },
-      { group: ['**/app', '**/app/*'], message: 'Components must not import from app/.' },
-    ]),
+    rules: restrict(apiForComponents, app, deepFeature),
   },
   {
-    files: ['src/hooks/**/*.{ts,tsx}'],
-    rules: layerImports([
-      {
-        group: ['**/components', '**/components/*'],
-        message: 'hooks/ must not import components.',
-      },
-      { group: ['**/app', '**/app/*'], message: 'hooks/ must not import from app/.' },
-    ]),
+    files: ['src/features/*/hooks/**/*.{ts,tsx}'],
+    rules: restrict(components, app, deepFeature),
   },
   {
-    files: ['src/api/**/*.{ts,tsx}'],
-    rules: layerImports([
-      { group: ['**/components', '**/components/*'], message: 'api/ must not import components.' },
-      { group: ['**/hooks', '**/hooks/*'], message: 'api/ must not import hooks.' },
-      { group: ['**/app', '**/app/*'], message: 'api/ must not import from app/.' },
-    ]),
+    files: ['src/features/*/api/**/*.{ts,tsx}'],
+    rules: restrict(components, hooks, app, deepFeature),
   },
+
+  { files: ['src/shared/**/*.{ts,tsx}'], rules: restrict(features, app) },
+  { files: ['src/shared/hooks/**/*.{ts,tsx}'], rules: restrict(features, app, components) },
+  { files: ['src/shared/api/**/*.{ts,tsx}'], rules: restrict(features, app, hooks, components) },
   {
-    files: ['src/config/**/*.{ts,tsx}'],
-    rules: layerImports([
-      {
-        group: ['**/app', '**/app/*', '**/components', '**/components/*', '**/hooks', '**/hooks/*'],
-        message: 'config/ is the lowest layer and imports nothing from the layers above.',
-      },
-      { group: ['**/api', '**/api/*'], message: 'config/ must not import api/.' },
-    ]),
+    files: ['src/shared/config/**/*.{ts,tsx}'],
+    rules: restrict(features, app, components, hooks, api),
   },
 
   ...sharedConfig,

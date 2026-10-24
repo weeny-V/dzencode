@@ -19,6 +19,8 @@ export const sharedConfig = [
       'simple-import-sort/imports': 'error',
       'simple-import-sort/exports': 'error',
       'import/no-duplicates': 'error',
+      // Needs an import resolver that understands TypeScript (set in each package's config).
+      'import/no-cycle': 'error',
 
       // Safety net.
       eqeqeq: ['error', 'always'],

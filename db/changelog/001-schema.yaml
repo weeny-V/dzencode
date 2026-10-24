@@ -1,0 +1,184 @@
+# Schema. Applied changeSets are never edited: add a new changeSet instead.
+databaseChangeLog:
+  - changeSet:
+      id: 001-create-product-types
+      author: dzencode
+      changes:
+        - createTable:
+            tableName: product_types
+            columns:
+              - column:
+                  name: id
+                  type: INT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: name
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+                    unique: true
+                    uniqueConstraintName: uq_product_types_name
+
+  - changeSet:
+      id: 002-create-orders
+      author: dzencode
+      changes:
+        - createTable:
+            tableName: orders
+            columns:
+              - column:
+                  name: id
+                  type: INT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: title
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: description
+                  type: TEXT
+              - column:
+                  name: date
+                  type: DATETIME
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 003-create-products
+      author: dzencode
+      changes:
+        - createTable:
+            tableName: products
+            columns:
+              - column:
+                  name: id
+                  type: INT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: serial_number
+                  type: INT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: is_new
+                  type: BOOLEAN
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+              - column:
+                  name: photo
+                  type: VARCHAR(255)
+              - column:
+                  name: title
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: type_id
+                  type: INT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: specification
+                  type: TEXT
+              - column:
+                  name: guarantee_start
+                  type: DATETIME
+                  constraints:
+                    nullable: false
+              - column:
+                  name: guarantee_end
+                  type: DATETIME
+                  constraints:
+                    nullable: false
+              - column:
+                  name: order_id
+                  type: INT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: date
+                  type: DATETIME
+                  constraints:
+                    nullable: false
+        - addForeignKeyConstraint:
+            constraintName: fk_products_type
+            baseTableName: products
+            baseColumnNames: type_id
+            referencedTableName: product_types
+            referencedColumnNames: id
+            onDelete: RESTRICT
+        # Deleting an order deletes its products (and their prices).
+        - addForeignKeyConstraint:
+            constraintName: fk_products_order
+            baseTableName: products
+            baseColumnNames: order_id
+            referencedTableName: orders
+            referencedColumnNames: id
+            onDelete: CASCADE
+
+  - changeSet:
+      id: 004-create-product-prices
+      author: dzencode
+      changes:
+        - createTable:
+            tableName: product_prices
+            columns:
+              - column:
+                  name: id
+                  type: INT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: product_id
+                  type: INT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: value
+                  type: DECIMAL(12,2)
+                  constraints:
+                    nullable: false
+              # Holds a currency code (USD, UAH), the name is kept from app.js.
+              - column:
+                  name: symbol
+                  type: VARCHAR(8)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: is_default
+                  type: BOOLEAN
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+        - addForeignKeyConstraint:
+            constraintName: fk_product_prices_product
+            baseTableName: product_prices
+            baseColumnNames: product_id
+            referencedTableName: products
+            referencedColumnNames: id
+            onDelete: CASCADE
+        - addUniqueConstraint:
+            constraintName: uq_product_prices_product_symbol
+            tableName: product_prices
+            columnNames: product_id, symbol
+      # The unique index also backs the foreign key, so the automatic rollback (which drops the index
+      # first) fails on MySQL: drop the foreign key before the table.
+      rollback:
+        - dropForeignKeyConstraint:
+            baseTableName: product_prices
+            constraintName: fk_product_prices_product
+        - dropTable:
+            tableName: product_prices

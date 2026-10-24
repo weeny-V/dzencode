@@ -17,10 +17,11 @@
 - Код целиком на английском (идентификаторы, комментарии, имена файлов, логи). Тексты UI в компонентах пока могут быть русскими.
 - Документацию и ответы ведём на русском.
 
-**Клиент** (`client/src`, слои сверху вниз: `app` → `components` → `hooks` → `api` → `config`)
+**Клиент** (`client/src`, feature-структура, слои сверху вниз: `app` → `features/<name>` → `shared`)
 
-- Компоненты не работают с промисами и `process.env`: запросы в `api/`, жизненный цикл в хуках, env только в `config/env.ts`.
-- Хук одного компонента лежит рядом с ним (`components/X/useX.ts`), общий хук — в `src/hooks/`.
+- Фича: `features/<name>/{components,hooks,api,store}` + `index.ts` как публичный интерфейс; к другой фиче только через `@/features/<name>`, внутри фичи относительные пути.
+- Компоненты не работают с промисами и `process.env`: запросы в `api/`, жизненный цикл в хуках, env только в `shared/config/env.ts`.
+- Хук одного компонента лежит рядом с ним (`components/X/useX.ts`), хук нескольких компонентов фичи — в `features/<name>/hooks/`, общий для фич — в `shared/hooks/`.
 - Container / Presentational; маленькие блоки держим в одном `components/X/index.tsx`, не дробим без нужды.
 - Без `.then().catch()`: `async/await` + `try/catch`, в эффекте — `void run()`.
 
@@ -28,6 +29,8 @@
 
 - Env читается только в `config.ts`; в лог пишем реальный адрес, не зашитый `localhost`.
 - Каждый промис ожидаем или помечаем `void`.
+- Feature-модули `modules/<name>/` (`*.routes.ts` → `*.service.ts` → `*.repository.ts`), сборка в `app.ts`; сервис бросает доменные ошибки, статусы HTTP ставит только `shared/http/errorHandler.ts`; к соседнему модулю только через его `index.ts`.
+- Схема БД меняется только новым changeSet'ом Liquibase (`db/changelog`); SQL пишем только в `*.repository.ts`, значения только через `?`.
 
 **Инструменты**
 
