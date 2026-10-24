@@ -1,0 +1,11 @@
+# Rules that the database can enforce itself. They come after the seed on purpose: the seed satisfies them.
+databaseChangeLog:
+  - changeSet:
+      id: 009-products-guarantee-period-check
+      author: dzencode
+      changes:
+        - sql:
+            sql: ALTER TABLE products ADD CONSTRAINT chk_products_guarantee_period CHECK (guarantee_end >= guarantee_start)
+      rollback:
+        - sql:
+            sql: ALTER TABLE products DROP CHECK chk_products_guarantee_period

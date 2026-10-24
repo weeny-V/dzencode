@@ -1,0 +1,17 @@
+product_id,value,symbol,is_default
+1,100,USD,false
+1,2600,UAH,true
+2,100,USD,false
+2,2600,UAH,true
+3,1200,USD,false
+3,31200,UAH,true
+4,90,USD,false
+4,2340,UAH,true
+5,650,USD,false
+5,16900,UAH,true
+6,450,USD,false
+6,11700,UAH,true
+7,900,USD,false
+7,23400,UAH,true
+8,45,USD,false
+8,1170,UAH,true

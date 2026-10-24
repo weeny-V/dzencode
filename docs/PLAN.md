@@ -17,4 +17,8 @@
 
 В рамках этапа 0 согласован набор правил ESLint (промисы с type-aware проверкой на клиенте и сервере, порядок и типизация импортов через `simple-import-sort`, границы слоёв клиента, страховочные правила). Подробности в [CODING_RULES.md](CODING_RULES.md#eslint-правила). Новые правила по ходу этапов добавляем туда же и в конфиги.
 
-Открытые решения для этапа 1: формат changelog Liquibase (YAML / formatted SQL / XML) и доступ к БД (`mysql2` с SQL вручную / ORM).
+Архитектура клиента (согласована): feature-структура `app/` → `features/<name>/{components,hooks,api,store}` → `shared/`, фичи общаются только через `index.ts` (подробности в [CODING_RULES.md](CODING_RULES.md#архитектура-клиента-clientsrc)).
+
+Архитектура сервера (согласована): feature-модули `modules/<name>` со слоями routes → service → repository, доменные ошибки вместо HTTP-ошибок в сервисах, зависимости собираются фабриками в `app.ts`, имена файлов вида `orders.service.ts` (подробности в [CODING_RULES.md](CODING_RULES.md#сервер-serversrc)).
+
+Решения этапа 1 (согласованы): changelog Liquibase в YAML; доступ к БД через `mysql2` с SQL вручную, без ORM; цены в отдельной таблице `product_prices`, типы в `product_types`; `ON DELETE CASCADE` для продуктов и цен при удалении прихода; REST включает `POST /orders` и `POST /products` (валидация вручную, на этапе 5 может смениться библиотекой); интеграционные тесты на отдельной БД `dzencode_test`; файл `.mwb` Workbench создаётся reverse engineering из живой базы (шаги в README), в репозитории лежит дамп `docs/db/schema.sql`.

@@ -1,4 +1,53 @@
 services:
+  db:
+    image: mysql:8.4
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root}
+      MYSQL_DATABASE: ${DB_NAME:-dzencode}
+      MYSQL_USER: ${DB_USER:-dzencode}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-dzencode}
+    ports:
+      - '3306:3306'
+    volumes:
+      - db-data:/var/lib/mysql
+      - ./db/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ['CMD-SHELL', 'mysqladmin ping -h 127.0.0.1 -p"$$MYSQL_ROOT_PASSWORD" --silent']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  # One-shot job: applies db/changelog to the app database (schema + seed) and to `<name>_test` (schema only).
+  liquibase:
+    build: ./db
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_NAME: ${DB_NAME:-dzencode}
+      DB_USER: ${DB_USER:-dzencode}
+      DB_PASSWORD: ${DB_PASSWORD:-dzencode}
+    volumes:
+      - ./db/changelog:/liquibase/changelog:ro
+    entrypoint: ['/bin/sh', '-c']
+    command:
+      - |
+        set -eu
+        for target in "$${DB_NAME}:seed" "$${DB_NAME}_test:test"; do
+          database="$${target%%:*}"
+          contexts="$${target##*:}"
+          liquibase \
+            --searchPath=/liquibase/changelog \
+            --changeLogFile=db.changelog-root.yaml \
+            --url="jdbc:mysql://db:3306/$${database}" \
+            --username="$${DB_USER}" \
+            --password="$${DB_PASSWORD}" \
+            --contexts="$${contexts}" \
+            update
+        done
+    restart: 'no'
+
   server:
     build:
       context: .
@@ -6,6 +55,16 @@ services:
     environment:
       PORT: 4000
       CLIENT_ORIGIN: ${CLIENT_ORIGIN:-http://localhost:3000}
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_NAME: ${DB_NAME:-dzencode}
+      DB_USER: ${DB_USER:-dzencode}
+      DB_PASSWORD: ${DB_PASSWORD:-dzencode}
+    depends_on:
+      db:
+        condition: service_healthy
+      liquibase:
+        condition: service_completed_successfully
     ports:
       - '4000:4000'
     restart: unless-stopped
@@ -21,3 +80,6 @@ services:
     ports:
       - '3000:3000'
     restart: unless-stopped
+
+volumes:
+  db-data:

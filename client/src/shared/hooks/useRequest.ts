@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 
-import { isAbortError } from '@/api/http';
+import { isAbortError } from '@/shared/api/http';
 
 export type RequestStatus = 'loading' | 'success' | 'error';
 

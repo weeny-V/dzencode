@@ -18,11 +18,14 @@
     "format:check": "prettier --check .",
     "docker:up": "docker compose up --build",
     "docker:down": "docker compose down",
+    "db:up": "docker compose up -d --build --wait db && docker compose run --rm --build liquibase",
+    "db:reset": "docker compose down -v && npm run db:up",
     "audit:prod": "npm audit --omit=dev --audit-level=high"
   },
   "devDependencies": {
     "concurrently": "^9.2.1",
     "eslint-config-prettier": "^10.1.8",
+    "eslint-import-resolver-typescript": "^3.10.1",
     "eslint-plugin-import": "^2.32.0",
     "eslint-plugin-simple-import-sort": "^14.0.0",
     "prettier": "^3.6.2"

@@ -1,7 +1,8 @@
 'use client';
 
-import { getHealth } from '@/api/health';
-import { type RequestStatus, useRequest } from '@/hooks/useRequest';
+import { type RequestStatus, useRequest } from '@/shared/hooks/useRequest';
+
+import { getHealth } from '../../api/health';
 
 export type ApiStatus = 'checking' | 'up' | 'down';
 

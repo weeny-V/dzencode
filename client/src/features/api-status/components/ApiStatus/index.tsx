@@ -1,6 +1,6 @@
 'use client';
 
-import { env } from '@/config/env';
+import { env } from '@/shared/config/env';
 
 import { type ApiStatus as Status, useApiStatus } from './useApiStatus';
 

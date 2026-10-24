@@ -1,4 +1,4 @@
-import ApiStatus from '@/components/ApiStatus';
+import { ApiStatus } from '@/features/api-status';
 
 // Stage 0 placeholder: proves the client builds and can reach the API.
 export default function Home() {

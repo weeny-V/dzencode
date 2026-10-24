@@ -1,0 +1,21 @@
+import type { OrderProductsSummary, Product } from '../products/index.js';
+
+export interface Order {
+  id: number;
+  title: string;
+  description: string | null;
+  date: Date;
+}
+
+export interface OrderInput {
+  title: string;
+  description: string | null;
+  date: Date;
+}
+
+/** An order in the list: product count and price totals are filled from the products module. */
+export interface OrderSummary extends Order, OrderProductsSummary {}
+
+export interface OrderDetails extends Order {
+  products: Product[];
+}
