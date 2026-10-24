@@ -45,3 +45,24 @@ export interface OrderDetails {
   date: string;
   products: Product[];
 }
+
+/** The body of `POST /orders`. A missing `date` means "now". */
+export interface NewOrder {
+  title: string;
+  description: string | null;
+  /** ISO 8601, e.g. `2017-06-29`. */
+  date?: string;
+}
+
+/** The body of `POST /products`. The type is given by name, the order by id. */
+export interface NewProduct {
+  title: string;
+  serialNumber: number;
+  isNew: boolean;
+  photo: string | null;
+  type: string;
+  specification: string | null;
+  guarantee: { start: string; end: string };
+  price: Price[];
+  order: number;
+}

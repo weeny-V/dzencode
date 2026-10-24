@@ -3,8 +3,10 @@ import './OrderPanel.scss';
 import Link from 'next/link';
 import type { CSSProperties } from 'react';
 
-import type { OrderDetails } from '@/shared/api/types';
-import { CloseIcon, PlusIcon, TrashIcon } from '@/shared/ui/icons';
+import type { OrderDetails, Product } from '@/shared/api/types';
+import { toQuery } from '@/shared/lib/searchParams';
+import { DeleteIconButton } from '@/shared/ui/DeleteIconButton';
+import { CloseIcon, PlusIcon } from '@/shared/ui/icons';
 import { LoadError } from '@/shared/ui/LoadError';
 import { ProductThumb } from '@/shared/ui/ProductThumb';
 import { ListSkeleton } from '@/shared/ui/Skeleton';
@@ -20,10 +22,18 @@ interface OrderPanelProps {
   /** Where the cross leads: the orders page without the panel (and with the search kept). */
   closeHref: string;
   onRetry: () => void;
+  /** The trash icon of a product was pressed: ask the visitor to confirm. */
+  onDeleteProduct: (product: Product) => void;
 }
 
 /** The products of the open order. */
-function OrderProducts({ order }: { order: OrderDetails }) {
+function OrderProducts({
+  order,
+  onDeleteProduct,
+}: {
+  order: OrderDetails;
+  onDeleteProduct: (product: Product) => void;
+}) {
   if (order.products.length === 0) {
     return <p className="order-panel__empty">В этом приходе пока нет продуктов.</p>;
   }
@@ -50,15 +60,12 @@ function OrderProducts({ order }: { order: OrderDetails }) {
             <span className="order-panel__product-serial">SN-{product.serialNumber}</span>
           </div>
           <span className="order-panel__product-type">{product.type}</span>
-          <button
-            type="button"
-            className="order-panel__product-delete"
-            disabled
-            aria-label={`Удалить продукт ${product.title}`}
-            title="Удаление продуктов: скоро"
-          >
-            <TrashIcon />
-          </button>
+          <div className="order-panel__product-delete">
+            <DeleteIconButton
+              label={`Удалить продукт ${product.title}`}
+              onClick={() => onDeleteProduct(product)}
+            />
+          </div>
         </li>
       ))}
     </ul>
@@ -66,7 +73,7 @@ function OrderProducts({ order }: { order: OrderDetails }) {
 }
 
 /** The panel next to the list with the products of the chosen order. The cross closes it. */
-export function OrderPanel({ panel, closeHref, onRetry }: OrderPanelProps) {
+export function OrderPanel({ panel, closeHref, onRetry, onDeleteProduct }: OrderPanelProps) {
   return (
     <section className="order-panel" aria-labelledby="order-panel-title">
       <Link href={closeHref} className="order-panel__close" aria-label="Закрыть панель">
@@ -77,19 +84,20 @@ export function OrderPanel({ panel, closeHref, onRetry }: OrderPanelProps) {
         <h2 className="order-panel__title" id="order-panel-title">
           {panel.status === 'ready' ? panel.order.title : 'Приход'}
         </h2>
-        {/* Adding a product is built in stage 5; the link is drawn as in the design. */}
-        <button
-          type="button"
-          className="order-panel__add"
-          disabled
-          title="Добавление продукта: скоро"
-        >
-          <PlusIcon />
-          Добавить продукт
-        </button>
+        {panel.status === 'ready' && (
+          <Link
+            href={`/products/new${toQuery({ order: String(panel.order.id) })}`}
+            className="order-panel__add"
+          >
+            <PlusIcon />
+            Добавить продукт
+          </Link>
+        )}
       </header>
 
-      {panel.status === 'ready' && <OrderProducts order={panel.order} />}
+      {panel.status === 'ready' && (
+        <OrderProducts order={panel.order} onDeleteProduct={onDeleteProduct} />
+      )}
       {panel.status === 'loading' && (
         <div className="order-panel__state">
           <ListSkeleton rows={3} rowHeight="4rem" label="Загрузка продуктов…" />

@@ -1,0 +1,39 @@
+@use 'tokens' as *;
+
+.form-layout {
+  max-width: 46rem;
+  padding: 2rem;
+  border: 1px solid $color-border;
+  border-radius: $radius;
+  background: $color-surface;
+  @include stagger;
+
+  // The fields sit in a two-column grid; a field that needs the whole row takes both columns.
+  &__fields {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.25rem 1.5rem;
+
+    @media (min-width: 640px) {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  &__error {
+    margin: 1.5rem 0 0;
+    padding: 0.75rem 1rem;
+    border-radius: $radius;
+    background: $color-danger-tint;
+    color: $color-danger;
+    font-size: 0.85rem;
+    overflow-wrap: anywhere;
+  }
+
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    margin-top: 2rem;
+  }
+}

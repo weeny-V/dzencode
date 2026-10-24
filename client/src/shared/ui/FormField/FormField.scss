@@ -1,0 +1,88 @@
+@use 'tokens' as *;
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+
+  &--wide {
+    grid-column: 1 / -1;
+  }
+
+  &__label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: $color-muted;
+  }
+
+  &__required {
+    color: $color-danger;
+  }
+
+  // One look for `input`, `select` and `textarea`.
+  &__control {
+    width: 100%;
+    min-height: 2.5rem;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid $color-border;
+    border-radius: $radius;
+    background: $color-surface;
+    color: $color-text;
+    font: inherit;
+    font-size: 0.9rem;
+    transition:
+      border-color $transition,
+      box-shadow $transition;
+
+    &:hover:not(:disabled) {
+      border-color: $color-subtle;
+    }
+
+    &:focus-visible {
+      border-color: $color-primary-dark;
+      box-shadow: 0 0 0 3px rgba($color-primary, 0.25);
+      outline: none;
+    }
+
+    &[aria-invalid='true'] {
+      border-color: $color-danger;
+    }
+
+    &:disabled {
+      background: $color-bg;
+      cursor: not-allowed;
+    }
+  }
+
+  &__control:is(textarea) {
+    min-height: 6rem;
+    resize: vertical;
+  }
+
+  &__message {
+    margin: 0;
+    font-size: 0.75rem;
+    color: $color-text-subtle;
+
+    &--error {
+      color: $color-danger;
+    }
+  }
+
+  &__check {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 0.9rem;
+    color: $color-text;
+  }
+
+  &__checkbox {
+    width: 1.1rem;
+    height: 1.1rem;
+    accent-color: $color-primary-dark;
+    cursor: pointer;
+  }
+}

@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { ForeignKeyViolationError } from '../../shared/db/errors.js';
-import { ValidationError } from '../../shared/errors.js';
+import { NotFoundError, ValidationError } from '../../shared/errors.js';
 import { ORDER_FOREIGN_KEY, type ProductsRepository } from './products.repository.js';
 import { createProductsService } from './products.service.js';
 import type { Product, ProductInput } from './products.types.js';
@@ -26,9 +26,11 @@ const setup = (create: ProductsRepository['create']) => {
   // Kept as standalone mocks so the assertions below do not read methods off the repository object.
   const list = vi.fn(() => Promise.resolve([stored]));
   const createMock = vi.fn(create);
+  const removeMock = vi.fn((id: number) => Promise.resolve(id === 10));
   const repository: ProductsRepository = {
     list,
     create: createMock,
+    remove: removeMock,
     findOrderIdsByQuery: () => Promise.resolve([]),
     summarizeByOrder: () => Promise.resolve(new Map()),
   };
@@ -42,6 +44,7 @@ const setup = (create: ProductsRepository['create']) => {
   return {
     list,
     create: createMock,
+    remove: removeMock,
     service: createProductsService({ repository, productTypes }),
   };
 };
@@ -80,5 +83,20 @@ describe('ProductsService.create', () => {
     const { service } = setup(() => Promise.reject(failure));
 
     await expect(service.create(input)).rejects.toBe(failure);
+  });
+});
+
+describe('ProductsService.remove', () => {
+  it('removes an existing product', async () => {
+    const { service, remove } = setup(() => Promise.resolve(10));
+
+    await expect(service.remove(10)).resolves.toBeUndefined();
+    expect(remove).toHaveBeenCalledWith(10);
+  });
+
+  it('throws NotFoundError for an unknown product', async () => {
+    const { service } = setup(() => Promise.resolve(10));
+
+    await expect(service.remove(11)).rejects.toBeInstanceOf(NotFoundError);
   });
 });

@@ -4,16 +4,17 @@ Base URL: `http://localhost:4000`. Request and response bodies are JSON, dates a
 
 The data shape follows `docs/task-materials/app.js`: `camelCase` fields, a product has a `price[]` array and a nested `guarantee { start, end }`, the product type is a string.
 
-| Method and path      | What it does                                                                                    | Success | Errors   |
-| -------------------- | ----------------------------------------------------------------------------------------------- | ------- | -------- |
-| `GET /health`        | Service status                                                                                  | 200     |          |
-| `GET /orders`        | List of orders (newest first) with `productsCount` and `totals` per currency; search: `?q=text` | 200     | 400      |
-| `GET /orders/:id`    | An order with all its products                                                                  | 200     | 400, 404 |
-| `POST /orders`       | Create an order: `title` (required), `description`, `date` (defaults to "now")                  | 201     | 400      |
-| `DELETE /orders/:id` | Delete an order together with its products and their prices                                     | 204     | 400, 404 |
-| `GET /products`      | All products; filter by type `?type=Monitors`, search `?q=text`                                 | 200     | 400      |
-| `POST /products`     | Create a product (body below)                                                                   | 201     | 400      |
-| `GET /product-types` | Type dictionary for the filter: `[{ id, name }]`                                                | 200     |          |
+| Method and path        | What it does                                                                                    | Success | Errors   |
+| ---------------------- | ----------------------------------------------------------------------------------------------- | ------- | -------- |
+| `GET /health`          | Service status                                                                                  | 200     |          |
+| `GET /orders`          | List of orders (newest first) with `productsCount` and `totals` per currency; search: `?q=text` | 200     | 400      |
+| `GET /orders/:id`      | An order with all its products                                                                  | 200     | 400, 404 |
+| `POST /orders`         | Create an order: `title` (required), `description`, `date` (defaults to "now")                  | 201     | 400      |
+| `DELETE /orders/:id`   | Delete an order together with its products and their prices                                     | 204     | 400, 404 |
+| `DELETE /products/:id` | Delete a product together with its prices; the order stays, its count and totals shrink         | 204     | 400, 404 |
+| `GET /products`        | All products; filter by type `?type=Monitors`, search `?q=text`                                 | 200     | 400      |
+| `POST /products`       | Create a product (body below)                                                                   | 201     | 400      |
+| `GET /product-types`   | Type dictionary for the filter: `[{ id, name }]`                                                | 200     |          |
 
 ## Examples
 

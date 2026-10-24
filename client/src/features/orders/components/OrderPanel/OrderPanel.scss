@@ -61,8 +61,8 @@
       color: $color-surface;
     }
 
-    &:disabled {
-      cursor: not-allowed;
+    &:hover {
+      color: $color-text;
     }
   }
 
@@ -138,16 +138,6 @@
   &__product-delete {
     display: grid;
     place-items: center;
-    padding: 0;
-    border: 0;
-    background: transparent;
-    color: $color-subtle;
-    font-size: 1rem;
-
-    &:disabled {
-      cursor: not-allowed;
-      opacity: 0.7;
-    }
   }
 }
 

@@ -174,3 +174,47 @@ describe('POST /products', () => {
     expect(await count(pool, 'products')).toBe(3);
   });
 });
+
+describe('DELETE /products/:id', () => {
+  it('deletes the product together with its prices and keeps the order', async () => {
+    const res = await request(app).delete('/products/1');
+
+    expect(res.status).toBe(204);
+    expect(await count(pool, 'products')).toBe(2);
+    expect(await count(pool, 'product_prices')).toBe(4);
+    expect(await count(pool, 'orders')).toBe(3);
+    expect((await request(app).get('/orders/1')).status).toBe(200);
+  });
+
+  it('is reflected in the counts and totals of the order', async () => {
+    await request(app).delete('/products/1');
+
+    const orders = (await request(app).get('/orders')).body as {
+      id: number;
+      productsCount: number;
+      totals: { symbol: string; value: number }[];
+    }[];
+
+    expect(orders.find((order) => order.id === 1)).toMatchObject({
+      productsCount: 1,
+      totals: [
+        { symbol: 'UAH', value: 26000 },
+        { symbol: 'USD', value: 1000 },
+      ],
+    });
+  });
+
+  it('returns 404 for an unknown product and deletes nothing', async () => {
+    const res = await request(app).delete('/products/999');
+
+    expect(res.status).toBe(404);
+    expect(await count(pool, 'products')).toBe(3);
+  });
+
+  it('returns 400 for an id that is not a positive integer', async () => {
+    const res = await request(app).delete('/products/abc');
+
+    expect(res.status).toBe(400);
+    expect(await count(pool, 'products')).toBe(3);
+  });
+});

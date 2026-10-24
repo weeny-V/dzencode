@@ -1,28 +1,10 @@
 @use 'tokens' as *;
 
-.delete-order {
-  &__trigger {
-    display: grid;
-    place-items: center;
-    padding: 0.3rem;
-    border: 0;
-    background: transparent;
-    color: $color-subtle;
-    font-size: 1rem;
-    cursor: pointer;
-    transition: color $transition;
-
-    &:hover {
-      color: $color-danger;
-    }
-  }
-
-  &__summary {
-    display: flex;
-    align-items: center;
-    gap: 1.25rem;
-    padding: 1.1rem 2.25rem;
-  }
+.item-summary {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 1.1rem 2.25rem;
 
   &__icon {
     display: grid;

@@ -3,12 +3,14 @@ import './ProductsPage.scss';
 import { ViewTransition } from 'react';
 
 import type { Product } from '@/shared/api/types';
+import type { DialogTarget } from '@/shared/hooks/useDialogTarget';
 import { toQuery } from '@/shared/lib/searchParams';
 import { LoadError } from '@/shared/ui/LoadError';
 import { NoResults } from '@/shared/ui/NoResults';
 import { PageHeader } from '@/shared/ui/PageHeader';
 import { ListSkeleton } from '@/shared/ui/Skeleton';
 
+import { DeleteProductDialog } from '../DeleteProductDialog';
 import { ProductRow } from '../ProductRow';
 import { TypeFilter } from '../TypeFilter';
 
@@ -27,6 +29,8 @@ interface ProductsPageProps {
   onRetryTypes: () => void;
   /** The type filter currently applied; empty means all. */
   selectedType: string;
+  /** The confirmation window of deleting a product. */
+  deletion: DialogTarget<Product>;
   /** The search text (`/products?q=...`). */
   query: string;
 }
@@ -39,10 +43,11 @@ function ProductsTable({
   onRetry,
   selectedType,
   query,
+  onDelete,
 }: Pick<
   ProductsPageProps,
   'products' | 'refreshing' | 'error' | 'onRetry' | 'selectedType' | 'query'
->) {
+> & { onDelete: (product: Product) => void }) {
   if (error !== undefined) {
     return <LoadError title="Не удалось загрузить продукты." message={error} onRetry={onRetry} />;
   }
@@ -83,13 +88,16 @@ function ProductsTable({
             share="row-move"
             update="row-move"
           >
-            <ProductRow product={product} index={index} />
+            <ProductRow product={product} index={index} onDelete={onDelete} />
           </ViewTransition>
         ))}
       </ul>
     </div>
   );
 }
+
+// The table drops a deleted product by itself (the slice), so there is nothing more to do.
+const noop = () => undefined;
 
 /** The products page: title with the count, the type filter and the table. */
 export function ProductsPage({
@@ -101,6 +109,7 @@ export function ProductsPage({
   typesFailed,
   onRetryTypes,
   selectedType,
+  deletion,
   query,
 }: ProductsPageProps) {
   return (
@@ -121,6 +130,15 @@ export function ProductsPage({
         onRetry={onRetry}
         selectedType={selectedType}
         query={query}
+        onDelete={deletion.ask}
+      />
+
+      {/* Mounted once, outside the rows: a row disappears when its deletion succeeds, the window must not. */}
+      <DeleteProductDialog
+        product={deletion.target}
+        open={deletion.open}
+        onClose={deletion.close}
+        onDeleted={noop}
       />
     </>
   );

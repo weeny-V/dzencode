@@ -1,0 +1,17 @@
+@use 'tokens' as *;
+
+.delete-icon-button {
+  display: grid;
+  place-items: center;
+  padding: 0.3rem;
+  border: 0;
+  background: transparent;
+  color: $color-subtle;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: color $transition;
+
+  &:hover {
+    color: $color-danger;
+  }
+}

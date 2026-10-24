@@ -21,9 +21,11 @@ export const NAV_ITEMS: readonly NavItem[] = [
 export const isActivePath = (pathname: string, href: string): boolean =>
   pathname === href || pathname.startsWith(`${href}/`);
 
-/** The search field is enabled only on pages that have something to search in. */
+/** The search field is enabled only on the list pages themselves, not on their forms (`/orders/new`). */
 export const isSearchablePath = (pathname: string): boolean =>
-  NAV_ITEMS.some((item) => item.searchable && isActivePath(pathname, item.href));
+  NAV_ITEMS.some(
+    (item) => item.searchable && (pathname === item.href || pathname === `${item.href}/`),
+  );
 
 /** Names of the view-transition types that `shared/styles/_transitions.scss` animates. */
 export type NavDirection = 'nav-forward' | 'nav-back';

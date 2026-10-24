@@ -20,10 +20,15 @@ describe('isActivePath', () => {
 });
 
 describe('isSearchablePath', () => {
-  it('is true on the pages with a list to search in, sub-pages included', () => {
+  it('is true on the pages with a list to search in', () => {
     expect(isSearchablePath('/orders')).toBe(true);
     expect(isSearchablePath('/products')).toBe(true);
     expect(isSearchablePath('/orders/')).toBe(true);
+  });
+
+  it('is false on their forms: there is no list to search there', () => {
+    expect(isSearchablePath('/orders/new')).toBe(false);
+    expect(isSearchablePath('/products/new')).toBe(false);
   });
 
   it('is false on every other page', () => {

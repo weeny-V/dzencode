@@ -1,5 +1,5 @@
 import { ForeignKeyViolationError } from '../../shared/db/errors.js';
-import { ValidationError } from '../../shared/errors.js';
+import { NotFoundError, ValidationError } from '../../shared/errors.js';
 import type { ProductTypesService } from '../product-types/index.js';
 import { ORDER_FOREIGN_KEY, type ProductsRepository } from './products.repository.js';
 import type {
@@ -18,6 +18,11 @@ export const createProductsService = ({ repository, productTypes }: ProductsServ
   list: (filter: ProductFilter = {}): Promise<Product[]> => repository.list(filter),
 
   listByOrder: (orderId: number): Promise<Product[]> => repository.list({ orderId }),
+
+  async remove(id: number): Promise<void> {
+    const removed = await repository.remove(id);
+    if (!removed) throw new NotFoundError('Product not found');
+  },
 
   /** Orders that have a product matching the search text (by its title or serial number). */
   findOrderIdsByQuery: (query: string): Promise<number[]> => repository.findOrderIdsByQuery(query),
