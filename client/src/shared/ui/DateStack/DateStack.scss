@@ -1,0 +1,18 @@
+@use 'tokens' as *;
+
+.date-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  white-space: nowrap;
+
+  &__month {
+    font-size: 0.65rem;
+    color: $color-text-subtle;
+  }
+
+  &__date {
+    font-size: 0.85rem;
+    color: $color-muted;
+  }
+}

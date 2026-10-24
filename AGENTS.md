@@ -1,48 +1,52 @@
 # AGENTS.md
 
-Монорепо Dzencode test task: `client/` (Next.js 16, React 19, TypeScript) и `server/` (Express 5, TypeScript). Подробности — в [README.md](README.md).
+Monorepo for the Dzencode test task: `client/` (Next.js 16, React 19, TypeScript) and `server/` (Express 5, TypeScript). See [README.md](README.md) for details.
 
-**Перед работой прочитай полный свод правил: [docs/CODING_RULES.md](docs/CODING_RULES.md).** План этапов — [docs/PLAN.md](docs/PLAN.md).
+**Read the full rule set before you start: [docs/CODING_RULES.md](docs/CODING_RULES.md).** The stage plan is in [docs/PLAN.md](docs/PLAN.md).
 
-## Главное (краткая выжимка)
+## The essentials
 
-**Процесс**
+**Process**
 
-- Работаем по этапам; перед этапом обсуждаем детали, затем реализуем в ветке `stage/N-name`.
-- Не коммитим и не вливаем в `main` без явного ОК владельца проекта.
-- Не пишем «работает» без проверки; непроверенное называем явно. Запущенные процессы останавливаем.
+- Work in stages: discuss the details of a stage first, then implement it on a `stage/N-name` branch.
+- Do not commit or merge into `main` without the project owner's explicit OK.
+- Do not say "it works" without checking; name what is unverified. Stop the processes you started.
 
-**Язык**
+**Language**
 
-- Код целиком на английском (идентификаторы, комментарии, имена файлов, логи). Тексты UI в компонентах пока могут быть русскими.
-- Документацию и ответы ведём на русском.
+- Everything in the repository is in English: identifiers, comments, file names, logs, documentation, commit messages.
+- UI texts in components (and the content of mock or seed data) may stay in Russian until i18n arrives in stage 6.
+- Talk to the project owner in Russian.
 
-**Клиент** (`client/src`, feature-структура, слои сверху вниз: `app` → `features/<name>` → `shared`)
+**Client** (`client/src`, feature structure, layers from top to bottom: `app` → `features/<name>` → `shared`)
 
-- Фича: `features/<name>/{components,hooks,api,store}` + `index.ts` как публичный интерфейс; к другой фиче только через `@/features/<name>`, внутри фичи относительные пути.
-- Компоненты не работают с промисами и `process.env`: запросы в `api/`, жизненный цикл в хуках, env только в `shared/config/env.ts`.
-- Хук одного компонента лежит рядом с ним (`components/X/useX.ts`), хук нескольких компонентов фичи — в `features/<name>/hooks/`, общий для фич — в `shared/hooks/`.
-- Container / Presentational; маленькие блоки держим в одном `components/X/index.tsx`, не дробим без нужды.
-- Без `.then().catch()`: `async/await` + `try/catch`, в эффекте — `void run()`.
+- A feature is `features/<name>/{components,hooks,api,store}` plus an `index.ts` as its public interface; reach another feature only through `@/features/<name>`, use relative paths inside a feature.
+- Components do not handle promises or `process.env`: requests live in `api/`, lifecycle in hooks, env only in `shared/config/env.ts`.
+- A hook used by one component sits next to it (`components/X/useX.ts`), a hook shared by components of one feature goes to `features/<name>/hooks/`, a hook shared by features goes to `shared/hooks/`.
+- Container / Presentational; keep small blocks in a single `components/X/index.tsx`, do not split without need.
+- Styles: Bootstrap 5 from SCSS plus a BEM block in `X.scss` next to the component; colors and sizes only from `shared/styles/_tokens.scss`.
+- Page animations: React `<ViewTransition>` (`PageTransition` inside `page.tsx`), classes in `shared/styles/_transitions.scss`; a section without a page is a `ComingSoon` page, not an ErrorBoundary.
+- Format dates and money with the functions from `shared/lib` (not `Intl`), so hydration does not break.
+- No `.then().catch()`: use `async/await` with `try/catch`, and `void run()` inside an effect.
 
-**Сервер** (`server/src`)
+**Server** (`server/src`)
 
-- Env читается только в `config.ts`; в лог пишем реальный адрес, не зашитый `localhost`.
-- Каждый промис ожидаем или помечаем `void`.
-- Feature-модули `modules/<name>/` (`*.routes.ts` → `*.service.ts` → `*.repository.ts`), сборка в `app.ts`; сервис бросает доменные ошибки, статусы HTTP ставит только `shared/http/errorHandler.ts`; к соседнему модулю только через его `index.ts`.
-- Схема БД меняется только новым changeSet'ом Liquibase (`db/changelog`); SQL пишем только в `*.repository.ts`, значения только через `?`.
+- Env is read only in `config.ts`; log the real bound address, never a hard-coded `localhost`.
+- Await every promise or mark it with `void`.
+- Feature modules `modules/<name>/` (`*.routes.ts` → `*.service.ts` → `*.repository.ts`), wired in `app.ts`; services throw domain errors, only `shared/http/errorHandler.ts` sets HTTP statuses; reach a neighbouring module only through its `index.ts`.
+- The DB schema changes only through a new Liquibase changeSet (`db/changelog`); SQL is written only in `*.repository.ts`, values only through `?`.
 
-**Инструменты**
+**Tooling**
 
-- Форматирование делает только Prettier, ESLint стилистику не дублирует.
-- У каждого модуля свой `.env.example`; корневой нужен только для `docker compose`.
+- Prettier does all formatting; ESLint does not duplicate style rules.
+- Every package has its own `.env.example`; the root one is only for `docker compose`.
 
-## Команды
+## Commands
 
-- `npm run dev` — server + client
-- `npm run lint` / `typecheck` / `test` / `format:check` — проверки перед сдачей этапа
-- `npm run build` — production-сборка
+- `npm run dev`: server and client
+- `npm run lint` / `typecheck` / `test` / `format:check`: checks before a stage is handed over
+- `npm run build`: production build
 
-## Заметки
+## Notes
 
-- `client/AGENTS.md` создаётся самим Next.js при `next dev` и перезаписывается; свои правила туда не добавляем.
+- `client/AGENTS.md` is created by Next.js itself on `next dev` and gets overwritten; do not add your own rules there.

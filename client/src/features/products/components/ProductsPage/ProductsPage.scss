@@ -1,0 +1,24 @@
+@use 'tokens' as *;
+
+.products-page {
+  &__scroll {
+    // Room for the card shadow and the scrollbar.
+    margin: 0 -0.5rem;
+    padding: 0.5rem;
+    overflow-x: auto;
+  }
+
+  &__list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  &__empty {
+    padding: 2rem 0;
+    color: $color-muted;
+  }
+}

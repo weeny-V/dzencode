@@ -1,0 +1,33 @@
+@use 'tokens' as *;
+
+.type-filter {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+
+  &__label {
+    font-size: 0.75rem;
+    color: $color-muted;
+  }
+
+  &__select {
+    min-width: 13rem;
+    height: 2.2rem;
+    padding: 0 2rem 0 0.7rem;
+    border: 1px solid $color-border;
+    border-radius: 2px;
+    appearance: none;
+    background:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%2390a4ae'/%3E%3C/svg%3E")
+        no-repeat right 0.7rem center / 0.6rem,
+      $color-surface;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: $color-text;
+    cursor: pointer;
+
+    &:hover {
+      border-color: $color-subtle;
+    }
+  }
+}

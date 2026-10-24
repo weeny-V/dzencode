@@ -1,0 +1,130 @@
+@use 'tokens' as *;
+
+.top-menu {
+  // The shell is not animated when pages change (see _transitions.scss).
+  view-transition-name: shell-top-menu;
+  position: relative;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  grid-column: 1 / -1;
+  grid-row: 1;
+  height: $topbar-height;
+  padding: 0 1rem;
+  background: $color-surface;
+  box-shadow: $shadow-soft;
+
+  @include desktop {
+    // The logo starts where the sidebar ends, as in the design.
+    padding: 0 clamp(1rem, 6vw, 160px) 0 $sidebar-width;
+  }
+
+  &__burger {
+    display: grid;
+    place-items: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    padding: 0;
+    border: 0;
+    border-radius: $radius;
+    background: transparent;
+    color: $color-muted;
+    font-size: 1.5rem;
+    cursor: pointer;
+
+    @include desktop {
+      display: none;
+    }
+  }
+
+  &__brand {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    flex: none;
+    color: $color-primary-text;
+
+    @include desktop {
+      flex-basis: 12rem;
+    }
+
+    @media (min-width: 1400px) {
+      flex-basis: 18rem;
+    }
+  }
+
+  &__logo {
+    flex: none;
+    width: 2.5rem;
+    height: auto;
+  }
+
+  &__brand-name {
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  &__search {
+    display: none;
+    flex: 1 1 auto;
+    min-width: 0;
+    max-width: 26rem;
+    margin-right: 1.5rem;
+
+    @include desktop {
+      display: block;
+    }
+  }
+
+  &__clock {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-left: auto;
+    font-size: 0.75rem;
+    color: $color-text;
+  }
+
+  &__date {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    text-align: left;
+  }
+
+  &__weekday {
+    font-size: 0.8rem;
+  }
+
+  &__day {
+    font-size: 0.72rem;
+    // Keeps the box the same width while the clock is empty.
+    min-width: 7rem;
+  }
+
+  &__clock-icon {
+    margin-left: 0.6rem;
+    color: $color-primary;
+    font-size: 1rem;
+  }
+
+  // Phones: only the time fits next to the logo.
+  @media (max-width: 575.98px) {
+    &__date {
+      display: none;
+    }
+
+    &__clock-icon {
+      margin-left: 0;
+    }
+  }
+
+  &__time {
+    min-width: 2.6rem;
+    font-size: 0.8rem;
+    font-variant-numeric: tabular-nums;
+  }
+}

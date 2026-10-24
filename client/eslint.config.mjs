@@ -86,7 +86,7 @@ export default defineConfig([
   {
     // Components get data from hooks. A hook next to its component (use*.ts) may call api/.
     files: ['src/features/*/components/**/*.{ts,tsx}'],
-    ignores: ['**/use*.ts'],
+    ignores: ['**/use[A-Z]*.{ts,tsx}'],
     rules: restrict(apiForComponents, app, deepFeature),
   },
   {

@@ -1,0 +1,137 @@
+// Animations driven by React's <ViewTransition> (see docs/CODING_RULES.md, "Client styles and animations"):
+// - pages slide in the direction of the sidebar move (down the list: from the right, up: from the left),
+//   or fade when no direction is known (browser Back, a plain link);
+// - rows and the sidebar underline move to their new places instead of jumping;
+// - the order panel slides in from the right (the dialog animates itself with CSS, see ui/Modal/Modal.scss);
+// - lists appear row by row (CSS only, the `stagger` mixin of _tokens.scss).
+// The shell (top menu, sidebar) keeps its own view-transition-name and is not animated.
+
+:root {
+  --duration-exit: 150ms;
+  --duration-enter: 220ms;
+  --duration-move: 320ms;
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+// Let clicks reach the live page while a transition is running.
+::view-transition {
+  pointer-events: none;
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slide-x {
+  from {
+    translate: var(--slide-offset) 0;
+  }
+  to {
+    translate: 0 0;
+  }
+}
+
+// A row (or any list item) that appears: used by the `stagger` mixin.
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    translate: 0 8px;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+
+// Pages, no direction known
+::view-transition-old(.page-exit) {
+  animation: var(--duration-exit) ease-out both fade reverse;
+}
+
+::view-transition-new(.page-enter) {
+  animation: var(--duration-enter) ease-out var(--duration-exit) both fade;
+}
+
+// Pages, moving down the sidebar: the old page leaves to the left, the new one comes from the right.
+::view-transition-old(.nav-forward) {
+  --slide-offset: -40px;
+  animation:
+    var(--duration-exit) ease-in both fade reverse,
+    var(--duration-move) ease-in-out both slide-x reverse;
+}
+
+::view-transition-new(.nav-forward) {
+  --slide-offset: 40px;
+  animation:
+    var(--duration-enter) ease-out var(--duration-exit) both fade,
+    var(--duration-move) var(--ease-out) both slide-x;
+}
+
+// Pages, moving up the sidebar: the mirror image.
+::view-transition-old(.nav-back) {
+  --slide-offset: 40px;
+  animation:
+    var(--duration-exit) ease-in both fade reverse,
+    var(--duration-move) ease-in-out both slide-x reverse;
+}
+
+::view-transition-new(.nav-back) {
+  --slide-offset: -40px;
+  animation:
+    var(--duration-enter) ease-out var(--duration-exit) both fade,
+    var(--duration-move) var(--ease-out) both slide-x;
+}
+
+// Rows that move and resize (the panel opens, the search removes neighbours) and the sidebar underline that
+// glides to the new item: a calm ease-out instead of the browser's default.
+::view-transition-group(.row-move),
+::view-transition-group(.nav-indicator-move) {
+  animation-duration: var(--duration-move);
+  animation-timing-function: var(--ease-out);
+}
+
+// Order panel
+::view-transition-old(.panel-exit) {
+  --slide-offset: 40px;
+  animation:
+    var(--duration-exit) ease-in both fade reverse,
+    var(--duration-move) ease-in both slide-x reverse;
+}
+
+::view-transition-new(.panel-enter) {
+  --slide-offset: 40px;
+  animation:
+    var(--duration-enter) ease-out both fade,
+    var(--duration-move) ease-out both slide-x;
+}
+
+// The shell stays put while the content changes.
+::view-transition-group(shell-top-menu),
+::view-transition-group(shell-sidebar) {
+  animation: none;
+  z-index: 100;
+}
+
+::view-transition-old(shell-top-menu),
+::view-transition-old(shell-sidebar) {
+  display: none;
+}
+
+::view-transition-new(shell-top-menu),
+::view-transition-new(shell-sidebar) {
+  animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(*),
+  ::view-transition-new(*),
+  ::view-transition-group(*) {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+  }
+}

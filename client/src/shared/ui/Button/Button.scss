@@ -1,0 +1,74 @@
+@use 'tokens' as *;
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 2.6rem;
+  padding: 0.5rem 1.6rem;
+  border: 0;
+  border-radius: 1.5rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition:
+    background-color $transition,
+    box-shadow $transition,
+    color $transition,
+    opacity $transition,
+    transform $transition;
+
+  // A disabled button is a button that does not work yet: no hover, no press feedback.
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+
+  // Every active button reacts to the pointer: a lift on hover, a press on click.
+  &:hover:not(:disabled) {
+    transform: translateY(-1px);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(1px);
+  }
+
+  &--primary {
+    background: $color-primary;
+    color: $color-surface;
+
+    &:hover:not(:disabled) {
+      background: $color-primary-dark;
+      box-shadow: 0 4px 10px rgba($color-primary-dark, 0.35);
+    }
+  }
+
+  // A white pill on the green bar of a dialog.
+  &--light-danger {
+    background: $color-surface;
+    box-shadow: $shadow-soft;
+    color: $color-danger;
+
+    &:hover:not(:disabled) {
+      background: $color-danger-tint;
+      box-shadow: $shadow-card;
+    }
+  }
+
+  // A plain label on the green bar of a dialog: it gets a translucent pill on hover.
+  &--text {
+    background: transparent;
+    color: $color-surface;
+
+    &:hover:not(:disabled) {
+      background: rgba($color-surface, 0.2);
+    }
+
+    &:active:not(:disabled) {
+      background: rgba($color-surface, 0.32);
+    }
+  }
+}

@@ -1,0 +1,94 @@
+// Design tokens, sampled from docs/task-materials/screen-*.png. Everything else uses these variables.
+
+// Colors
+$color-primary: #89c049;
+$color-primary-dark: #7cb342;
+$color-lime: #cddc39;
+$color-danger: #e8364f;
+$color-danger-tint: #fde8ec;
+
+$color-bg: #f0f3f5;
+$color-surface: #fff;
+$color-border: #cfd8dc;
+$color-overlay: rgba(84, 110, 122, 0.65);
+
+$color-text: #2c3c44;
+$color-text-nav: #36454d;
+$color-muted: #546e7a;
+// Pale grey of the design: for icons and decoration only (2.6:1 on white).
+$color-subtle: #90a4ae;
+// Darker variants of the design colors for small text: at least 4.5:1 on white and on $color-bg (WCAG AA).
+$color-text-subtle: #627076;
+$color-primary-text: #52762c;
+
+// Small decorative surfaces
+$color-avatar: #b7c5cc;
+$color-input-border: #dfe5e9;
+$color-thumb-display: #e7eef2;
+
+// Layout
+$sidebar-width: 196px;
+$topbar-height: 73px;
+$page-gutter: 2rem;
+$page-gutter-lg: 125px;
+
+// Shape and motion
+$radius: 3px;
+$shadow-card: 0 10px 30px rgba(84, 110, 122, 0.18);
+$shadow-soft: 0 2px 12px rgba(84, 110, 122, 0.14);
+$transition: 0.2s ease;
+$ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+// Breakpoint where the sidebar becomes a drawer (matches Bootstrap's `lg`)
+$bp-desktop: 992px;
+
+@mixin desktop {
+  @media (min-width: $bp-desktop) {
+    @content;
+  }
+}
+
+// Wide screens: the design's generous side gutters and the order panel next to the list.
+$bp-wide: 1200px;
+$bp-extra-wide: 1600px;
+
+// A list item that appears one after another with its neighbours. The component sets `--i` (its index) inline;
+// the delay is capped, so a long list does not make the last rows wait. The `rise-in` keyframes are global
+// (_transitions.scss), and `prefers-reduced-motion` shortens the animation to nothing (_base.scss).
+@mixin stagger($step: 35ms, $max: 10) {
+  animation: rise-in 320ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  animation-delay: calc(min(var(--i, 0), #{$max}) * #{$step});
+}
+
+// Hidden on screen, still read by screen readers and reachable by keyboard.
+@mixin visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+// Bootstrap overrides (read by bootstrap/scss/_variables.scss)
+$primary: $color-primary;
+$danger: $color-danger;
+$body-bg: $color-bg;
+$body-color: $color-text;
+$font-family-sans-serif:
+  var(--font-main),
+  system-ui,
+  -apple-system,
+  'Segoe UI',
+  sans-serif;
+$font-size-base: 0.9375rem;
+$headings-font-weight: 700;
+$enable-shadows: false;
+$enable-rounded: true;
+$border-radius: $radius;
+$link-color: $color-muted;
+$link-hover-color: $color-primary-dark;
+$link-decoration: none;

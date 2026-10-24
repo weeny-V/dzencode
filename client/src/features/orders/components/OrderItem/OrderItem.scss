@@ -1,0 +1,189 @@
+@use 'tokens' as *;
+
+// One order row, as in the design: title, icon, count, date, total, delete.
+// Wide screens: one line. Narrower screens: the title gets its own line, so long titles have room.
+// Wide screens with a panel open: a narrow row (`--compact`) with the title hidden.
+
+.order-item {
+  position: relative;
+  display: grid;
+  grid-template-columns: 5rem 8rem minmax(0, 1fr) 2.6rem 2rem;
+  grid-template-areas:
+    'title title title icon delete'
+    'count date total icon delete';
+  align-items: center;
+  gap: 0.4rem 1rem;
+  padding: 0.7rem 1.3rem 0.7rem 1.4rem;
+  border: 1px solid $color-border;
+  border-radius: $radius;
+  background: $color-surface;
+  color: $color-muted;
+  transition: box-shadow $transition;
+  @include stagger;
+
+  @media (min-width: $bp-wide) {
+    grid-template-columns: minmax(0, 1fr) 2.6rem 6.5rem 8.5rem 11rem 2rem;
+    grid-template-areas: 'title icon count date total delete';
+    min-height: 4.5rem;
+    padding-left: 2.2rem;
+  }
+
+  &:hover,
+  &--selected {
+    box-shadow: $shadow-card;
+  }
+
+  // The row is a link, so show the keyboard focus on the whole row, not on its title.
+  &:has(&__link:focus-visible) {
+    outline: 2px solid $color-primary-dark;
+    outline-offset: 2px;
+  }
+
+  &__icon {
+    grid-area: icon;
+    display: grid;
+    place-items: center;
+    width: 2.6rem;
+    height: 2.6rem;
+    border: 1px solid $color-border;
+    border-radius: 50%;
+    color: $color-muted;
+    font-size: 1.2rem;
+  }
+
+  &__title {
+    grid-area: title;
+    margin: 0;
+    min-width: 0;
+    font-size: 1.1rem;
+    font-weight: 400;
+    letter-spacing: 0.02em;
+  }
+
+  &__link {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: $color-muted;
+
+    // The link covers the whole row, except the delete button which sits above it.
+    &::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+    }
+
+    &:hover,
+    &:focus-visible {
+      color: $color-primary-text;
+    }
+  }
+
+  &__count {
+    grid-area: count;
+    display: flex;
+    flex-direction: column;
+  }
+
+  &__count-number {
+    font-size: 1.15rem;
+    line-height: 1.1;
+  }
+
+  &__count-label {
+    font-size: 0.75rem;
+    color: $color-text-subtle;
+    text-transform: capitalize;
+  }
+
+  &__date {
+    grid-area: date;
+  }
+
+  &__total {
+    grid-area: total;
+  }
+
+  &__delete {
+    grid-area: delete;
+    position: relative;
+    z-index: 1;
+    display: grid;
+    place-items: center;
+  }
+
+  // The arrow tab marks the chosen order while the list is narrow, next to the panel.
+  &__arrow {
+    display: none;
+    position: absolute;
+    top: -1px;
+    right: -1px;
+    bottom: -1px;
+    place-items: center;
+    width: 2.7rem;
+    border-radius: 0 $radius $radius 0;
+    background: $color-border;
+    color: $color-surface;
+  }
+
+  &--selected {
+    border-color: $color-primary;
+  }
+
+  // Wide screens, panel open: the list is narrow, [icon] [count] [date] and the arrow tab.
+  // Narrower screens put the panel under the full list instead, so nothing changes in the rows.
+  @media (min-width: $bp-wide) {
+    &--compact {
+      grid-template-columns: 2.6rem 5.5rem minmax(0, 1fr);
+      grid-template-areas: 'icon count date';
+      padding: 0.7rem 3.2rem 0.7rem 1.4rem;
+
+      .order-item__total,
+      .order-item__delete {
+        display: none;
+      }
+
+      // The title is hidden only visually: the link must stay a real link that covers the whole row
+      // (its containing block is the row, so the h2 and the link must not be positioned themselves)
+      // and screen readers still read the title.
+      .order-item__title {
+        grid-area: icon;
+      }
+
+      .order-item__label {
+        @include visually-hidden;
+      }
+    }
+
+    &--selected {
+      border-color: $color-border;
+    }
+
+    &--selected .order-item__arrow {
+      display: grid;
+    }
+  }
+}
+
+// Phones: the title may take two lines, the date is dropped.
+@media (max-width: 575.98px) {
+  .order-item {
+    grid-template-columns: 5rem minmax(0, 1fr) 2.6rem 2rem;
+    grid-template-areas:
+      'title title icon delete'
+      'count total icon delete';
+    padding-left: 1rem;
+
+    .order-item__link {
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      white-space: normal;
+    }
+
+    .order-item__date {
+      display: none;
+    }
+  }
+}

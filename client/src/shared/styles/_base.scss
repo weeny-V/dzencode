@@ -1,0 +1,49 @@
+@use 'tokens' as *;
+
+// Colors that SVG markup needs (the logo): inline SVG cannot read Sass variables.
+:root {
+  --color-primary: #{$color-primary};
+  --color-primary-dark: #{$color-primary-dark};
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  background: $color-bg;
+  color: $color-text;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  text-decoration: none;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+}
+
+// Keyboard users get a visible focus ring; mouse clicks do not.
+:focus-visible {
+  outline: 2px solid $color-primary-dark;
+  outline-offset: 2px;
+}
+
+// People who asked their system for less motion get none: transitions are switched off and animations cut short.
+// (Transitions get 0s, not a tiny value: a zero duration applies a change such as visibility at once.)
+// (The page animations of <ViewTransition> are switched off separately in _transitions.scss.)
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after,
+  ::backdrop {
+    transition-duration: 0s !important;
+    transition-delay: 0s !important;
+    animation-duration: 0.01ms !important;
+    animation-delay: 0s !important;
+    scroll-behavior: auto !important;
+  }
+}

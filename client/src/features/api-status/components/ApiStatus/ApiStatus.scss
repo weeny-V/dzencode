@@ -1,0 +1,25 @@
+@use 'tokens' as *;
+
+.api-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  font-size: 0.7rem;
+  color: $color-text-subtle;
+
+  &__dot {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background: $color-subtle;
+  }
+
+  &--up &__dot {
+    background: $color-primary;
+  }
+
+  &--down &__dot {
+    background: $color-danger;
+  }
+}
