@@ -1,0 +1,47 @@
+@use 'tokens' as *;
+
+.sessions-counter {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.7rem;
+  border: 1px solid $color-border;
+  border-radius: 1rem;
+  color: $color-primary-text;
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  transition:
+    color $transition,
+    border-color $transition;
+
+  &__icon {
+    font-size: 1rem;
+    color: $color-primary;
+    transition: color $transition;
+  }
+
+  &__value {
+    // Keeps the box the same width while the number changes between one and two digits.
+    min-width: 1.1ch;
+    text-align: center;
+  }
+
+  // No connection: the number is a dash, the badge turns grey, then red when the server cannot be reached.
+  &--connecting {
+    color: $color-text-subtle;
+
+    .sessions-counter__icon {
+      color: $color-subtle;
+    }
+  }
+
+  &--offline {
+    border-color: $color-danger;
+    color: $color-danger;
+
+    .sessions-counter__icon {
+      color: $color-danger;
+    }
+  }
+}

@@ -71,6 +71,20 @@ The serial number is matched as the lists print it, `SN-12345671`, so `sn-1234` 
 
 `totals` are summed over the currencies that the order's products have; an order without products returns `productsCount: 0` and an empty `totals`.
 
+## Realtime (Socket.io)
+
+The same server (same host and port as the REST API, same allowed client origin) also speaks Socket.io. It carries the counter of active sessions in the top menu.
+
+| Direction        | Event            | Payload          | When                                                                          |
+| ---------------- | ---------------- | ---------------- | ----------------------------------------------------------------------------- |
+| server → clients | `sessions:count` | `{ "count": 3 }` | A connection opens or closes; every connected client gets it, the new one too |
+
+- **A session is an open browser tab,** which is one socket connection (the task asks for "the open tabs"). Two tabs of one person count as two. The app opens one connection per tab and keeps it while the tab is open, so moving between pages does not change the number.
+- A new client does not ask for the number: it receives `sessions:count` right after it connects. A client that loses the connection shows a dash until it reconnects (the library retries by itself) and gets a fresh number.
+- A tab that is closed or loses the network is dropped after Socket.io's ping timeout (about 45 s at most); a normal close is noticed at once.
+- **Limit: one server instance.** The registry of sessions lives in the memory of the Node.js process, so the number is right only while one instance runs. Several instances (or a restart of the server) would each count their own tabs; for that the Socket.io Redis adapter and a shared store would be needed. A restart resets the number, and the clients reconnect and report themselves again.
+- Not covered by the REST API: there is no HTTP endpoint for the number.
+
 ## Input rules and limits
 
 A problem with the input is always a 400 with a readable message in `error`; a 500 means a server failure. The limits mirror the database columns.
