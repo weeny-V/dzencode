@@ -15,3 +15,19 @@ export class ValidationError extends Error {
     this.name = 'ValidationError';
   }
 }
+
+export class AuthenticationError extends Error {
+  constructor(message = 'Authentication required') {
+    super(message);
+    this.name = 'AuthenticationError';
+  }
+}
+
+export class ConflictError extends Error {}
+export class ForbiddenError extends Error {}
+export class RateLimitError extends Error {
+  constructor(readonly retryAfter: number) {
+    super('Too many attempts. Try again later.');
+    this.name = 'RateLimitError';
+  }
+}

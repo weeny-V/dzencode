@@ -15,7 +15,13 @@ const DESKTOP_QUERY = '(min-width: 992px)';
 const NAVIGATION_ID = 'main-navigation';
 
 /** The frame of every page: top bar, sidebar and the content area. Owns the sidebar drawer state. */
-export function AppShell({ children }: { children: ReactNode }) {
+export function AppShell({
+  children,
+  authControls,
+}: {
+  children: ReactNode;
+  authControls?: ReactNode;
+}) {
   const t = useTranslations('AppShell');
   const pathname = usePathname();
   // The drawer is open for the page it was opened on, so any navigation (a link, the browser's Back button)
@@ -60,6 +66,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         navigationId={NAVIGATION_ID}
         onMenuToggle={() => setOpenOn(menuOpen ? null : pathname)}
         searchEnabled={isSearchablePath(pathname)}
+        authControls={authControls}
       />
       <NavigationMenu
         id={NAVIGATION_ID}

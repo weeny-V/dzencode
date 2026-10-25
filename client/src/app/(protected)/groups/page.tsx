@@ -1,3 +1,4 @@
+import { ProtectedPage } from '@/features/auth';
 import { pageMetadata } from '@/shared/i18n/metadata';
 import { ComingSoon } from '@/shared/ui/ComingSoon';
 import { PageTransition } from '@/shared/ui/PageTransition';
@@ -9,8 +10,10 @@ export const generateMetadata = () => pageMetadata(text);
 export default async function GroupsPage() {
   const t = await text();
   return (
-    <PageTransition>
-      <ComingSoon title={t('title')} />
-    </PageTransition>
+    <ProtectedPage>
+      <PageTransition>
+        <ComingSoon title={t('title')} />
+      </PageTransition>
+    </ProtectedPage>
   );
 }

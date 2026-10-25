@@ -5,7 +5,7 @@ import './TopMenu.scss';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { Suspense } from 'react';
+import { type ReactNode, Suspense } from 'react';
 
 import { LocaleSwitcher } from '@/features/locale';
 import { SessionsCounter } from '@/features/sessions';
@@ -23,10 +23,17 @@ interface TopMenuProps {
   onMenuToggle: () => void;
   /** The search works on the current page (it has a list to filter). */
   searchEnabled: boolean;
+  authControls?: ReactNode;
 }
 
 /** The top bar: logo, search and the live date and time. */
-export function TopMenu({ menuOpen, navigationId, onMenuToggle, searchEnabled }: TopMenuProps) {
+export function TopMenu({
+  menuOpen,
+  navigationId,
+  onMenuToggle,
+  searchEnabled,
+  authControls,
+}: TopMenuProps) {
   const t = useTranslations('TopMenu');
   const calendar = useTranslations('Calendar');
   const names = { months: calendar('months'), weekdays: calendar('weekdays') };
@@ -59,6 +66,7 @@ export function TopMenu({ menuOpen, navigationId, onMenuToggle, searchEnabled }:
       </div>
 
       <LocaleSwitcher />
+      {authControls}
       <div className="top-menu__sessions">
         <SessionsCounter />
       </div>

@@ -1,8 +1,10 @@
+import { requireSession } from '@/shared/api/session.server';
 import { FormMessages } from '@/shared/i18n/FormMessages.server';
 
 import { dictionary } from '../OrderForm/messages.server';
 import { NewOrderContainer } from '.';
 export async function NewOrderContent() {
+  await requireSession();
   return (
     <FormMessages name="OrderForm" dictionary={await dictionary()}>
       <NewOrderContainer />

@@ -3,22 +3,22 @@ import { NextIntlClientProvider } from 'next-intl';
 import type { ReactNode } from 'react';
 import { renderToReadableStream, renderToStaticMarkup as staticMarkup } from 'react-dom/server';
 
+import en1 from '@/app/(protected)/groups/messages/en.json';
+import ru1 from '@/app/(protected)/groups/messages/ru.json';
+import en3 from '@/app/(protected)/orders/messages/en.json';
+import ru3 from '@/app/(protected)/orders/messages/ru.json';
+import en5 from '@/app/(protected)/products/messages/en.json';
+import ru5 from '@/app/(protected)/products/messages/ru.json';
+import en8 from '@/app/(protected)/settings/messages/en.json';
+import ru8 from '@/app/(protected)/settings/messages/ru.json';
+import en9 from '@/app/(protected)/users/messages/en.json';
+import ru9 from '@/app/(protected)/users/messages/ru.json';
 import en0 from '@/app/error/messages/en.json';
 import ru0 from '@/app/error/messages/ru.json';
-import en1 from '@/app/groups/messages/en.json';
-import ru1 from '@/app/groups/messages/ru.json';
 import en2 from '@/app/not-found/messages/en.json';
 import ru2 from '@/app/not-found/messages/ru.json';
-import en3 from '@/app/orders/messages/en.json';
-import ru3 from '@/app/orders/messages/ru.json';
-import en5 from '@/app/products/messages/en.json';
-import ru5 from '@/app/products/messages/ru.json';
 import en7 from '@/app/root/messages/en.json';
 import ru7 from '@/app/root/messages/ru.json';
-import en8 from '@/app/settings/messages/en.json';
-import ru8 from '@/app/settings/messages/ru.json';
-import en9 from '@/app/users/messages/en.json';
-import ru9 from '@/app/users/messages/ru.json';
 import en10 from '@/features/api-status/components/ApiStatus/messages/en.json';
 import ru10 from '@/features/api-status/components/ApiStatus/messages/ru.json';
 import en11 from '@/features/app-shell/components/AppShell/messages/en.json';
@@ -69,6 +69,8 @@ import en33 from '@/shared/ui/NoResults/messages/en.json';
 import ru33 from '@/shared/ui/NoResults/messages/ru.json';
 import en34 from '@/shared/ui/RetryButton/messages/en.json';
 import ru34 from '@/shared/ui/RetryButton/messages/ru.json';
+
+import { TestAuth } from './auth';
 export const testMessages = {
   ru: {
     ErrorPage: ru0,
@@ -150,7 +152,7 @@ export function TestLocale({
 }) {
   return (
     <NextIntlClientProvider locale={locale} messages={testMessages[locale]} timeZone="UTC">
-      {children}
+      <TestAuth>{children}</TestAuth>
     </NextIntlClientProvider>
   );
 }

@@ -4,21 +4,28 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { startTransition, useCallback, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 
+import { useAuthSession } from '@/shared/hooks/useAuthSession';
 import { useDeletion } from '@/shared/hooks/useDeletion';
 import { useLatestRef } from '@/shared/hooks/useLatestRef';
 import { useMountedRef } from '@/shared/hooks/useMountedRef';
 import { type ActionResult, actionResult } from '@/shared/lib/actionResult';
+import { recoverAuthentication } from '@/shared/lib/authRecovery';
 import { withParam } from '@/shared/lib/searchParams';
 import { useAppDispatch } from '@/shared/store/hooks';
 
 import { closeDelete, type DeleteTarget, selectConfirmation } from '../../store/confirmationSlice';
 
 export interface DeleteActions {
-  deleteOrder?: (id: number) => Promise<ActionResult<void>>;
-  deleteProduct: (id: number, orderId: number) => Promise<ActionResult<void>>;
+  deleteOrder?: (id: number, expectedSessionId?: string) => Promise<ActionResult<void>>;
+  deleteProduct: (
+    id: number,
+    orderId: number,
+    expectedSessionId?: string,
+  ) => Promise<ActionResult<void>>;
 }
 
 export function useDeleteDialog(actions: DeleteActions) {
+  const session = useAuthSession();
   const { target, open } = useSelector(selectConfirmation);
   const dispatch = useAppDispatch();
   const router = useRouter();
@@ -29,15 +36,18 @@ export function useDeleteDialog(actions: DeleteActions) {
   const [pendingOperation, setPendingOperation] = useState<{ target: DeleteTarget }>();
 
   const remove = async () => {
+    if (!session.isCurrent()) return 'Authentication changed';
     if (!target) return 'No item selected';
     if (target.kind === 'order' && !actions.deleteOrder)
       return 'Order deletion is unavailable on this page';
     const transport = await actionResult(() =>
       target.kind === 'order'
-        ? actions.deleteOrder!(target.id)
-        : actions.deleteProduct(target.id, target.orderId),
+        ? actions.deleteOrder!(target.id, session.sessionId)
+        : actions.deleteProduct(target.id, target.orderId, session.sessionId),
     );
+    if (!session.isCurrent()) return 'Authentication changed';
     if (!transport.ok) return transport.error;
+    if (mounted.current && recoverAuthentication(transport.data)) return 'Authentication required';
     if (!transport.data.ok) return transport.data.error;
     // Read the address after the request: another panel or search may now be active.
     const current = location.current;
@@ -55,7 +65,7 @@ export function useDeleteDialog(actions: DeleteActions) {
   };
 
   const onDeleted = (_id: number, stillOpen: boolean) => {
-    if (mounted.current && stillOpen) dispatch(closeDelete());
+    if (mounted.current && session.isCurrent() && stillOpen) dispatch(closeDelete());
   };
   const deletion = useDeletion(remove, onDeleted);
   const { reset } = deletion;
@@ -81,7 +91,7 @@ export function useDeleteDialog(actions: DeleteActions) {
   }
 
   const confirm = () => {
-    if (!target) return;
+    if (!target || !session.isCurrent()) return;
     // Set pending urgently for this operation, rather than for every overlapping transition.
     // The wrapper is unique even when the same target is closed and confirmed again.
     const operation = { target };

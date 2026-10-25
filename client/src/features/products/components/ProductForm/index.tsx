@@ -6,7 +6,9 @@ import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 
 import type { NewProduct } from '@/shared/api/types';
+import { useAuthSession } from '@/shared/hooks/useAuthSession';
 import { useFormDraft } from '@/shared/hooks/useFormDraft';
+import { useMountedRef } from '@/shared/hooks/useMountedRef';
 import { CheckboxField, FormField } from '@/shared/ui/FormField';
 import { FormLayout } from '@/shared/ui/FormLayout';
 
@@ -42,6 +44,8 @@ export function ProductForm({
   cancelHref,
   onSubmit,
 }: ProductFormProps) {
+  const mounted = useMountedRef();
+  const session = useAuthSession();
   const t = useTranslations('ProductForm');
   const v = useTranslations('Validation');
   const form = useForm<ProductFormValues>({
@@ -92,7 +96,7 @@ export function ProductForm({
           const snapshot = draft.snapshot();
           const error = await onSubmit(toNewProduct(values));
           if (error === undefined) draft.complete(snapshot);
-          setSubmitError(error);
+          if (mounted.current && session.isCurrent()) setSubmitError(error);
         })(event)
       }
     >

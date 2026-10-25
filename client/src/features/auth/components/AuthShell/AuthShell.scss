@@ -1,0 +1,28 @@
+@use 'tokens' as *;
+
+.auth-shell {
+  min-height: 100dvh;
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $auth-field-gap;
+    padding: $auth-field-gap $page-gutter;
+    background: $color-surface;
+    border-bottom: 1px solid $color-border;
+  }
+  &__brand {
+    display: flex;
+    align-items: center;
+    gap: $auth-field-gap;
+    color: $color-primary-text;
+    font-weight: 700;
+  }
+  &__logo {
+    width: $auth-logo-size;
+    height: $auth-logo-size;
+  }
+  &__content {
+    padding: $auth-field-gap;
+  }
+}

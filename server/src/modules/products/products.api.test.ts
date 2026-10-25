@@ -1,13 +1,17 @@
 // Integration tests: HTTP -> service -> repository -> real MySQL test database (see shared/testing/database.ts).
-import request from 'supertest';
 import { afterAll, beforeEach, describe, expect, it } from 'vitest';
 
+import { createTestClient } from '../../shared/testing/auth.js';
 import { count, createTestContext, resetData } from '../../shared/testing/database.js';
 import type { Product } from './index.js';
 
-const { app, pool } = createTestContext();
+const { app, pool, auth } = createTestContext();
+const { client, register } = createTestClient(app, auth);
 
-beforeEach(() => resetData(pool));
+beforeEach(async () => {
+  await resetData(pool);
+  await register();
+});
 
 afterAll(async () => {
   await pool.end();
@@ -15,7 +19,7 @@ afterAll(async () => {
 
 describe('GET /products', () => {
   it('lists all products with their order title', async () => {
-    const res = await request(app).get('/products');
+    const res = await client.get('/products');
     const products = res.body as Product[];
 
     expect(res.status).toBe(200);
@@ -24,29 +28,27 @@ describe('GET /products', () => {
   });
 
   it('filters by type', async () => {
-    const res = await request(app).get('/products').query({ type: 'Monitors' });
+    const res = await client.get('/products').query({ type: 'Monitors' });
 
     expect((res.body as Product[]).map((product) => product.id)).toEqual([1, 3]);
   });
 
   it('returns an empty list for a type without products', async () => {
-    const res = await request(app).get('/products').query({ type: 'Unknown' });
+    const res = await client.get('/products').query({ type: 'Unknown' });
 
     expect(res.status).toBe(200);
     expect(res.body).toEqual([]);
   });
 
   it('compares the type name case-insensitively (the column collation is *_ai_ci)', async () => {
-    const res = await request(app).get('/products').query({ type: 'monitors' });
+    const res = await client.get('/products').query({ type: 'monitors' });
 
     expect((res.body as Product[]).map((product) => product.id)).toEqual([1, 3]);
   });
 
   it('searches the title, the serial number, the type and the order title', async () => {
     const found = async (q: string) =>
-      ((await request(app).get('/products').query({ q })).body as Product[]).map(
-        (product) => product.id,
-      );
+      ((await client.get('/products').query({ q })).body as Product[]).map((product) => product.id);
 
     expect(await found('laptop')).toEqual([2]);
     expect(await found('SN-333')).toEqual([3]);
@@ -56,22 +58,22 @@ describe('GET /products', () => {
   });
 
   it('combines the search with the type filter', async () => {
-    const res = await request(app).get('/products').query({ type: 'Monitors', q: 'order a' });
+    const res = await client.get('/products').query({ type: 'Monitors', q: 'order a' });
 
     expect((res.body as Product[]).map((product) => product.id)).toEqual([1]);
   });
 
   it('treats % and _ as plain characters', async () => {
-    expect((await request(app).get('/products').query({ q: '%' })).body).toEqual([]);
-    expect((await request(app).get('/products').query({ q: 'Monitor_1' })).body).toEqual([]);
+    expect((await client.get('/products').query({ q: '%' })).body).toEqual([]);
+    expect((await client.get('/products').query({ q: 'Monitor_1' })).body).toEqual([]);
   });
 
   it('rejects a repeated search parameter', async () => {
-    expect((await request(app).get('/products?q=a&q=b')).status).toBe(400);
+    expect((await client.get('/products?q=a&q=b')).status).toBe(400);
   });
 
   it('rejects a repeated type parameter', async () => {
-    const res = await request(app).get('/products?type=a&type=b');
+    const res = await client.get('/products?type=a&type=b');
 
     expect(res.status).toBe(400);
   });
@@ -92,7 +94,7 @@ describe('POST /products', () => {
   };
 
   it('creates a product with its prices', async () => {
-    const res = await request(app).post('/products').send(newProduct);
+    const res = await client.post('/products').send(newProduct);
     const product = res.body as Product;
 
     expect(res.status).toBe(201);
@@ -108,9 +110,7 @@ describe('POST /products', () => {
   });
 
   it('rejects an unknown product type and stores nothing', async () => {
-    const res = await request(app)
-      .post('/products')
-      .send({ ...newProduct, type: 'Nope' });
+    const res = await client.post('/products').send({ ...newProduct, type: 'Nope' });
 
     expect(res.status).toBe(400);
     expect(res.body).toEqual({ error: 'Unknown product type: Nope' });
@@ -118,9 +118,7 @@ describe('POST /products', () => {
   });
 
   it('rejects an unknown order and stores nothing', async () => {
-    const res = await request(app)
-      .post('/products')
-      .send({ ...newProduct, order: 999 });
+    const res = await client.post('/products').send({ ...newProduct, order: 999 });
 
     expect(res.status).toBe(400);
     expect(res.body).toEqual({ error: 'Unknown order: 999' });
@@ -130,9 +128,7 @@ describe('POST /products', () => {
 
   it('treats the currency code case-insensitively: usd is stored as USD', async () => {
     const price = [{ value: 5, symbol: 'usd', isDefault: true }];
-    const res = await request(app)
-      .post('/products')
-      .send({ ...newProduct, price });
+    const res = await client.post('/products').send({ ...newProduct, price });
 
     expect(res.status).toBe(201);
     expect((res.body as Product).price).toEqual([{ value: 5, symbol: 'USD', isDefault: true }]);
@@ -155,9 +151,7 @@ describe('POST /products', () => {
     ['specification above TEXT size', { specification: '😀'.repeat(20_000) }],
     ['a year above 9999', { date: '+010000-01-01T00:00:00Z' }],
   ])('answers 400, not 500, for %s', async (_name, patch) => {
-    const res = await request(app)
-      .post('/products')
-      .send({ ...newProduct, ...patch });
+    const res = await client.post('/products').send({ ...newProduct, ...patch });
 
     expect(res.status).toBe(400);
     expect(await count(pool, 'products')).toBe(3);
@@ -166,9 +160,7 @@ describe('POST /products', () => {
 
   it('rejects two default prices', async () => {
     const price = newProduct.price.map((item) => ({ ...item, isDefault: true }));
-    const res = await request(app)
-      .post('/products')
-      .send({ ...newProduct, price });
+    const res = await client.post('/products').send({ ...newProduct, price });
 
     expect(res.status).toBe(400);
     expect(await count(pool, 'products')).toBe(3);
@@ -177,19 +169,19 @@ describe('POST /products', () => {
 
 describe('DELETE /products/:id', () => {
   it('deletes the product together with its prices and keeps the order', async () => {
-    const res = await request(app).delete('/products/1');
+    const res = await client.delete('/products/1');
 
     expect(res.status).toBe(204);
     expect(await count(pool, 'products')).toBe(2);
     expect(await count(pool, 'product_prices')).toBe(4);
     expect(await count(pool, 'orders')).toBe(3);
-    expect((await request(app).get('/orders/1')).status).toBe(200);
+    expect((await client.get('/orders/1')).status).toBe(200);
   });
 
   it('is reflected in the counts and totals of the order', async () => {
-    await request(app).delete('/products/1');
+    await client.delete('/products/1');
 
-    const orders = (await request(app).get('/orders')).body as {
+    const orders = (await client.get('/orders')).body as {
       id: number;
       productsCount: number;
       totals: { symbol: string; value: number }[];
@@ -205,14 +197,14 @@ describe('DELETE /products/:id', () => {
   });
 
   it('returns 404 for an unknown product and deletes nothing', async () => {
-    const res = await request(app).delete('/products/999');
+    const res = await client.delete('/products/999');
 
     expect(res.status).toBe(404);
     expect(await count(pool, 'products')).toBe(3);
   });
 
   it('returns 400 for an id that is not a positive integer', async () => {
-    const res = await request(app).delete('/products/abc');
+    const res = await client.delete('/products/abc');
 
     expect(res.status).toBe(400);
     expect(await count(pool, 'products')).toBe(3);

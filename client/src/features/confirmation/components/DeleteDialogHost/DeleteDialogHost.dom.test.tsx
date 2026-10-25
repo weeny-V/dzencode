@@ -2,6 +2,7 @@ import { act, fireEvent, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { ActionResult } from '@/shared/lib/actionResult';
+import { testIdentity } from '@/testing/auth';
 import { deferred } from '@/testing/fixtures';
 import { navigation } from '@/testing/navigation';
 import { renderWithStore } from '@/testing/renderWithStore';
@@ -38,7 +39,7 @@ describe('DeleteDialogHost', () => {
     expect(deleteOrder).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole('button', { name: 'Удалить' }));
     await waitFor(() => expect(store.getState().confirmation.open).toBe(false));
-    expect(deleteOrder).toHaveBeenCalledWith(7);
+    expect(deleteOrder).toHaveBeenCalledWith(7, testIdentity.sessionId);
     expect(navigation.replace).toHaveBeenCalledWith('/orders?q=monitor', { scroll: false });
     expect(document.querySelector('dialog')).toHaveAttribute('data-closing');
   });
@@ -98,7 +99,9 @@ describe('DeleteDialogHost', () => {
       const confirm = screen.getByRole('button', { name: 'Удалить' });
       expect(confirm).toBeEnabled();
       fireEvent.click(confirm);
-      await waitFor(() => expect(remove).toHaveBeenNthCalledWith(2, nextTarget.id));
+      await waitFor(() =>
+        expect(remove).toHaveBeenNthCalledWith(2, nextTarget.id, testIdentity.sessionId),
+      );
       expect(screen.getByRole('button', { name: 'Удаление…' })).toBeDisabled();
 
       await act(async () => {
@@ -109,7 +112,9 @@ describe('DeleteDialogHost', () => {
       const retry = screen.getByRole('button', { name: 'Удалить' });
       expect(retry).toBeEnabled();
       fireEvent.click(retry);
-      await waitFor(() => expect(remove).toHaveBeenNthCalledWith(3, nextTarget.id));
+      await waitFor(() =>
+        expect(remove).toHaveBeenNthCalledWith(3, nextTarget.id, testIdentity.sessionId),
+      );
       expect(await screen.findByRole('alert')).toHaveTextContent('Не удалось удалить.');
 
       await act(async () => {
@@ -158,7 +163,7 @@ describe('DeleteDialogHost', () => {
       ),
     );
     fireEvent.click(screen.getByRole('button', { name: 'Удалить' }));
-    await waitFor(() => expect(deleteProduct).toHaveBeenCalledWith(9, 7));
+    await waitFor(() => expect(deleteProduct).toHaveBeenCalledWith(9, 7, testIdentity.sessionId));
     expect(navigation.replace).not.toHaveBeenCalled();
   });
 });

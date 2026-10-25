@@ -32,3 +32,11 @@ describe('order API cancellation', () => {
     await expect(request).rejects.toMatchObject({ name: 'AbortError' });
   });
 });
+
+vi.mock('@/shared/api/session.server', async () => {
+  const { testSession } = await import('@/testing/auth');
+  return {
+    readSession: () => Promise.resolve(testSession),
+    requireSession: () => Promise.resolve(testSession),
+  };
+});

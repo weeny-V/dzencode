@@ -2,6 +2,7 @@ import { NextIntlClientProvider } from 'next-intl';
 import type { ReactNode } from 'react';
 
 import { apiStatusMessages } from '@/features/api-status';
+import { authMessages, LogoutButton } from '@/features/auth';
 import { localeMessages } from '@/features/locale';
 import { navigationMenuMessages } from '@/features/navigation-menu';
 import { sessionsMessages } from '@/features/sessions';
@@ -13,7 +14,7 @@ import { AppShell } from '.';
 import { dictionary } from './messages.server';
 
 export async function LocalizedAppShell({ children }: { children: ReactNode }) {
-  const [shell, top, search, nav, sessions, api, locale, calendar] = await Promise.all([
+  const [shell, top, search, nav, sessions, api, locale, calendar, auth] = await Promise.all([
     dictionary(),
     getDictionary(topMenuMessages),
     getDictionary(searchMessages),
@@ -22,6 +23,7 @@ export async function LocalizedAppShell({ children }: { children: ReactNode }) {
     getDictionary(apiStatusMessages),
     getDictionary(localeMessages),
     calendarMessages(),
+    getDictionary(authMessages),
   ]);
   return (
     <NextIntlClientProvider
@@ -35,9 +37,10 @@ export async function LocalizedAppShell({ children }: { children: ReactNode }) {
         ApiStatus: api.messages,
         LocaleSwitcher: locale.messages,
         Calendar: calendar.messages,
+        AuthForm: auth.messages,
       }}
     >
-      <AppShell>{children}</AppShell>
+      <AppShell authControls={<LogoutButton />}>{children}</AppShell>
     </NextIntlClientProvider>
   );
 }

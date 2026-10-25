@@ -1,8 +1,9 @@
-import type { Server as HttpServer } from 'node:http';
+import type { IncomingMessage, Server as HttpServer, ServerResponse } from 'node:http';
 
-import { Server } from 'socket.io';
+import { Server, type Socket } from 'socket.io';
 
 import type { Config } from './config.js';
+import { type AuthService, readAuthCookie } from './modules/auth/index.js';
 import { createSessionsModule } from './modules/sessions/index.js';
 
 /**
@@ -11,11 +12,49 @@ import { createSessionsModule } from './modules/sessions/index.js';
  */
 export const attachRealtime = (
   httpServer: HttpServer,
-  { clientOrigin }: Pick<Config, 'clientOrigin'>,
+  {
+    clientOrigin,
+    auth,
+  }: Pick<Config, 'clientOrigin'> & { auth: Pick<AuthService, 'authenticate' | 'onRevoked'> },
 ): Server => {
-  const io = new Server(httpServer, { cors: { origin: clientOrigin } });
+  const io = new Server(httpServer, {
+    cors: { origin: clientOrigin, credentials: true },
+    // CORS alone does not protect WebSocket handshakes. Reject absent and untrusted origins too.
+    allowRequest: (req, callback) => callback(null, req.headers.origin === clientOrigin),
+  });
+  io.engine.use((req: IncomingMessage, _res: ServerResponse, next: (error?: Error) => void) => {
+    // Also check subsequent polling requests and upgrades of an existing Engine.IO session.
+    if (req.headers.origin !== clientOrigin) next(new Error('Origin is not allowed'));
+    else next();
+  });
 
-  createSessionsModule().attach(io);
+  const room = (sessionId: string) => `auth-session:${sessionId}`;
+  const unsubscribe = auth.onRevoked((sessionId) => {
+    io.in(room(sessionId)).disconnectSockets(true);
+  });
+  httpServer.once('close', unsubscribe);
+
+  const sessionIds = new WeakMap<Socket, string>();
+  io.use((socket, next) => {
+    const authorize = async () => {
+      try {
+        const context = await auth.authenticate(readAuthCookie(socket.request.headers.cookie));
+        sessionIds.set(socket, context.sessionId);
+        next();
+      } catch {
+        next(new Error('Authentication required'));
+      }
+    };
+    void authorize();
+  });
+
+  createSessionsModule().attach(io, async (socket) => {
+    const sessionId = sessionIds.get(socket);
+    if (!sessionId) throw new Error('Authentication required');
+    await socket.join(room(sessionId));
+    // Close the authenticate/join race: logout either sees this room or this second DB check fails.
+    await auth.authenticate(readAuthCookie(socket.request.headers.cookie));
+  });
 
   return io;
 };

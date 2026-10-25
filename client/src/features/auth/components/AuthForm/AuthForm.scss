@@ -1,0 +1,26 @@
+@use 'tokens' as *;
+
+.auth-form {
+  max-width: $auth-form-width;
+  margin: $page-gutter auto;
+  padding: $page-gutter;
+  background: $color-surface;
+  border: 1px solid $color-border;
+  border-radius: $radius;
+  box-shadow: $shadow-soft;
+  &__title {
+    margin-bottom: $page-gutter;
+  }
+  &__fields {
+    display: grid;
+    gap: $auth-field-gap;
+  }
+  &__error {
+    color: $color-danger;
+  }
+  &__alternate {
+    display: inline-block;
+    margin-top: $auth-field-gap;
+    text-decoration: underline;
+  }
+}

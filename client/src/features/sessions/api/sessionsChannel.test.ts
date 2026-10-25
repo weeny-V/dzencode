@@ -21,7 +21,11 @@ describe('openSessionsChannel', () => {
   it('opens its own connection to the API server', () => {
     setup();
 
-    expect(io).toHaveBeenCalledWith('http://localhost:4000', { forceNew: true });
+    expect(io).toHaveBeenCalledWith('http://localhost:4000', {
+      forceNew: true,
+      withCredentials: true,
+      transports: ['websocket'],
+    });
   });
 
   it('reports the count the server sends', () => {

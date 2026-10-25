@@ -1,39 +1,41 @@
 import 'server-only';
 
 import { unstable_cache } from 'next/cache';
+import { unstable_rethrow } from 'next/navigation';
 import { cache } from 'react';
 
 import { env } from '@/shared/config/env';
-import { actionResult } from '@/shared/lib/actionResult';
+import type { ActionResult } from '@/shared/lib/actionResult';
 
-import { request } from './http';
+import { ApiError } from './errors';
+import { redirectToLogin, requireSession } from './session.server';
+import { rawRequest } from './transport.server';
 
-/** Each origin fetch gets its own deadline, including a background cache refresh. */
-const readOriginJson = (path: string, signal?: AbortSignal): Promise<unknown> => {
+const readOriginJson = (path: string, token: string, signal?: AbortSignal): Promise<unknown> => {
   const timeout = AbortSignal.timeout(env.apiReadTimeoutMs);
-  return request<unknown>(path, {
-    // Cache the completed JSON above fetch. Next's stale-fetch revalidation drops
-    // signals, so the origin fetch itself must never enter the fetch Data Cache.
+  return rawRequest<unknown>(path, {
     cache: 'no-store',
+    headers: { Authorization: 'Bearer ' + token },
     signal: signal ? AbortSignal.any([signal, timeout]) : timeout,
   });
 };
 
-// React.cache only deduplicates within a render. A caller-owned signal identifies
-// an independent cancellation scope and is never persisted in the Data Cache.
+// Credentials are render-scoped arguments only, never persisted as cache keys or function arguments.
 const readJson = cache(
   (
     apiUrl: string,
     path: string,
     revalidate: number,
     signal: AbortSignal | undefined,
+    sessionId: string,
+    userId: number,
+    token: string,
     ...tags: string[]
   ) => {
-    // Explicitly cancellable reads must not abort work shared by other visitors.
-    if (signal || revalidate === 0) return readOriginJson(path, signal);
+    if (signal || revalidate === 0) return readOriginJson(path, token, signal);
     return unstable_cache(
-      () => readOriginJson(path),
-      [JSON.stringify({ apiUrl, path, revalidate, tags })],
+      () => readOriginJson(path, token),
+      [JSON.stringify({ apiUrl, path, revalidate, tags, sessionId, userId })],
       { tags, revalidate },
     )();
   },
@@ -44,8 +46,32 @@ export const getJson = async <T>(
   { tags, revalidate = 60, signal }: { tags: string[]; revalidate?: number; signal?: AbortSignal },
 ): Promise<T> => {
   signal?.throwIfAborted();
-  return (await readJson(env.serverApiUrl, path, revalidate, signal, ...tags)) as T;
+  // This MUST precede the persistent lookup, including warmed hits. Cookies stay outside unstable_cache.
+  const session = await requireSession();
+  try {
+    return (await readJson(
+      env.serverApiUrl,
+      path,
+      revalidate,
+      signal,
+      session.sessionId,
+      session.user.id,
+      session.token,
+      ...tags,
+    )) as T;
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 401) return await redirectToLogin();
+    throw error;
+  }
 };
 
-/** Expected API and network failures render locally, without losing the rest of the page. */
-export const loadOrError = actionResult;
+/** Preserve Next redirects/dynamic rendering; authentication failures never become generic load errors. */
+export async function loadOrError<T>(run: () => Promise<T>): Promise<ActionResult<T>> {
+  try {
+    return { ok: true, data: await run() };
+  } catch (error) {
+    unstable_rethrow(error);
+    if (error instanceof ApiError && error.status === 401) return await redirectToLogin();
+    return { ok: false, error: error instanceof Error ? error.message : 'Request failed' };
+  }
+}

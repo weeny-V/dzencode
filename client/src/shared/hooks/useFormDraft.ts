@@ -4,6 +4,7 @@ import type { FieldValues, UseFormReturn } from 'react-hook-form';
 
 import { decodeDraft, draftStorageKey, encodeDraft } from '@/shared/lib/formDraft';
 
+import { useAuthSession } from './useAuthSession';
 import { useLatestRef } from './useLatestRef';
 
 /** Browser-only drafts. Restoring happens after hydration and never overwrites an early edit. */
@@ -13,11 +14,12 @@ export function useFormDraft<T extends FieldValues>(
   defaults: T,
   normalize?: (values: T) => T,
 ) {
+  const session = useAuthSession();
   const [unavailable, setUnavailable] = useState(false);
   const latest = useLatestRef({ defaults, normalize, dirtyFields: form.formState.dirtyFields });
   const last = useRef<string | null>(null);
   const stopped = useRef(false);
-  const storageKey = draftStorageKey(key);
+  const storageKey = draftStorageKey('user:' + String(session.userId) + ':' + key);
   const activeKey = useRef(storageKey);
   useEffect(() => {
     const changed = activeKey.current !== storageKey;
@@ -37,7 +39,7 @@ export function useFormDraft<T extends FieldValues>(
       fail();
     }
     const subscription = form.watch(() => {
-      if (stopped.current) return;
+      if (stopped.current || !session.isCurrent()) return;
       try {
         const raw = encodeDraft(form.getValues());
         localStorage.setItem(storageKey, raw);
@@ -48,7 +50,7 @@ export function useFormDraft<T extends FieldValues>(
       }
     });
     return () => subscription.unsubscribe();
-  }, [storageKey, form, latest]);
+  }, [storageKey, form, latest, session]);
   const removeIfCurrent = (snapshot: string | null) => {
     try {
       if (localStorage.getItem(storageKey) === snapshot) localStorage.removeItem(storageKey);
