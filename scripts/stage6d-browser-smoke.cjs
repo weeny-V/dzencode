@@ -54,14 +54,16 @@ async function findLibraries() {
     const source = bytes.toString();
     const kind = source.includes('chartjs')
       ? 'chart'
-      : source.includes('Leaflet')
-        ? 'map'
-        : source.includes('.leaflet-container')
-          ? 'mapCss'
-          : undefined;
+      : source.includes('cytoscape')
+        ? 'graph'
+        : source.includes('Leaflet')
+          ? 'map'
+          : source.includes('.leaflet-container')
+            ? 'mapCss'
+            : undefined;
     if (kind) entries[kind] = { file, bytes: bytes.length, gzip: zlib.gzipSync(bytes).length };
   }
-  for (const kind of ['chart', 'map', 'mapCss'])
+  for (const kind of ['chart', 'graph', 'map', 'mapCss'])
     assert.ok(entries[kind], `Missing deferred ${kind} entry`);
   return entries;
 }
@@ -123,6 +125,12 @@ async function json(method, route, data) {
   });
   assert.ok(response.ok(), `${method} ${route} returned ${response.status()}`);
   return response.status() === 204 ? undefined : response.json();
+}
+async function graphql(query, variables) {
+  const search = new URLSearchParams({ query, variables: JSON.stringify(variables) });
+  const body = await json('get', '/graphql?' + search);
+  assert.equal(body.errors, undefined);
+  return body.data;
 }
 async function login(account, returnTo) {
   await page.goto(base + '/login?returnTo=' + encodeURIComponent(returnTo));
@@ -206,7 +214,12 @@ async function main() {
       guarantee: { start: '2026-01-01', end: '2027-01-01' },
       price: prices,
     });
-  const expected = await json('get', '/statistics/inventory?currency=UAH');
+  const expected = (
+    await graphql(
+      'query ($c: Currency!) { inventoryStatistics(currency: $c) { ordersCount productsCount missingPrices } }',
+      { c: 'UAH' },
+    )
+  ).inventoryStatistics;
   browser = await chromium.launch({
     channel: process.env.AUTH_SMOKE_BROWSER_CHANNEL ?? 'msedge',
     headless: true,
@@ -273,11 +286,26 @@ async function main() {
   assert.equal(loaded('chart'), false, 'Do not request chart code before its section is visible');
   await page.locator('.inventory-chart').first().scrollIntoViewIfNeeded();
   await page.locator('.inventory-chart [role="alert"]').first().waitFor();
-  assert.equal(await page.getByRole('table').count(), 2, 'Exact values survive chunk failure');
+  assert.equal(await page.getByRole('table').count(), 3, 'Exact values survive chunk failure');
   blockChart = false;
   await page.getByRole('button', { name: 'Retry chart', exact: true }).first().click();
   await page.locator('.inventory-chart [role="alert"]').first().waitFor({ state: 'detached' });
   assert.ok(loaded('chart'));
+  assert.equal(loaded('graph'), false, 'Do not request graph code before its section is visible');
+  await page.locator('.inventory-graph').scrollIntoViewIfNeeded();
+  await page.locator('.inventory-graph__canvas canvas').first().waitFor();
+  assert.ok(loaded('graph'));
+  const drawn = await page
+    .locator('.inventory-graph__canvas')
+    .evaluate((element) => ({ ...element.dataset }));
+  assert.ok(Number(drawn.nodes) >= 8, 'The graph holds its nodes');
+  assert.equal(drawn.visibleNodes, drawn.nodes, 'Every graph node is drawn');
+  await page.getByRole('button', { name: 'Zoom in', exact: true }).click();
+  await page.getByRole('button', { name: 'Fit to view', exact: true }).click();
+  await page
+    .getByRole('table', { name: 'Warehouse, order and product-type relations', exact: true })
+    .getByRole('rowheader', { name: 'Stage6d ' + run + ' 0', exact: true })
+    .waitFor();
   const cards = await page.locator('.groups-content__cards dd').allTextContents();
   assert.equal(Number(cards[0].replaceAll(',', '')), expected.ordersCount);
   assert.equal(Number(cards[1].replaceAll(',', '')), expected.productsCount);
@@ -296,6 +324,18 @@ async function main() {
   await page.setViewportSize({ width: 1365, height: 900 });
   await page.locator('.inventory-chart').last().scrollIntoViewIfNeeded();
   await page.locator('.inventory-chart [role="status"]').last().waitFor({ state: 'detached' });
+  await page.waitForFunction(
+    () => {
+      const box = document.querySelector('.inventory-graph__canvas');
+      const canvas = box?.querySelector('canvas');
+      return (
+        canvas &&
+        Math.abs(canvas.getBoundingClientRect().width - box.getBoundingClientRect().width) < 4
+      );
+    },
+    undefined,
+    { timeout: 10000 },
+  );
   await page.screenshot({ path: path.join(artifacts, 'groups-ru.png'), fullPage: true });
   if (mapMode === 'fixtures') {
     await page.goto(base + '/orders?order=' + orders[0].id);
@@ -381,7 +421,7 @@ async function main() {
   await page.goto(base + '/groups');
   await page.getByRole('table').first().waitFor();
   await logout();
-  for (const route of ['/warehouses', '/statistics/inventory?currency=UAH']) {
+  for (const route of ['/warehouses', '/graphql?query=%7B__typename%7D']) {
     assert.equal((await apiClient.get(api + route)).status(), 401);
     assert.equal(
       (
@@ -413,7 +453,7 @@ async function main() {
     JSON.stringify({ libraries, requests, expected, mapMode }, null, 2),
   );
   console.info(
-    'Stage 6d integrated browser smoke passed: protected reports/options, EN/RU, owned warehouse drafts, coherent currencies, lazy charts/maps, failures/retry, resize and revoked-cache denial.',
+    'Stage 6d integrated browser smoke passed: protected reports/options, EN/RU, owned warehouse drafts, coherent currencies, lazy charts/graph/maps, failures/retry, resize and revoked-cache denial.',
   );
 }
 async function runSmoke() {

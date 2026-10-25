@@ -4,7 +4,11 @@ import Link from 'next/link';
 
 import { loadOrError } from '@/shared/api/server';
 import { requireSession } from '@/shared/api/session.server';
-import type { InventoryCurrency, InventoryStatistics } from '@/shared/api/types';
+import type {
+  InventoryCurrency,
+  InventoryGraph as Graph,
+  InventoryStatistics,
+} from '@/shared/api/types';
 import type { Locale } from '@/shared/i18n/config';
 import type { ActionResult } from '@/shared/lib/actionResult';
 import { formatAmount } from '@/shared/lib/money';
@@ -13,9 +17,11 @@ import { LoadError } from '@/shared/ui/LoadError';
 import { PageHeader } from '@/shared/ui/PageHeader';
 import { ListSkeleton } from '@/shared/ui/Skeleton';
 
-import { getInventoryStatistics } from '../../api/statistics';
+import { getInventoryGraph, getInventoryStatistics } from '../../api/statistics';
+import { connectionRows } from '../../graphRows';
 import { parseCurrency } from '../../searchParams';
 import { InventoryChart } from '../InventoryChart';
+import { InventoryGraph } from '../InventoryGraph';
 import type { GroupsMessages } from './messages';
 import { dictionary } from './messages.server';
 
@@ -23,7 +29,10 @@ export async function GroupsContent({ searchParams }: { searchParams: SearchPara
   await requireSession();
   const params = await searchParams;
   const currency = parseCurrency(params.currency);
-  const result = await loadOrError(() => getInventoryStatistics(currency));
+  const [result, graph] = await Promise.all([
+    loadOrError(() => getInventoryStatistics(currency)),
+    loadOrError(() => getInventoryGraph()),
+  ]);
   const { locale, messages } = await dictionary();
   const links = (['UAH', 'USD'] as const).map((code) => ({
     code,
@@ -32,6 +41,7 @@ export async function GroupsContent({ searchParams }: { searchParams: SearchPara
   return (
     <GroupsContentView
       result={result}
+      graph={graph}
       currency={currency}
       links={links}
       locale={locale}
@@ -42,12 +52,14 @@ export async function GroupsContent({ searchParams }: { searchParams: SearchPara
 
 function GroupsContentView({
   result,
+  graph,
   currency,
   links,
   locale,
   messages: m,
 }: {
   result: ActionResult<InventoryStatistics>;
+  graph: ActionResult<Graph>;
   currency: InventoryCurrency;
   links: { code: InventoryCurrency; href: string }[];
   locale: Locale;
@@ -161,10 +173,81 @@ function GroupsContentView({
                 </table>
               </div>
             </section>
+            <GraphSection graph={graph} locale={locale} messages={m} />
           </>
         )}
       </div>
     </>
+  );
+}
+
+function GraphSection({
+  graph,
+  locale,
+  messages: m,
+}: {
+  graph: ActionResult<Graph>;
+  locale: Locale;
+  messages: GroupsMessages;
+}) {
+  return (
+    <section className="groups-content__section" aria-labelledby="groups-graph">
+      <h2 id="groups-graph">{m.graphTitle}</h2>
+      {!graph.ok ? (
+        <LoadError title={m.graphLoadError} />
+      ) : graph.data.ordersShown === 0 ? (
+        <p>{m.graphEmpty}</p>
+      ) : (
+        <>
+          <InventoryGraph
+            key={`graph-${locale}`}
+            nodes={graph.data.nodes.map((node) => ({ ...node, label: node.label ?? m.unassigned }))}
+            edges={graph.data.edges}
+            messages={{
+              loading: m.graphLoading,
+              error: m.graphError,
+              retry: m.graphRetry,
+              zoomIn: m.graphZoomIn,
+              zoomOut: m.graphZoomOut,
+              fit: m.graphFit,
+              controls: m.graphControls,
+              hint: m.graphHint,
+            }}
+          />
+          <p>
+            {m.graphShown}: {formatAmount(graph.data.ordersShown, locale)} /{' '}
+            {formatAmount(graph.data.ordersTotal, locale)}
+          </p>
+          <div className="groups-content__table">
+            <table>
+              <caption>{m.graphTitle}</caption>
+              <thead>
+                <tr>
+                  <th scope="col">{m.order}</th>
+                  <th scope="col">{m.warehouse}</th>
+                  <th scope="col">{m.products}</th>
+                  <th scope="col">{m.productTypes}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {connectionRows(graph.data, m.unassigned).map((row) => (
+                  <tr key={row.orderId}>
+                    <th scope="row">{row.order}</th>
+                    <td>{row.warehouse}</td>
+                    <td>{formatAmount(row.productsCount, locale)}</td>
+                    <td>
+                      {row.types
+                        .map((type) => `${type.type} × ${formatAmount(type.productsCount, locale)}`)
+                        .join(', ')}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
+    </section>
   );
 }
 

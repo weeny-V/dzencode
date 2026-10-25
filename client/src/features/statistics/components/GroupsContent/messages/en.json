@@ -16,5 +16,19 @@
   "loading": "Loading inventory statistics…",
   "chartLoading": "Loading chart…",
   "chartError": "The chart is unavailable. Exact values remain in the table.",
-  "retry": "Retry chart"
+  "retry": "Retry chart",
+  "graphTitle": "Warehouse, order and product-type relations",
+  "graphLoadError": "Could not load the relations graph.",
+  "graphEmpty": "There are no orders to connect yet.",
+  "graphShown": "Orders shown (those with the most products)",
+  "graphLoading": "Loading graph…",
+  "graphError": "The graph is unavailable. Exact connections remain in the table.",
+  "graphRetry": "Retry graph",
+  "graphZoomIn": "Zoom in",
+  "graphZoomOut": "Zoom out",
+  "graphFit": "Fit to view",
+  "graphControls": "Graph view controls",
+  "graphHint": "Drag the background to move the graph; click a node to highlight its connections.",
+  "order": "Order",
+  "productTypes": "Product types"
 }

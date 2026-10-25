@@ -57,8 +57,8 @@ describe('authentication before persistent inventory cache', () => {
   it.each([
     '/orders',
     '/warehouses',
-    '/statistics/inventory?currency=UAH',
-    '/statistics/inventory?currency=USD',
+    '/graphql?query=%7BinventoryStatistics%7D&variables=%7B%22currency%22%3A%22UAH%22%7D',
+    '/graphql?query=%7BinventoryStatistics%7D&variables=%7B%22currency%22%3A%22USD%22%7D',
   ])('denies a guest/revoked session after warming %s', async (path) => {
     expect(await getJson(path, { tags: ['inventory'] })).toEqual([{ id: 7 }]);
     expect(await getJson(path, { tags: ['inventory'] })).toEqual([{ id: 7 }]);
@@ -71,7 +71,7 @@ describe('authentication before persistent inventory cache', () => {
     );
     expect(state.cacheLookup).toHaveBeenCalledTimes(lookups);
   });
-  it.each(['/orders', '/warehouses', '/statistics/inventory?currency=USD'])(
+  it.each(['/orders', '/warehouses', '/graphql?query=%7BinventoryGraph%7D'])(
     'isolates users/sessions for %s without persisting credentials',
     async (path) => {
       await getJson(path, { tags: ['inventory'] });
