@@ -1,4 +1,5 @@
-import { deleteRequest, postJson, request } from '@/shared/api/http';
+import { deleteRequest, postJson } from '@/shared/api/http';
+import { getJson } from '@/shared/api/server';
 import type { NewProduct, OrderSummary, Product, ProductType } from '@/shared/api/types';
 import { toQuery } from '@/shared/lib/searchParams';
 
@@ -9,15 +10,19 @@ export interface ProductsFilter {
   query: string;
 }
 
+export const productsTag = 'products';
+export const productTypesTag = 'product-types';
+
 /** `GET /products`, optionally of one type and matching a search text. */
 export const getProducts = (
   { type, query }: ProductsFilter,
   signal?: AbortSignal,
-): Promise<Product[]> => request<Product[]>(`/products${toQuery({ type, q: query })}`, { signal });
+): Promise<Product[]> =>
+  getJson<Product[]>(`/products${toQuery({ type, q: query })}`, { tags: [productsTag], signal });
 
 /** `GET /product-types`: the names for the type filter. */
 export const getProductTypes = async (signal?: AbortSignal): Promise<string[]> => {
-  const types = await request<ProductType[]>('/product-types', { signal });
+  const types = await getJson<ProductType[]>('/product-types', { tags: [productTypesTag], signal });
   return types.map((type) => type.name);
 };
 
@@ -37,6 +42,6 @@ export interface OrderOption {
 
 /** `GET /orders`, reduced to what the select needs (the newest orders come first). */
 export const getOrderOptions = async (signal?: AbortSignal): Promise<OrderOption[]> => {
-  const orders = await request<OrderSummary[]>('/orders', { signal });
+  const orders = await getJson<OrderSummary[]>('/orders', { tags: ['orders'], signal });
   return orders.map(({ id, title }) => ({ id, title }));
 };

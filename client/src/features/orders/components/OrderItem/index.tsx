@@ -3,10 +3,10 @@ import './OrderItem.scss';
 import Link from 'next/link';
 import type { CSSProperties } from 'react';
 
+import { DeleteButton } from '@/features/confirmation';
 import type { OrderSummary } from '@/shared/api/types';
 import { pluralize } from '@/shared/lib/plural';
 import { DateStack } from '@/shared/ui/DateStack';
-import { DeleteIconButton } from '@/shared/ui/DeleteIconButton';
 import { ChevronRightIcon, ListIcon } from '@/shared/ui/icons';
 import { PriceStack } from '@/shared/ui/PriceStack';
 
@@ -20,12 +20,10 @@ interface OrderItemProps {
   selected: boolean;
   /** The list is narrow while a panel is open: title, prices and the delete button are hidden. */
   compact: boolean;
-  /** The trash icon was pressed: ask the visitor to confirm. */
-  onDelete: (order: OrderSummary) => void;
 }
 
 /** One order in the list. The whole row opens the order's panel (the link is stretched over it). */
-export function OrderItem({ order, index, href, selected, compact, onDelete }: OrderItemProps) {
+export function OrderItem({ order, index, href, selected, compact }: OrderItemProps) {
   const className = [
     'order-item',
     compact && 'order-item--compact',
@@ -62,7 +60,15 @@ export function OrderItem({ order, index, href, selected, compact, onDelete }: O
       </div>
 
       <div className="order-item__delete">
-        <DeleteIconButton label={`Удалить приход ${order.title}`} onClick={() => onDelete(order)} />
+        <DeleteButton
+          label={`Удалить приход ${order.title}`}
+          target={{
+            kind: 'order',
+            id: order.id,
+            title: order.title,
+            meta: `${order.productsCount} ${pluralize(order.productsCount, ['продукт', 'продукта', 'продуктов'])}`,
+          }}
+        />
       </div>
 
       {selected && (

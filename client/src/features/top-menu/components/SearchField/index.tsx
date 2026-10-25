@@ -3,7 +3,15 @@
 import './SearchField.scss';
 
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { type FormEvent, startTransition, useEffect, useId, useRef, useState } from 'react';
+import {
+  type FormEvent,
+  startTransition,
+  useEffect,
+  useId,
+  useOptimistic,
+  useRef,
+  useState,
+} from 'react';
 
 import { withParam } from '@/shared/lib/searchParams';
 import { CloseIcon } from '@/shared/ui/icons';
@@ -44,6 +52,7 @@ export function SearchField({ enabled }: SearchFieldProps) {
   const urlValue = useSearchParams().get('q') ?? '';
 
   const [value, setValue] = useState(urlValue);
+  const [pending, setPending] = useOptimistic(false);
   const [seenUrlValue, setSeenUrlValue] = useState(urlValue);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
@@ -59,7 +68,10 @@ export function SearchField({ enabled }: SearchFieldProps) {
   const apply = (text: string) => {
     // Read the address now, not when the timer was set: other parameters may have changed meanwhile.
     const query = withParam(new URLSearchParams(window.location.search), 'q', text.trim());
-    startTransition(() => router.replace(`${pathname}${query}`, { scroll: false }));
+    startTransition(() => {
+      setPending(true);
+      router.replace(`${pathname}${query}`, { scroll: false });
+    });
   };
 
   const change = (text: string) => {
@@ -81,7 +93,12 @@ export function SearchField({ enabled }: SearchFieldProps) {
   };
 
   return (
-    <form className="search-field" role="search" onSubmit={submit}>
+    <form
+      className="search-field"
+      role="search"
+      onSubmit={submit}
+      data-pending={pending ? '' : undefined}
+    >
       <label className="visually-hidden" htmlFor={id}>
         Поиск
       </label>

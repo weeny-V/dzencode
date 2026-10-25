@@ -104,9 +104,9 @@ export default defineConfig([
   // Feature files that sit outside the layers below (index.ts, types, store).
   { files: ['src/features/**/*.{ts,tsx}'], rules: restrict(app, deepFeature) },
   {
-    // Components get data from hooks. A hook next to its component (use*.ts) may call api/.
+    // Client components get data from hooks. Colocated hooks and async server components may call api/.
     files: ['src/features/*/components/**/*.{ts,tsx}'],
-    ignores: ['**/use[A-Z]*.{ts,tsx}'],
+    ignores: ['**/use[A-Z]*.{ts,tsx}', '**/*.server.{ts,tsx}'],
     rules: restrict(apiForComponents, app, deepFeature),
   },
   {

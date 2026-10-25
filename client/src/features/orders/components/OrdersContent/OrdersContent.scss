@@ -1,0 +1,35 @@
+@use 'tokens' as *;
+
+.orders-page {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 2rem;
+  align-items: start;
+
+  &__list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    transition: opacity $transition;
+  }
+
+  &__empty {
+    margin: 0;
+    padding: 2rem 0;
+    color: $color-muted;
+  }
+
+  // On wide screens the panel sits next to a narrow list; below that it goes under the full list.
+  &--with-panel {
+    @media (min-width: $bp-wide) {
+      grid-template-columns: minmax(21rem, 1fr) minmax(0, 2.2fr);
+    }
+  }
+
+  &__panel {
+    min-width: 0;
+  }
+}

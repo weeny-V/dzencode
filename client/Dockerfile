@@ -15,8 +15,9 @@ FROM node:22-alpine
 WORKDIR /app
 ENV NODE_ENV=production PORT=3000 HOSTNAME=0.0.0.0
 # `public/` may not exist yet; the standalone output keeps the monorepo layout (client/server.js).
-COPY --from=build /app/client/.next/standalone ./
-COPY --from=build /app/client/.next/static client/.next/static
+# Next writes the tagged Data Cache at runtime as the unprivileged node user.
+COPY --from=build --chown=node:node /app/client/.next/standalone ./
+COPY --from=build --chown=node:node /app/client/.next/static client/.next/static
 USER node
 EXPOSE 3000
 CMD ["node", "client/server.js"]

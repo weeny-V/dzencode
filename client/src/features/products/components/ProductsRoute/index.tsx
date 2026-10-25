@@ -1,16 +1,39 @@
-import { parseSearch, type SearchParams } from '@/shared/lib/searchParams';
+import { Suspense } from 'react';
 
+import { DeleteDialogHost } from '@/features/confirmation';
+import { parseSearch, type SearchParams } from '@/shared/lib/searchParams';
+import { PageHeader } from '@/shared/ui/PageHeader';
+import { ListSkeleton } from '@/shared/ui/Skeleton';
+
+import { deleteProduct } from '../../actions';
 import { parseTypeParam } from '../../searchParams';
-import { ProductsContainer } from '../ProductsContainer';
+import { ProductsContent } from '../ProductsContent/ProductsContent.server';
 
 /**
- * The content of the `/products` route. It reads the address on the server and hands the result to the
- * container, which loads the data in the browser (prefetching it on the server is stage 6).
+ * Resolve the address inside Suspense, keeping the route shell synchronous without promise chains.
  */
-export async function ProductsRoute({ searchParams }: { searchParams: SearchParams }) {
+async function ProductsRequest({ searchParams }: { searchParams: SearchParams }) {
   const params = await searchParams;
 
+  return <ProductsContent typeParam={parseTypeParam(params.type)} query={parseSearch(params.q)} />;
+}
+
+export function ProductsRoute({ searchParams }: { searchParams: SearchParams }) {
   return (
-    <ProductsContainer typeParam={parseTypeParam(params.type)} query={parseSearch(params.q)} />
+    <>
+      <Suspense
+        fallback={
+          <>
+            <PageHeader title="Продукты" />
+            <ListSkeleton rows={8} rowHeight="3.6rem" label="Загрузка продуктов…" />
+          </>
+        }
+      >
+        <ProductsRequest searchParams={searchParams} />
+      </Suspense>
+      <Suspense>
+        <DeleteDialogHost deleteProduct={deleteProduct} />
+      </Suspense>
+    </>
   );
 }

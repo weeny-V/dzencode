@@ -1,14 +1,18 @@
-import { deleteRequest, postJson, request } from '@/shared/api/http';
+import { deleteRequest, postJson } from '@/shared/api/http';
+import { getJson } from '@/shared/api/server';
 import type { NewOrder, OrderDetails, OrderSummary } from '@/shared/api/types';
 import { toQuery } from '@/shared/lib/searchParams';
 
+export const ordersTag = 'orders';
+export const orderTag = (id: number) => `order:${id}`;
+
 /** `GET /orders`, newest first. A search keeps the orders whose title or products contain the text. */
 export const getOrders = (query: string, signal?: AbortSignal): Promise<OrderSummary[]> =>
-  request<OrderSummary[]>(`/orders${toQuery({ q: query })}`, { signal });
+  getJson<OrderSummary[]>(`/orders${toQuery({ q: query })}`, { tags: [ordersTag], signal });
 
 /** `GET /orders/:id`: the order with all its products. */
 export const getOrder = (id: number, signal?: AbortSignal): Promise<OrderDetails> =>
-  request<OrderDetails>(`/orders/${id}`, { signal });
+  getJson<OrderDetails>(`/orders/${id}`, { tags: [orderTag(id)], signal });
 
 /** `POST /orders`: the created order comes back in the shape of a list item (no products yet). */
 export const postOrder = (order: NewOrder, signal?: AbortSignal): Promise<OrderSummary> =>

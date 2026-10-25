@@ -1,6 +1,14 @@
 @use 'tokens' as *;
 
 .app-shell {
+  [data-pending-target] {
+    transition: opacity $transition;
+  }
+
+  &:has([data-pending]) [data-pending-target] {
+    opacity: $pending-opacity;
+    pointer-events: none;
+  }
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   grid-template-rows: $topbar-height 1fr;
