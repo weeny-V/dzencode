@@ -97,3 +97,28 @@ export interface NewProduct {
   price: Price[];
   order: number;
 }
+
+export type InventoryGraphNodeKind = 'WAREHOUSE' | 'ORDER' | 'PRODUCT_TYPE';
+
+export interface InventoryGraphNode {
+  id: string;
+  kind: InventoryGraphNodeKind;
+  /** Null for the node of orders without a warehouse. */
+  label: string | null;
+  productsCount: number;
+}
+
+export interface InventoryGraphEdge {
+  id: string;
+  source: string;
+  target: string;
+  productsCount: number;
+}
+
+/** Warehouse -> order -> product type, limited to the orders with the most products. */
+export interface InventoryGraph {
+  nodes: InventoryGraphNode[];
+  edges: InventoryGraphEdge[];
+  ordersTotal: number;
+  ordersShown: number;
+}

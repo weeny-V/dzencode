@@ -118,7 +118,7 @@ The serial number is matched as the lists print it, `SN-12345671`, so `sn-1234` 
 
 `POST /orders` also accepts `warehouseId`: an existing positive INT id, null, or omitted. Omitted/null means unassigned. Malformed/unknown ids return 400 without inserting an order; the foreign key is the final validator. `GET /orders` and the create response include `warehouseId`; `GET /orders/:id` also includes `warehouse`, the complete metadata object or null. Existing orders stay unassigned after migration. Products inherit the order's warehouse; product creation has no warehouse field. A referenced warehouse cannot be removed through a future administrative DB operation without resolving its orders (`ON DELETE RESTRICT`).
 
-`GET /statistics/inventory?currency=UAH|USD` returns current inventory, including empty orders and warehouses. Omitted currency defaults to UAH; blank, repeated and unsupported REST values return 400. The Groups URL deliberately normalizes unsupported/repeated currency values to UAH and exposes explicit UAH/USD links. Search does not filter this inventory-wide report.
+The `inventoryStatistics(currency)` GraphQL query (see [GraphQL](#graphql-stage-7a); the REST `GET /statistics/inventory` of stage 6d was removed in stage 7a and now returns 404) returns current inventory, including empty orders and warehouses. An omitted currency defaults to UAH; the `Currency` enum rejects blank, lower-case and unsupported values at validation. The Groups URL deliberately normalizes unsupported/repeated currency values to UAH and exposes explicit UAH/USD links. Search does not filter this inventory-wide report.
 
 ```json
 {
@@ -134,11 +134,57 @@ The serial number is matched as the lists print it, `SN-12345671`, so `sn-1234` 
 }
 ```
 
-The abbreviated example omits other type/warehouse rows. Null warehouse id/name denotes the localized Unassigned bucket. Every reference warehouse and product type is returned even with no products. Each product counts once, regardless of its price rows. Only the selected currency is summed, without conversion; a real zero is priced, while a missing price increments `missingPrices` and contributes nothing to the known-value subtotal. Per-warehouse counts include missing-price products. These are stored-inventory values, not revenue or movement history.
+The abbreviated example (the `data.inventoryStatistics` object) omits other type/warehouse rows. Null warehouse id/name denotes the localized Unassigned bucket. Every reference warehouse and product type is returned even with no products. Each product counts once, regardless of its price rows. Only the selected currency is summed, without conversion; a real zero is priced, while a missing price increments `missingPrices` and contributes nothing to the known-value subtotal. Per-warehouse counts include missing-price products. These are stored-inventory values, not revenue or movement history.
 
-All aggregate reads share a read-only REPEATABLE READ transaction, composed through public module services. Concurrent writes cannot place a product in the wrong warehouse by mixing snapshots. Successful Next order/product creates/deletes expire `statistics` alongside the existing tags; warehouse reads use `warehouses`. Direct API writes and other tabs retain the documented 60-second revalidation limits. There are no stage-7 inventory events.
+All aggregate reads share a read-only REPEATABLE READ transaction, composed through public module services. Concurrent writes cannot place a product in the wrong warehouse by mixing snapshots. Successful Next order/product creates/deletes expire `statistics` alongside the existing tags; warehouse reads use `warehouses`. Direct API writes and other tabs retain the documented 60-second revalidation limits. Stage 7b replaces this limit with inventory events.
 
-Both endpoints require the same active bearer session as the other inventory APIs and return 401 for guests/revoked sessions. Next verifies the session before warmed warehouse/statistics cache lookups; non-credential user/session identities remain in cache keys. Report rendering, chart numbers, map controls and form labels use the selected EN/RU locale. The warehouse field participates in the existing seven-day user-owned order draft: legacy records without the field restore unassigned, stale saved choices normalize on restore, and dirty fields/newer revisions retain the established protections.
+The warehouse list and the GraphQL endpoint require the same active bearer session as the other inventory APIs and return 401 for guests/revoked sessions. Next verifies the session before warmed warehouse/statistics cache lookups; non-credential user/session identities remain in cache keys. Report rendering, chart numbers, map controls and form labels use the selected EN/RU locale. The warehouse field participates in the existing seven-day user-owned order draft: legacy records without the field restore unassigned, stale saved choices normalize on restore, and dirty fields/newer revisions retain the established protections.
+
+## GraphQL (stage 7a)
+
+`GET|POST /graphql` is a read-only GraphQL API (graphql-yoga) for analytical reads; CRUD, authentication and sessions stay on REST. It needs the same `Authorization: Bearer` session as the REST inventory endpoints and answers 401 for guests and revoked sessions. There are no mutations, GraphiQL or landing page, the handler does not widen CORS, and unexpected resolver errors are masked (`Unexpected error.`). The Next server sends queries with GET (`?query=&variables=`), so they go through the Next Data Cache with the `statistics` tag exactly like REST reads. Domain validation failures are returned as `BAD_USER_INPUT` errors with HTTP 400.
+
+```graphql
+type Query {
+  inventoryStatistics(currency: Currency = UAH): InventoryStatistics!
+  inventoryGraph(limit: Int = 40): InventoryGraph!
+}
+```
+
+`inventoryGraph` returns the relations warehouse -> order -> product type for the orders with the most products (ties by lower id). `limit` must be an integer from 1 to 100. Node ids are `warehouse:<id>`, `warehouse:none` (orders without a warehouse; its label is null and the client localizes it), `order:<id>` and `type:<name>`; edge ids are `<source>><target>`. Every reference warehouse is always a node; product types appear only when a shown order has such products. `productsCount` on a node counts the products connected to it inside the returned graph, and `ordersTotal`/`ordersShown` tell how much was cut. The graph is read in the same REPEATABLE READ snapshot as the statistics.
+
+```json
+{
+  "ordersTotal": 3,
+  "ordersShown": 3,
+  "nodes": [
+    {
+      "id": "warehouse:1",
+      "kind": "WAREHOUSE",
+      "label": "Kyiv demonstration warehouse",
+      "productsCount": 2
+    },
+    { "id": "order:1", "kind": "ORDER", "label": "Order A", "productsCount": 2 },
+    { "id": "type:Monitors", "kind": "PRODUCT_TYPE", "label": "Monitors", "productsCount": 1 }
+  ],
+  "edges": [
+    {
+      "id": "warehouse:1>order:1",
+      "source": "warehouse:1",
+      "target": "order:1",
+      "productsCount": 2
+    },
+    {
+      "id": "order:1>type:Monitors",
+      "source": "order:1",
+      "target": "type:Monitors",
+      "productsCount": 1
+    }
+  ]
+}
+```
+
+The example is abbreviated. On the Groups page the same data is also rendered as a table, so the canvas graph is never the only source of the values.
 
 ## Realtime (Socket.io)
 

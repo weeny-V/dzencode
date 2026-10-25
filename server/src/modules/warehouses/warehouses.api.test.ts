@@ -84,5 +84,5 @@ describe('warehouse reference and order association', () => {
 
 it('rejects guest reads before protected warehouse/statistics access', async () => {
   expect((await request(app).get('/warehouses')).status).toBe(401);
-  expect((await request(app).get('/statistics/inventory?currency=UAH')).status).toBe(401);
+  expect((await request(app).get('/graphql').query({ query: '{ __typename }' })).status).toBe(401);
 });

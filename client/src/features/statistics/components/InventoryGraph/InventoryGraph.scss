@@ -1,0 +1,34 @@
+@use 'tokens' as *;
+.inventory-graph {
+  position: relative;
+  min-height: $graph-height;
+  --graph-warehouse: #{$color-primary-text};
+  --graph-order: #{$color-muted};
+  --graph-type: #{$color-text};
+  --graph-node-text: #{$color-surface};
+  --graph-edge: #{$color-subtle};
+  &__canvas {
+    position: relative;
+    height: $graph-height;
+    border: 1px solid $color-border;
+    border-radius: $radius;
+    touch-action: none;
+  }
+  &__toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $space-sm;
+    margin-bottom: $space-sm;
+  }
+  &__hint {
+    margin: $space-sm 0 0;
+    color: $color-text-subtle;
+  }
+  > p[role='status'],
+  > div[role='alert'] {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: $color-surface;
+  }
+}

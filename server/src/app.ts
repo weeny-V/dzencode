@@ -3,6 +3,7 @@ import express from 'express';
 
 import type { Config } from './config.js';
 import { createAuthModule } from './modules/auth/index.js';
+import { createGraphqlModule } from './modules/graphql/index.js';
 import { createOrdersInventoryReader, createOrdersModule } from './modules/orders/index.js';
 import { createProductTypesModule } from './modules/product-types/index.js';
 import { createProductsInventoryReader, createProductsModule } from './modules/products/index.js';
@@ -47,6 +48,8 @@ export const createApp = ({ clientOrigin, jwtSecret, pool }: AppDeps) => {
       ),
   });
 
+  const graphql = createGraphqlModule({ statistics: statistics.service });
+
   const app = express();
 
   app.disable('x-powered-by');
@@ -55,6 +58,8 @@ export const createApp = ({ clientOrigin, jwtSecret, pool }: AppDeps) => {
     next();
   });
   app.use(cors({ origin: clientOrigin, credentials: true }));
+  // Yoga reads its own request body; it is mounted before the JSON parser.
+  app.use('/graphql', auth.requireAuthentication, graphql.handler);
   app.use(express.json());
 
   app.get('/health', (_req, res) => {
@@ -68,7 +73,6 @@ export const createApp = ({ clientOrigin, jwtSecret, pool }: AppDeps) => {
   app.use('/products', auth.requireAuthentication, products.router);
   app.use('/product-types', auth.requireAuthentication, productTypes.router);
   app.use('/warehouses', auth.requireAuthentication, warehouses.router);
-  app.use('/statistics', auth.requireAuthentication, statistics.router);
 
   app.use(notFoundHandler);
   app.use(errorHandler);
