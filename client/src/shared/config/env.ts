@@ -1,6 +1,8 @@
 // The only place that reads process.env in client/src, including its Next server code.
 // NEXT_PUBLIC_* values are inlined into the bundle at build time.
 export const env = {
+  mapTileUrl: process.env.NEXT_PUBLIC_MAP_TILE_URL ?? '',
+  mapTileAttribution: process.env.NEXT_PUBLIC_MAP_TILE_ATTRIBUTION ?? '',
   apiUrl: process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000',
   apiReadTimeoutMs: 10_000,
   get authCookieSecure() {

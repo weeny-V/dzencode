@@ -1,18 +1,22 @@
+import { Suspense } from 'react';
+
 import { ProtectedPage } from '@/features/auth';
+import { GroupsContent, GroupsLoading } from '@/features/statistics';
 import { pageMetadata } from '@/shared/i18n/metadata';
-import { ComingSoon } from '@/shared/ui/ComingSoon';
+import type { SearchParams } from '@/shared/lib/searchParams';
 import { PageTransition } from '@/shared/ui/PageTransition';
 
 import { text } from './messages.server';
 
 export const generateMetadata = () => pageMetadata(text);
 
-export default async function GroupsPage() {
-  const t = await text();
+export default function GroupsPage({ searchParams }: { searchParams: SearchParams }) {
   return (
     <ProtectedPage>
       <PageTransition>
-        <ComingSoon title={t('title')} />
+        <Suspense fallback={<GroupsLoading />}>
+          <GroupsContent searchParams={searchParams} />
+        </Suspense>
       </PageTransition>
     </ProtectedPage>
   );

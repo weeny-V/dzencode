@@ -1,16 +1,19 @@
 import type { OrderProductsSummary, Product } from '../products/index.js';
+import type { Warehouse } from '../warehouses/index.js';
 
 export interface Order {
   id: number;
   title: string;
   description: string | null;
   date: Date;
+  warehouseId: number | null;
 }
 
 export interface OrderInput {
   title: string;
   description: string | null;
   date: Date;
+  warehouseId?: number | null;
 }
 
 export interface OrderFilter {
@@ -23,4 +26,5 @@ export interface OrderSummary extends Order, OrderProductsSummary {}
 
 export interface OrderDetails extends Order {
   products: Product[];
+  warehouse: Warehouse | null;
 }

@@ -2,7 +2,7 @@
 
 An "Orders / Products" SPA (Dzencode test task, **Middle** level). Requirements: [docs/TASK.md](docs/TASK.md). Work plan by stages: [docs/PLAN.md](docs/PLAN.md).
 
-> Status: stage 6c authentication is complete on the accepted stage 6b base. See [authentication implementation status and review checklist](docs/AUTH_IMPLEMENTATION.md).
+> Status: stage 6d is integrated with accepted 6b localization/drafts and 6c authentication. Groups provides warehouse inventory statistics and lazy Chart.js bars; order forms/panels include an optional warehouse and deferred Leaflet map. See [stage 6d verification and owner review](docs/STAGE_6D_STATUS.md) and the accepted [authentication contract](docs/AUTH_IMPLEMENTATION.md).
 
 ## Stack
 
@@ -71,7 +71,8 @@ The source of truth for the schema is [db/changelog](db/changelog) (YAML). Appli
 
 | Table            | Purpose                                                                                   |
 | ---------------- | ----------------------------------------------------------------------------------------- |
-| `orders`         | Orders                                                                                    |
+| `orders`         | Orders with a nullable warehouse; old records remain unassigned                           |
+| `warehouses`     | Read-only demonstration reference: stable code, name, address and coordinates             |
 | `products`       | Products; `order_id` (deleting an order deletes its products), `type_id`                  |
 | `product_prices` | Prices of a product per currency (`value`, `symbol`, `is_default`)                        |
 | `product_types`  | Dictionary of product types (for the filter)                                              |

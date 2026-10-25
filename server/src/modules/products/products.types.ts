@@ -55,3 +55,13 @@ export interface OrderProductsSummary {
   /** Sum of the product prices per currency. */
   totals: Price[];
 }
+
+export type InventoryCurrency = 'UAH' | 'USD';
+
+export interface InventoryGroup {
+  orderId: number;
+  type: string;
+  productsCount: number;
+  value: number;
+  missingPrices: number;
+}

@@ -4,7 +4,7 @@ import { NotFoundError } from '../../shared/errors.js';
 import type { Product } from '../products/index.js';
 import type { OrdersRepository } from './orders.repository.js';
 import { createOrdersService } from './orders.service.js';
-import type { Order } from './orders.types.js';
+import type { Order, OrderInput } from './orders.types.js';
 
 // The service is tested with fakes: no database, no HTTP.
 
@@ -12,6 +12,7 @@ const order = (id: number): Order => ({
   id,
   title: `Order ${id}`,
   description: null,
+  warehouseId: null,
   date: new Date('2020-01-01T00:00:00Z'),
 });
 
@@ -23,7 +24,9 @@ const setup = (orders: Order[]) => {
   const repository: OrdersRepository = {
     list,
     findById: vi.fn((id: number) => Promise.resolve(orders.find((item) => item.id === id))),
-    create: vi.fn((input) => Promise.resolve({ id: 99, ...input })),
+    create: vi.fn((input: OrderInput) =>
+      Promise.resolve({ id: 99, ...input, warehouseId: input.warehouseId ?? null }),
+    ),
     remove: vi.fn((id: number) => Promise.resolve(orders.some((item) => item.id === id))),
   };
   const products = {
@@ -37,7 +40,15 @@ const setup = (orders: Order[]) => {
       ),
     ),
   };
-  return { list, products, service: createOrdersService({ repository, products }) };
+  return {
+    list,
+    products,
+    service: createOrdersService({
+      repository,
+      products,
+      warehouses: { list: () => Promise.resolve([]) },
+    }),
+  };
 };
 
 describe('OrdersService', () => {

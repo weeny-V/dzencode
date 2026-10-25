@@ -25,14 +25,24 @@ describe('order actions', () => {
       ok: true,
       data: order,
     });
-    expect(mocks.updateTag.mock.calls).toEqual([['orders'], ['order:7'], ['products']]);
+    expect(mocks.updateTag.mock.calls).toEqual([
+      ['orders'],
+      ['order:7'],
+      ['products'],
+      ['statistics'],
+    ]);
     expect(mocks.refresh).not.toHaveBeenCalled();
   });
   it('deletes, invalidates cascade products and refreshes', async () => {
     mocks.removeOrder.mockResolvedValue(undefined);
     expect(await deleteOrder(7)).toEqual({ ok: true, data: undefined });
     expect(mocks.removeOrder).toHaveBeenCalledWith(7);
-    expect(mocks.updateTag.mock.calls).toEqual([['orders'], ['order:7'], ['products']]);
+    expect(mocks.updateTag.mock.calls).toEqual([
+      ['orders'],
+      ['order:7'],
+      ['products'],
+      ['statistics'],
+    ]);
     expect(mocks.refresh).toHaveBeenCalledOnce();
   });
   it('returns errors and does not invalidate a failed mutation', async () => {

@@ -112,6 +112,34 @@ The serial number is matched as the lists print it, `SN-12345671`, so `sn-1234` 
 
 `totals` are summed over the currencies that the order's products have; an order without products returns `productsCount: 0` and an empty `totals`.
 
+## Warehouses and inventory statistics (stage 6d)
+
+`GET /warehouses` returns a read-only seeded demonstration list of `{ id, code, name, address, latitude, longitude }`. Codes are unique and stable. Names are limited to 100 characters, codes to 32, addresses to 255, latitude to [-90, 90] and longitude to [-180, 180]. There are no warehouse write endpoints.
+
+`POST /orders` also accepts `warehouseId`: an existing positive INT id, null, or omitted. Omitted/null means unassigned. Malformed/unknown ids return 400 without inserting an order; the foreign key is the final validator. `GET /orders` and the create response include `warehouseId`; `GET /orders/:id` also includes `warehouse`, the complete metadata object or null. Existing orders stay unassigned after migration. Products inherit the order's warehouse; product creation has no warehouse field. A referenced warehouse cannot be removed through a future administrative DB operation without resolving its orders (`ON DELETE RESTRICT`).
+
+`GET /statistics/inventory?currency=UAH|USD` returns current inventory, including empty orders and warehouses. Omitted currency defaults to UAH; blank, repeated and unsupported REST values return 400. The Groups URL deliberately normalizes unsupported/repeated currency values to UAH and exposes explicit UAH/USD links. Search does not filter this inventory-wide report.
+
+```json
+{
+  "currency": "UAH",
+  "ordersCount": 3,
+  "productsCount": 3,
+  "value": 29900,
+  "missingPrices": 0,
+  "byType": [{ "type": "Monitors", "productsCount": 2 }],
+  "byWarehouse": [
+    { "warehouseId": null, "name": null, "productsCount": 3, "value": 29900, "missingPrices": 0 }
+  ]
+}
+```
+
+The abbreviated example omits other type/warehouse rows. Null warehouse id/name denotes the localized Unassigned bucket. Every reference warehouse and product type is returned even with no products. Each product counts once, regardless of its price rows. Only the selected currency is summed, without conversion; a real zero is priced, while a missing price increments `missingPrices` and contributes nothing to the known-value subtotal. Per-warehouse counts include missing-price products. These are stored-inventory values, not revenue or movement history.
+
+All aggregate reads share a read-only REPEATABLE READ transaction, composed through public module services. Concurrent writes cannot place a product in the wrong warehouse by mixing snapshots. Successful Next order/product creates/deletes expire `statistics` alongside the existing tags; warehouse reads use `warehouses`. Direct API writes and other tabs retain the documented 60-second revalidation limits. There are no stage-7 inventory events.
+
+Both endpoints require the same active bearer session as the other inventory APIs and return 401 for guests/revoked sessions. Next verifies the session before warmed warehouse/statistics cache lookups; non-credential user/session identities remain in cache keys. Report rendering, chart numbers, map controls and form labels use the selected EN/RU locale. The warehouse field participates in the existing seven-day user-owned order draft: legacy records without the field restore unassigned, stale saved choices normalize on restore, and dirty fields/newer revisions retain the established protections.
+
 ## Realtime (Socket.io)
 
 The same server (same host and port as the REST API, same allowed client origin) also speaks Socket.io. It carries the counter of active sessions in the top menu.

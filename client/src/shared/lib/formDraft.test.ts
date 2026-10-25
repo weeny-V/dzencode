@@ -7,6 +7,23 @@ describe('form draft records', () => {
     const values = { title: ' unfinished ', isNew: false };
     expect(decodeDraft(encodeDraft(values), defaults)).toEqual(values);
   });
+  it('migrates only explicitly optional new fields without dropping legacy form data', () => {
+    const current = { title: '', warehouseId: '' };
+    const raw = encodeDraft({ title: 'Legacy order draft' });
+    expect(decodeDraft(raw, current)).toBeUndefined();
+    expect(decodeDraft(raw, current, Date.now(), ['warehouseId'])).toEqual({
+      title: 'Legacy order draft',
+      warehouseId: '',
+    });
+    expect(
+      decodeDraft(encodeDraft({ title: 'Wrong type', warehouseId: 3 }), current, Date.now(), [
+        'warehouseId',
+      ]),
+    ).toBeUndefined();
+    expect(
+      decodeDraft(encodeDraft({ warehouseId: '' }), current, Date.now(), ['warehouseId']),
+    ).toBeUndefined();
+  });
   it('rejects broken JSON, unsupported versions, missing fields and expired records', () => {
     expect(decodeDraft('{', defaults)).toBeUndefined();
     const record = { version: 1, updatedAt: 1000, values: { title: 'old', isNew: true } };

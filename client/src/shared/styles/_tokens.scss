@@ -58,6 +58,15 @@ $bp-desktop: 992px;
 $bp-wide: 1200px;
 $bp-extra-wide: 1600px;
 
+// Inventory visualizations
+$space-sm: 0.5rem;
+$space-md: 1rem;
+$space-lg: 1.5rem;
+$visualization-height: 20rem;
+$inventory-card-min: 13rem;
+$inventory-heading-size: 1.25rem;
+$warehouse-marker-border: 3px;
+
 // A list item that appears one after another with its neighbours. The component sets `--i` (its index) inline;
 // the delay is capped, so a long list does not make the last rows wait. The `rise-in` keyframes are global
 // (_transitions.scss), and `prefers-reduced-motion` shortens the animation to nothing (_base.scss).

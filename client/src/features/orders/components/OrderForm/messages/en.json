@@ -6,5 +6,10 @@
   "dateHint": "If omitted, today’s date will be used.",
   "description": "Description",
   "loading": "Loading form…",
-  "failed": "Could not load form data."
+  "failed": "Could not load form data.",
+  "warehouse": "Warehouse",
+  "warehouseHint": "All products in this order share the selected warehouse.",
+  "unassigned": "Unassigned",
+  "staleWarehouse": "This warehouse is no longer available. Choose another one.",
+  "unavailableWarehouse": "Unavailable warehouse ({id})"
 }

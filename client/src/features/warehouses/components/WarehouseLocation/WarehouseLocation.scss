@@ -1,0 +1,23 @@
+@use 'tokens' as *;
+.warehouse-location {
+  padding: $space-md;
+  border-bottom: 1px solid $color-border;
+  overflow-wrap: anywhere;
+  &__name {
+    font-size: $font-size-base;
+  }
+  &__map {
+    height: $visualization-height;
+    margin-top: $space-md;
+    z-index: 0;
+  }
+  &__map--failed {
+    display: none;
+  }
+  &__marker {
+    background: $color-primary-text;
+    border: $warehouse-marker-border solid $color-surface;
+    border-radius: 50%;
+    box-shadow: $shadow-soft;
+  }
+}

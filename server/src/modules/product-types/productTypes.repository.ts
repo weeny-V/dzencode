@@ -1,11 +1,11 @@
 import type { RowDataPacket } from 'mysql2/promise';
 
-import type { Pool } from '../../shared/db/pool.js';
+import type { ReadDatabase } from '../../shared/db/pool.js';
 import type { ProductType } from './productTypes.types.js';
 
 interface ProductTypeRow extends RowDataPacket, ProductType {}
 
-export const createProductTypesRepository = (pool: Pool) => ({
+export const createProductTypesRepository = (pool: ReadDatabase) => ({
   async list(): Promise<ProductType[]> {
     const [rows] = await pool.query<ProductTypeRow[]>(
       'SELECT id, name FROM product_types ORDER BY name',

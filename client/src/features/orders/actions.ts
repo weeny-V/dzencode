@@ -15,6 +15,7 @@ export async function createOrder(order: NewOrder, expectedSessionId?: string) {
     updateTag(ordersTag);
     updateTag(orderTag(result.data.id));
     updateTag('products');
+    updateTag('statistics');
   }
   return result;
 }
@@ -29,6 +30,7 @@ export async function deleteOrder(id: number, expectedSessionId?: string) {
     updateTag(ordersTag);
     updateTag(orderTag(id));
     updateTag('products');
+    updateTag('statistics');
     refresh();
   }
   return result;

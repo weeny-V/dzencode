@@ -4,6 +4,7 @@ export const order: OrderSummary = {
   id: 7,
   title: 'Test order',
   description: null,
+  warehouseId: null,
   date: '2026-10-25T10:00:00Z',
   productsCount: 1,
   totals: [{ value: 20, symbol: 'USD', isDefault: false }],

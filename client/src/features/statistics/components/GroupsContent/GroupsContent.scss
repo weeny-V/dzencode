@@ -1,0 +1,58 @@
+@use 'tokens' as *;
+.groups-content {
+  display: grid;
+  gap: $space-lg;
+  &__currency {
+    display: flex;
+    gap: $space-md;
+  }
+  &__currency a {
+    padding: $space-sm $space-md;
+    border: 1px solid $color-border;
+    border-radius: $radius;
+  }
+  &__currency a[aria-current] {
+    color: $color-primary-text;
+    background: $color-surface;
+    font-weight: bold;
+  }
+  &__cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, $inventory-card-min), 1fr));
+    gap: $space-md;
+    margin: 0;
+  }
+  &__cards > div {
+    background: $color-surface;
+    padding: $space-md;
+    border: 1px solid $color-border;
+    border-radius: $radius;
+  }
+  &__cards dd {
+    font-size: $inventory-heading-size;
+    margin: $space-sm 0 0;
+  }
+  &__section {
+    min-width: 0;
+    padding: $space-md;
+    background: $color-surface;
+    border: 1px solid $color-border;
+    border-radius: $radius;
+  }
+  &__section h2 {
+    font-size: $inventory-heading-size;
+    overflow-wrap: anywhere;
+  }
+  &__table {
+    overflow-x: auto;
+  }
+  &__table table {
+    width: 100%;
+  }
+  &__table th,
+  &__table td {
+    padding: $space-sm;
+    border-bottom: 1px solid $color-border;
+    overflow-wrap: anywhere;
+  }
+}

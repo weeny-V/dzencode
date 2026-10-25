@@ -3,6 +3,8 @@ import { createPool as createMysqlPool, type Pool } from 'mysql2/promise';
 import type { DbConfig } from '../../config.js';
 
 export type { Pool };
+/** Read repositories accept either a pool or one transaction connection. */
+export type ReadDatabase = Pick<Pool, 'query'>;
 
 /** Connections are opened lazily, so creating a pool does not require a running database. */
 export const createPool = ({ host, port, user, password, database }: DbConfig): Pool =>

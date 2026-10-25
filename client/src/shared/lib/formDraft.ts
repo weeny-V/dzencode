@@ -5,6 +5,7 @@ export function decodeDraft<T extends Record<string, unknown>>(
   raw: string | null,
   defaults: T,
   now = Date.now(),
+  optionalFields: readonly (keyof T)[] = [],
 ): T | undefined {
   if (!raw) return undefined;
   try {
@@ -22,9 +23,20 @@ export function decodeDraft<T extends Record<string, unknown>>(
     )
       return undefined;
     const fields = values as Record<string, unknown>;
-    if (!Object.keys(defaults).every((key) => typeof fields[key] === typeof defaults[key]))
+    if (
+      !Object.keys(defaults).every(
+        (key) =>
+          (fields[key] === undefined && optionalFields.includes(key)) ||
+          typeof fields[key] === typeof defaults[key],
+      )
+    )
       return undefined;
-    return Object.fromEntries(Object.keys(defaults).map((key) => [key, fields[key]])) as T;
+    return Object.fromEntries(
+      Object.keys(defaults).map((key) => [
+        key,
+        fields[key] === undefined ? defaults[key] : fields[key],
+      ]),
+    ) as T;
   } catch {
     return undefined;
   }

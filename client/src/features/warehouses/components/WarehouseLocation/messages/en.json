@@ -1,0 +1,12 @@
+{
+  "title": "Warehouse",
+  "unassigned": "No warehouse assigned",
+  "show": "Show map",
+  "hide": "Hide map",
+  "loading": "Loading map…",
+  "error": "The map is unavailable. The warehouse address remains above.",
+  "retry": "Retry map",
+  "mapLabel": "Warehouse location",
+  "zoomIn": "Zoom in",
+  "zoomOut": "Zoom out"
+}

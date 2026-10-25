@@ -54,29 +54,37 @@ beforeEach(() => {
   );
 });
 describe('authentication before persistent inventory cache', () => {
-  it('denies a guest/revoked session even after a prior authenticated warmed hit', async () => {
-    expect(await getJson('/orders', { tags: ['orders'] })).toEqual([{ id: 7 }]);
-    expect(await getJson('/orders', { tags: ['orders'] })).toEqual([{ id: 7 }]);
+  it.each([
+    '/orders',
+    '/warehouses',
+    '/statistics/inventory?currency=UAH',
+    '/statistics/inventory?currency=USD',
+  ])('denies a guest/revoked session after warming %s', async (path) => {
+    expect(await getJson(path, { tags: ['inventory'] })).toEqual([{ id: 7 }]);
+    expect(await getJson(path, { tags: ['inventory'] })).toEqual([{ id: 7 }]);
     expect(fetch).toHaveBeenCalledOnce();
     state.denied = true;
     const lookups = state.cacheLookup.mock.calls.length;
-    await expect(getJson('/orders', { tags: ['orders'] })).rejects.toHaveProperty(
+    await expect(getJson(path, { tags: ['inventory'] })).rejects.toHaveProperty(
       'digest',
       expect.stringContaining('NEXT_REDIRECT'),
     );
     expect(state.cacheLookup).toHaveBeenCalledTimes(lookups);
   });
-  it('isolates users and distinct sessions without persisting bearer credentials', async () => {
-    await getJson('/orders', { tags: ['orders'] });
-    state.identity = { userId: 2, sessionId: 'b'.repeat(64), token: 'private-bearer-B' };
-    await getJson('/orders', { tags: ['orders'] });
-    state.identity = { userId: 1, sessionId: 'c'.repeat(64), token: 'private-bearer-C' };
-    await getJson('/orders', { tags: ['orders'] });
-    expect(fetch).toHaveBeenCalledTimes(3);
-    expect(new Set(state.keys).size).toBe(3);
-    expect(state.keys.join()).not.toContain('private-bearer');
-    expect(state.keys.join()).toContain('sessionId');
-  });
+  it.each(['/orders', '/warehouses', '/statistics/inventory?currency=USD'])(
+    'isolates users/sessions for %s without persisting credentials',
+    async (path) => {
+      await getJson(path, { tags: ['inventory'] });
+      state.identity = { userId: 2, sessionId: 'b'.repeat(64), token: 'private-bearer-B' };
+      await getJson(path, { tags: ['inventory'] });
+      state.identity = { userId: 1, sessionId: 'c'.repeat(64), token: 'private-bearer-C' };
+      await getJson(path, { tags: ['inventory'] });
+      expect(fetch).toHaveBeenCalledTimes(3);
+      expect(new Set(state.keys).size).toBe(3);
+      expect(state.keys.join()).not.toContain('private-bearer');
+      expect(state.keys.join()).toContain('sessionId');
+    },
+  );
   it('preserves Next control flow and handles upstream 401 deliberately', async () => {
     const redirect = Object.assign(new Error('redirect'), {
       digest: 'NEXT_REDIRECT;replace;/login;307;',

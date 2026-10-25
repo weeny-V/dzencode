@@ -1,9 +1,10 @@
 import './OrderPanel.scss';
 
 import Link from 'next/link';
-import type { CSSProperties } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 
 import { DeleteButton } from '@/features/confirmation';
+import { WarehouseLocation } from '@/features/warehouses';
 import { loadOrError } from '@/shared/api/server';
 import type { OrderDetails } from '@/shared/api/types';
 import type { Text } from '@/shared/i18n/server';
@@ -27,7 +28,17 @@ export async function OrderPanel({
 }) {
   const result = await (details ?? loadOrError(() => getOrder(id)));
   const t = await text();
-  return <OrderPanelView t={t} result={result} closeHref={closeHref} />;
+  const warehouseLocation = result.ok
+    ? await WarehouseLocation({ warehouse: result.data.warehouse, orderId: result.data.id })
+    : null;
+  return (
+    <OrderPanelView
+      t={t}
+      result={result}
+      closeHref={closeHref}
+      warehouseLocation={warehouseLocation}
+    />
+  );
 }
 
 /** The server-rendered view receives the completed read and does not load data itself. */
@@ -35,10 +46,12 @@ function OrderPanelView({
   t,
   result,
   closeHref,
+  warehouseLocation,
 }: {
   t: Text;
   result: ActionResult<OrderDetails>;
   closeHref: string;
+  warehouseLocation: ReactNode;
 }) {
   return (
     <section className="order-panel" aria-labelledby="order-panel-title">
@@ -59,6 +72,7 @@ function OrderPanelView({
           </Link>
         )}
       </header>
+      {warehouseLocation}
       {!result.ok ? (
         <div className="order-panel__state">
           <LoadError title={t('failed')} />
