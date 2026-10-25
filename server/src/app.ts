@@ -13,14 +13,22 @@ import { createWarehousesModule } from './modules/warehouses/index.js';
 import type { Pool } from './shared/db/pool.js';
 import { withReadSnapshot } from './shared/db/readSnapshot.repository.js';
 import { withTransaction } from './shared/db/transaction.js';
+import { createEventBus, type EventBus } from './shared/events/eventBus.js';
 import { errorHandler, notFoundHandler } from './shared/http/errorHandler.js';
 
 interface AppDeps extends Pick<Config, 'clientOrigin' | 'jwtSecret'> {
   pool: Pool;
+  /** Created here when absent; the socket side must receive the same bus (see `index.ts`). */
+  events?: EventBus;
 }
 
 /** Composition root: the only place that knows how modules depend on each other. */
-export const createApp = ({ clientOrigin, jwtSecret, pool }: AppDeps) => {
+export const createApp = ({
+  clientOrigin,
+  jwtSecret,
+  pool,
+  events = createEventBus(),
+}: AppDeps) => {
   const users = createUsersModule({ pool });
   const auth = createAuthModule({
     pool,
@@ -29,10 +37,11 @@ export const createApp = ({ clientOrigin, jwtSecret, pool }: AppDeps) => {
     transaction: (work) => withTransaction(pool, work),
   });
   const productTypes = createProductTypesModule({ pool });
-  const products = createProductsModule({ pool, productTypes: productTypes.service });
+  const products = createProductsModule({ pool, events, productTypes: productTypes.service });
   const warehouses = createWarehousesModule({ pool });
   const orders = createOrdersModule({
     pool,
+    events,
     products: products.service,
     warehouses: warehouses.service,
   });
@@ -77,5 +86,5 @@ export const createApp = ({ clientOrigin, jwtSecret, pool }: AppDeps) => {
   app.use(notFoundHandler);
   app.use(errorHandler);
 
-  return { app, auth: auth.service };
+  return { app, auth: auth.service, events };
 };

@@ -1,5 +1,6 @@
 import { deleteRequest, postJson } from '@/shared/api/http';
 import { getJson } from '@/shared/api/server';
+import { tags } from '@/shared/api/tags';
 import type { NewProduct, OrderSummary, Product, ProductType } from '@/shared/api/types';
 import { toQuery } from '@/shared/lib/searchParams';
 
@@ -10,7 +11,7 @@ export interface ProductsFilter {
   query: string;
 }
 
-export const productsTag = 'products';
+export const productsTag = tags.products;
 export const productTypesTag = 'product-types';
 
 /** `GET /products`, optionally of one type and matching a search text. */

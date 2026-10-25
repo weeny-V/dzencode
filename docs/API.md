@@ -136,7 +136,7 @@ The `inventoryStatistics(currency)` GraphQL query (see [GraphQL](#graphql-stage-
 
 The abbreviated example (the `data.inventoryStatistics` object) omits other type/warehouse rows. Null warehouse id/name denotes the localized Unassigned bucket. Every reference warehouse and product type is returned even with no products. Each product counts once, regardless of its price rows. Only the selected currency is summed, without conversion; a real zero is priced, while a missing price increments `missingPrices` and contributes nothing to the known-value subtotal. Per-warehouse counts include missing-price products. These are stored-inventory values, not revenue or movement history.
 
-All aggregate reads share a read-only REPEATABLE READ transaction, composed through public module services. Concurrent writes cannot place a product in the wrong warehouse by mixing snapshots. Successful Next order/product creates/deletes expire `statistics` alongside the existing tags; warehouse reads use `warehouses`. Direct API writes and other tabs retain the documented 60-second revalidation limits. Stage 7b replaces this limit with inventory events.
+All aggregate reads share a read-only REPEATABLE READ transaction, composed through public module services. Concurrent writes cannot place a product in the wrong warehouse by mixing snapshots. Successful Next order/product creates/deletes expire `statistics` alongside the existing tags; warehouse reads use `warehouses`. Direct API writes and other tabs retain the documented 60-second revalidation limits. Stage 7b adds inventory events that expire the same tags in every open tab (see [Inventory events](#inventory-events-stage-7b)); writes made while no tab listens still wait for the revalidation.
 
 The warehouse list and the GraphQL endpoint require the same active bearer session as the other inventory APIs and return 401 for guests/revoked sessions. Next verifies the session before warmed warehouse/statistics cache lookups; non-credential user/session identities remain in cache keys. Report rendering, chart numbers, map controls and form labels use the selected EN/RU locale. The warehouse field participates in the existing seven-day user-owned order draft: legacy records without the field restore unassigned, stale saved choices normalize on restore, and dirty fields/newer revisions retain the established protections.
 
@@ -188,19 +188,36 @@ The example is abbreviated. On the Groups page the same data is also rendered as
 
 ## Realtime (Socket.io)
 
-The same server (same host and port as the REST API, same allowed client origin) also speaks Socket.io. It carries the counter of active sessions in the top menu.
+The same server (same host and port as the REST API, same allowed client origin) also speaks Socket.io. It carries the counter of active sessions in the top menu and the inventory change events that keep other open tabs current.
 
 Socket.io accepts only the `dzencode_auth` cookie containing an active signed JWT. The browser uses credentials and the same hostname as the client app; different local ports are allowed. The client uses the WebSocket transport so Origin is present even with a same-origin reverse proxy; that proxy must forward WebSocket upgrades. Do not send a token through the socket `auth` payload or localStorage. CORS permits credentials for `CLIENT_ORIGIN`; exact Origin validation also applies to polling and WebSocket handshakes/upgrades. Missing or other origins are rejected. Logout disconnects all tabs belonging to that revoked auth session, denies their reconnect and preserves sockets from other sessions. A session is rechecked after joining its revocation room before counting the tab, covering logout during handshake. Counter broadcasts go only to the separate group of fully authorized tabs; sockets still awaiting the repeated check receive no count events.
 
-| Direction        | Event            | Payload          | When                                                                      |
-| ---------------- | ---------------- | ---------------- | ------------------------------------------------------------------------- |
-| server → clients | `sessions:count` | `{ "count": 3 }` | An authorized tab opens or closes; every fully authorized tab receives it |
+| Direction        | Event               | Payload                        | When                                                                               |
+| ---------------- | ------------------- | ------------------------------ | ---------------------------------------------------------------------------------- |
+| server → clients | `sessions:count`    | `{ "count": 3 }`               | An authorized tab opens or closes; every fully authorized tab receives it          |
+| server → clients | `inventory:changed` | one inventory event, see below | An order or product was created or deleted by any writer (a tab, a script, a test) |
 
 - **A counter session is an authenticated open browser tab,** which is one socket connection (the task asks for "the open tabs"). Two tabs of one person count as two. It is distinct from the persistent `auth_sessions` row, which represents one login/browser cookie and may cover several tabs. The integrated client must open one connection per protected tab and keep it while navigating.
 - A new client does not ask for the number: it receives `sessions:count` right after it connects. A client that loses the connection shows a dash until it reconnects (the library retries by itself) and gets a fresh number.
 - A tab that is closed or loses the network is dropped after Socket.io's ping timeout (about 45 s at most); a normal close is noticed at once.
 - **Limit: one server instance.** The registry of sessions lives in the memory of the Node.js process, so the number is right only while one instance runs. Several instances (or a restart of the server) would each count their own tabs; for that the Socket.io Redis adapter and a shared store would be needed. A restart resets the number, and the clients reconnect and report themselves again.
 - Not covered by the REST API: there is no HTTP endpoint for the number.
+
+### Inventory events (stage 7b)
+
+The services publish typed domain events on an in-process bus after a write has succeeded (never for a rejected or missing one). The bus delivers them synchronously to the handlers registered in the same process; a failing handler is logged and neither breaks the write that was already done nor the other handlers. Two handlers exist: the sessions counter (`session.opened` / `session.closed`, published when a fully authorized socket joins or leaves) and the inventory gateway, which forwards the four inventory events to every fully authorized tab. The inventory is shared by all users, so there are no per-user rooms.
+
+| Event                                | Payload fields         |
+| ------------------------------------ | ---------------------- |
+| `order.created`, `order.deleted`     | `orderId`              |
+| `product.created`, `product.deleted` | `productId`, `orderId` |
+
+The payload is `{ "type": "product.deleted", "productId": 9, "orderId": 3 }`; it names what changed and carries no entity data, so a tab re-reads what it shows instead of keeping a copy. Deleting an order that has products publishes only `order.deleted` (the cascade is part of it). The tab that made a change receives its own event as well.
+
+- **Next side.** The tab collects events for 250 ms, calls one Server Action that expires the matching Data Cache tags (the same sets the mutating actions expire; a `resync` expires `orders`, `products`, `statistics` and the umbrella tag `order-details`), and then re-renders the page's server data. This also makes a write made directly against the API visible without waiting for the 60-second revalidation. The action requires a session, accepts at most 50 known change shapes and only expires cache tags.
+- **Deleted open order.** If the order shown in the panel was deleted elsewhere, the panel closes (other search parameters are kept) and a short notice appears. The check runs when the batch is flushed, so a tab that has already left the panel itself does not show it.
+- **Delivery is at most once and not replayed.** There is no queue or store: an event published while a tab has no connection, or before its page's socket has connected, is lost. After a reconnect the client sends itself a `resync`, which expires and re-reads the inventory. A page rendered from a still-cached copy can stay behind until its socket connects or the 60-second revalidation passes.
+- **Limit: one server instance**, as for the counter: the bus does not cross processes. Several instances would need a shared broker (for example the Socket.io Redis adapter or a message queue).
 
 ## Input rules and limits
 

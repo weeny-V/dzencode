@@ -5,6 +5,7 @@ import { io as connect, type Socket } from 'socket.io-client';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { attachRealtime } from '../../realtime.js';
+import { createEventBus } from '../../shared/events/eventBus.js';
 import { TEST_JWT_SECRET } from '../../shared/testing/auth.js';
 import { SESSIONS_COUNT_EVENT } from '../sessions/index.js';
 import type { User } from '../users/index.js';
@@ -81,7 +82,11 @@ describe('counter broadcasts during authentication', () => {
         },
       });
       const httpServer = createServer();
-      const io = attachRealtime(httpServer, { clientOrigin: origin, auth });
+      const io = attachRealtime(httpServer, {
+        clientOrigin: origin,
+        auth,
+        events: createEventBus(),
+      });
       const clients: Socket[] = [];
       cleanup = async () => {
         firstUser.resolve(user);

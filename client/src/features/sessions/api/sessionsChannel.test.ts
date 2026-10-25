@@ -17,6 +17,49 @@ const setup = () => {
   return { socket, onCount, onConnectionChange, close };
 };
 
+describe('inventory events on the same socket', () => {
+  const withInventory = () => {
+    const socket = Object.assign(new EventEmitter(), { disconnect: vi.fn() });
+    vi.mocked(io).mockReturnValue(socket as unknown as ReturnType<typeof io>);
+    const onInventoryChange = vi.fn();
+    openSessionsChannel({ onCount: vi.fn(), onConnectionChange: vi.fn(), onInventoryChange });
+    return { socket, onInventoryChange };
+  };
+
+  it('reports a valid inventory change', () => {
+    const { socket, onInventoryChange } = withInventory();
+    socket.emit('inventory:changed', { type: 'product.deleted', productId: 4, orderId: 2 });
+    expect(onInventoryChange).toHaveBeenCalledWith({
+      type: 'product.deleted',
+      productId: 4,
+      orderId: 2,
+    });
+  });
+
+  it.each([
+    null,
+    'x',
+    {},
+    { type: 'order.deleted' },
+    { type: 'order.created', orderId: -1 },
+    { type: 'resync' },
+  ])('ignores a payload that is not a server change: %j', (payload) => {
+    const { socket, onInventoryChange } = withInventory();
+    socket.emit('inventory:changed', payload);
+    expect(onInventoryChange).not.toHaveBeenCalled();
+  });
+
+  it('asks for a resync only when the connection comes back, not on the first connect', () => {
+    const { socket, onInventoryChange } = withInventory();
+    socket.emit('connect');
+    expect(onInventoryChange).not.toHaveBeenCalled();
+    socket.emit('disconnect');
+    socket.emit('connect');
+    expect(onInventoryChange).toHaveBeenCalledOnce();
+    expect(onInventoryChange).toHaveBeenCalledWith({ type: 'resync' });
+  });
+});
+
 describe('openSessionsChannel', () => {
   it('opens its own connection to the API server', () => {
     setup();
