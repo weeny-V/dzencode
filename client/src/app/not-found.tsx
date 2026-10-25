@@ -1,13 +1,13 @@
 import { ButtonLink } from '@/shared/ui/Button';
 import { NoticePage } from '@/shared/ui/NoticePage';
 
-export default function NotFound() {
+import { text } from './not-found/messages.server';
+
+export default async function NotFound() {
+  const t = await text();
   return (
-    <NoticePage
-      title="Страница не найдена"
-      text="Такого адреса нет. Проверьте ссылку или вернитесь к приходам."
-    >
-      <ButtonLink href="/orders">К приходам</ButtonLink>
+    <NoticePage title={t('title')} text={t('text')}>
+      <ButtonLink href="/orders">{t('back')}</ButtonLink>
     </NoticePage>
   );
 }

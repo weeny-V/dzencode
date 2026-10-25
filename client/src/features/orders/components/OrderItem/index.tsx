@@ -5,10 +5,11 @@ import type { CSSProperties } from 'react';
 
 import { DeleteButton } from '@/features/confirmation';
 import type { OrderSummary } from '@/shared/api/types';
-import { pluralize } from '@/shared/lib/plural';
 import { DateStack } from '@/shared/ui/DateStack';
 import { ChevronRightIcon, ListIcon } from '@/shared/ui/icons';
 import { PriceStack } from '@/shared/ui/PriceStack';
+
+import { text } from './messages.server';
 
 interface OrderItemProps {
   order: OrderSummary;
@@ -23,7 +24,8 @@ interface OrderItemProps {
 }
 
 /** One order in the list. The whole row opens the order's panel (the link is stretched over it). */
-export function OrderItem({ order, index, href, selected, compact }: OrderItemProps) {
+export async function OrderItem({ order, index, href, selected, compact }: OrderItemProps) {
+  const t = await text();
   const className = [
     'order-item',
     compact && 'order-item--compact',
@@ -47,7 +49,7 @@ export function OrderItem({ order, index, href, selected, compact }: OrderItemPr
       <div className="order-item__count">
         <span className="order-item__count-number">{order.productsCount}</span>
         <span className="order-item__count-label">
-          {pluralize(order.productsCount, ['продукт', 'продукта', 'продуктов'])}
+          {t('products', { count: order.productsCount })}
         </span>
       </div>
 
@@ -61,12 +63,12 @@ export function OrderItem({ order, index, href, selected, compact }: OrderItemPr
 
       <div className="order-item__delete">
         <DeleteButton
-          label={`Удалить приход ${order.title}`}
+          label={t('delete', { title: order.title })}
           target={{
             kind: 'order',
             id: order.id,
             title: order.title,
-            meta: `${order.productsCount} ${pluralize(order.productsCount, ['продукт', 'продукта', 'продуктов'])}`,
+            meta: `${order.productsCount} ${t('products', { count: order.productsCount })}`,
           }}
         />
       </div>

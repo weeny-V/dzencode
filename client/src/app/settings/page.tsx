@@ -1,14 +1,16 @@
-import type { Metadata } from 'next';
-
+import { pageMetadata } from '@/shared/i18n/metadata';
 import { ComingSoon } from '@/shared/ui/ComingSoon';
 import { PageTransition } from '@/shared/ui/PageTransition';
 
-export const metadata: Metadata = { title: 'Настройки' };
+import { text } from './messages.server';
 
-export default function SettingsPage() {
+export const generateMetadata = () => pageMetadata(text);
+
+export default async function SettingsPage() {
+  const t = await text();
   return (
     <PageTransition>
-      <ComingSoon title="Настройки" />
+      <ComingSoon title={t('title')} />
     </PageTransition>
   );
 }

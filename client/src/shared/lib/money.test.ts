@@ -17,12 +17,18 @@ describe('formatAmount', () => {
     [999.999, '1_000'],
     [9_999_999_999.99, '9_999_999_999.99'],
   ])('formats %s as %j', (value, expected) => {
-    expect(formatAmount(value)).toBe(nbsp(expected));
+    expect(formatAmount(value, 'ru')).toBe(nbsp(expected.replace('.', ',')));
   });
 
   it('uses a non-breaking space, so a price never wraps in the middle', () => {
-    expect(formatAmount(1000)).not.toContain(' ');
-    expect(formatAmount(1000)).toContain(String.fromCharCode(0xa0));
+    expect(formatAmount(1000, 'ru')).not.toContain(' ');
+    expect(formatAmount(1000, 'ru')).toContain(String.fromCharCode(0xa0));
+  });
+});
+
+describe('English amounts', () => {
+  it('uses comma groups and a decimal point', () => {
+    expect(formatAmount(1234567.89, 'en')).toBe('1,234,567.89');
   });
 });
 

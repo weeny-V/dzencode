@@ -1,0 +1,4 @@
+{
+  "products": "{count, plural, one {продукт} few {продукта} many {продуктов} other {продукта}}",
+  "delete": "Удалить приход {title}"
+}

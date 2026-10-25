@@ -5,7 +5,7 @@ import { optionalDateField, textField, titleField } from '@/shared/lib/formSchem
 
 /** The fields of the "new order" form, all as the visitor typed them (strings). */
 export const orderFormSchema = z.object({
-  title: titleField('Введите название прихода'),
+  title: titleField('required'),
   description: textField,
   date: optionalDateField,
 });

@@ -3,6 +3,7 @@
 import './SearchField.scss';
 
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import {
   type FormEvent,
   startTransition,
@@ -19,16 +20,17 @@ import { CloseIcon } from '@/shared/ui/icons';
 const DEBOUNCE_MS = 250;
 
 /** A disabled copy of the field, shown while the real one waits for the address (and on pages without a search). */
-export function SearchFieldPlaceholder({ title = 'Поиск' }: { title?: string }) {
+export function SearchFieldPlaceholder({ title }: { title?: string }) {
+  const t = useTranslations('SearchField');
   return (
     <div className="search-field">
       <input
         type="search"
         className="search-field__input"
-        placeholder="Поиск"
-        aria-label="Поиск"
+        placeholder={t('search')}
+        aria-label={t('search')}
         disabled
-        title={title}
+        title={title ?? t('search')}
       />
     </div>
   );
@@ -46,6 +48,7 @@ interface SearchFieldProps {
  * Mount it with `key={pathname}`: moving to another page starts with an empty field.
  */
 export function SearchField({ enabled }: SearchFieldProps) {
+  const t = useTranslations('SearchField');
   const id = useId();
   const pathname = usePathname();
   const router = useRouter();
@@ -100,16 +103,16 @@ export function SearchField({ enabled }: SearchFieldProps) {
       data-pending={pending ? '' : undefined}
     >
       <label className="visually-hidden" htmlFor={id}>
-        Поиск
+        {t('search')}
       </label>
       <input
         id={id}
         type="search"
         className="search-field__input"
-        placeholder="Поиск"
+        placeholder={t('search')}
         value={value}
         disabled={!enabled}
-        title={enabled ? undefined : 'Поиск работает на страницах «Приход» и «Продукты»'}
+        title={enabled ? undefined : t('disabled')}
         autoComplete="off"
         maxLength={100}
         onChange={(event) => change(event.target.value)}
@@ -125,7 +128,7 @@ export function SearchField({ enabled }: SearchFieldProps) {
           type="button"
           className="search-field__clear"
           onClick={clear}
-          aria-label="Очистить поиск"
+          aria-label={t('clear')}
         >
           <CloseIcon />
         </button>

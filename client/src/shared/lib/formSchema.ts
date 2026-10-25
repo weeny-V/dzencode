@@ -22,12 +22,10 @@ export const titleField = (emptyMessage: string) =>
     .string()
     .trim()
     .min(1, emptyMessage)
-    .refine((text) => characterCount(text) <= MAX_TITLE_CHARACTERS, 'Не более 255 символов');
+    .refine((text) => characterCount(text) <= MAX_TITLE_CHARACTERS, 'maxTitle');
 
 /** Free text that may stay empty. */
-export const textField = z
-  .string()
-  .refine((text) => byteLength(text) <= MAX_TEXT_BYTES, 'Слишком длинный текст');
+export const textField = z.string().refine((text) => byteLength(text) <= MAX_TEXT_BYTES, 'maxText');
 
 /** `2017-06-29` as an `<input type="date">` gives it: a real calendar day in the years the database stores. */
 export const isValidIsoDate = (value: string): boolean => {
@@ -43,13 +41,13 @@ export const isValidIsoDate = (value: string): boolean => {
 /** A date that may stay empty. */
 export const optionalDateField = z
   .string()
-  .refine((value) => value === '' || isValidIsoDate(value), 'Укажите дату полностью');
+  .refine((value) => value === '' || isValidIsoDate(value), 'dateIncomplete');
 
 /** A date that must be there. */
 export const requiredDateField = z
   .string()
-  .min(1, 'Укажите дату')
-  .refine(isValidIsoDate, 'Укажите дату полностью');
+  .min(1, 'dateRequired')
+  .refine(isValidIsoDate, 'dateIncomplete');
 
 /** A positive whole number that fits an INT column, typed as text. */
 export const wholeNumberField = (emptyMessage: string) =>
@@ -57,9 +55,9 @@ export const wholeNumberField = (emptyMessage: string) =>
     .string()
     .trim()
     .min(1, emptyMessage)
-    .regex(/^\d+$/, 'Только цифры')
-    .refine((value) => Number(value) >= 1, 'Число должно быть больше нуля')
-    .refine((value) => Number(value) <= MAX_INT, 'Слишком большое число');
+    .regex(/^\d+$/, 'digits')
+    .refine((value) => Number(value) >= 1, 'positive')
+    .refine((value) => Number(value) <= MAX_INT, 'maxNumber');
 
 /** `100`, `99.5` and `99,50` (a comma is how many people type it): at most two decimals. */
 export const parseMoney = (value: string): number => Number(value.trim().replace(',', '.'));
@@ -69,5 +67,5 @@ export const moneyField = (emptyMessage: string) =>
     .string()
     .trim()
     .min(1, emptyMessage)
-    .regex(/^\d+([.,]\d{1,2})?$/, 'Введите сумму, например 100 или 99,50')
-    .refine((value) => parseMoney(value) <= MAX_PRICE, 'Слишком большая сумма');
+    .regex(/^\d+([.,]\d{1,2})?$/, 'money')
+    .refine((value) => parseMoney(value) <= MAX_PRICE, 'maxMoney');

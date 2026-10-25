@@ -1,13 +1,13 @@
 import { Suspense } from 'react';
 
-import { DeleteDialogHost } from '@/features/confirmation';
+import { confirmationMessages, DeleteDialogHost } from '@/features/confirmation';
+import { MessageScope } from '@/shared/i18n/MessageScope.server';
 import { parseSearch, type SearchParams } from '@/shared/lib/searchParams';
-import { PageHeader } from '@/shared/ui/PageHeader';
-import { ListSkeleton } from '@/shared/ui/Skeleton';
 
 import { deleteProduct } from '../../actions';
 import { parseTypeParam } from '../../searchParams';
 import { ProductsContent } from '../ProductsContent/ProductsContent.server';
+import { Loading } from './Loading.server';
 
 /**
  * Resolve the address inside Suspense, keeping the route shell synchronous without promise chains.
@@ -21,18 +21,13 @@ async function ProductsRequest({ searchParams }: { searchParams: SearchParams })
 export function ProductsRoute({ searchParams }: { searchParams: SearchParams }) {
   return (
     <>
-      <Suspense
-        fallback={
-          <>
-            <PageHeader title="Продукты" />
-            <ListSkeleton rows={8} rowHeight="3.6rem" label="Загрузка продуктов…" />
-          </>
-        }
-      >
+      <Suspense fallback={<Loading />}>
         <ProductsRequest searchParams={searchParams} />
       </Suspense>
       <Suspense>
-        <DeleteDialogHost deleteProduct={deleteProduct} />
+        <MessageScope load={confirmationMessages}>
+          <DeleteDialogHost deleteProduct={deleteProduct} />
+        </MessageScope>
       </Suspense>
     </>
   );

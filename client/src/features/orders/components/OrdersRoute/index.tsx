@@ -1,14 +1,14 @@
 import { Suspense } from 'react';
 
-import { DeleteDialogHost } from '@/features/confirmation';
+import { confirmationMessages, DeleteDialogHost } from '@/features/confirmation';
 import { deleteProduct } from '@/features/products';
+import { MessageScope } from '@/shared/i18n/MessageScope.server';
 import { parseSearch, type SearchParams } from '@/shared/lib/searchParams';
-import { PageHeader } from '@/shared/ui/PageHeader';
-import { ListSkeleton } from '@/shared/ui/Skeleton';
 
 import { deleteOrder } from '../../actions';
 import { parseOrderId } from '../../searchParams';
 import { OrdersContent } from '../OrdersContent/OrdersContent.server';
+import { Loading } from './Loading.server';
 
 /**
  * Resolve the address inside Suspense, keeping the route shell synchronous without promise chains.
@@ -22,18 +22,13 @@ async function OrdersRequest({ searchParams }: { searchParams: SearchParams }) {
 export function OrdersRoute({ searchParams }: { searchParams: SearchParams }) {
   return (
     <>
-      <Suspense
-        fallback={
-          <>
-            <PageHeader title="Приходы" add={{ label: 'Добавить приход', href: '/orders/new' }} />
-            <ListSkeleton rows={6} rowHeight="4.5rem" label="Загрузка приходов…" />
-          </>
-        }
-      >
+      <Suspense fallback={<Loading />}>
         <OrdersRequest searchParams={searchParams} />
       </Suspense>
       <Suspense>
-        <DeleteDialogHost deleteOrder={deleteOrder} deleteProduct={deleteProduct} />
+        <MessageScope load={confirmationMessages}>
+          <DeleteDialogHost deleteOrder={deleteOrder} deleteProduct={deleteProduct} />
+        </MessageScope>
       </Suspense>
     </>
   );

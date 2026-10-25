@@ -9,7 +9,7 @@ Rules to follow so that mistakes we have already found do not repeat. A new rule
 3. Do not commit or merge into `main` without an explicit OK.
 4. Do not say "it works" until it is checked. In the report, name separately what is unverified (for example, Docker).
 5. Stop the dev servers and processes that were started for a check once the check is done.
-6. **Everything in the repository is in English:** identifiers, comments, file names, log and error messages, documentation, commit messages. The exceptions are the UI texts in components and the content of mock or seed data, which stay in Russian until i18n arrives in stage 6. Conversation with the project owner is in Russian.
+6. **Everything in the repository is in English:** identifiers, comments, file names, log and error messages, documentation, commit messages. Translation resources may contain their target language; user-entered and seed data keep their original language. UI text comes from component dictionaries starting in stage 6b. Conversation with the project owner is in Russian.
 
 ## Client architecture (`client/src`)
 
@@ -88,6 +88,15 @@ Inside a feature the layers also go from top to bottom: `components` → `hooks`
     - Pending belongs to the current dialog operation, not every overlapping React transition. Cancelling a request must leave a new confirmation usable, including when the same item is opened again; a late completion must not clear a newer operation's pending state.
     - Inventory slices, tombstone ids and client reload thunks are no longer used.
 18. **Feature dependencies.** `orders` may use the products feature's public `deleteProduct` action. Products loads its own order options through its API layer, without importing orders. Confirmation receives actions through props and imports neither domain feature. Keep the graph acyclic.
+
+## Localization and form drafts (stage 6b)
+
+1. English is the default. Only an explicit supported locale cookie selects Russian. The language switch keeps the current URL and form state.
+2. Each page/component owns its messages/en.json and messages/ru.json. Pure messages.ts loaders import only the selected language; request-aware wrappers stay in messages.server.ts. Public feature exports remain in index.ts and must not expose server-only dependencies to client consumers.
+3. The global-error recovery screen has a tiny, immediately available English fallback independent of the server and optional Russian loading. Other components load only the selected dictionary. Do not collect the application's dictionaries in the root provider. Shell, forms, filters and dialogs get their own scoped providers. Server components resolve their own text; their dictionaries are not serialized into client providers.
+4. Schema validation returns stable message keys, translated next to the fields. Format entity dates in UTC and the mounted clock in local time through shared/lib helpers. Upstream error strings are not UI translations.
+5. Form drafts store raw fields in localStorage, with a version and last-edit timestamp. Validate restored field types, ignore corrupt/expired records, and tolerate denied storage. Restore after hydration without overwriting dirty fields.
+6. Saving a form removes only the submitted revision; a late success must preserve a newer draft. Product drafts are separated by their incoming order context, with obsolete select options cleared on restore.
 
 ## Asynchronous code
 

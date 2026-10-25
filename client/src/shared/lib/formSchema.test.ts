@@ -49,7 +49,7 @@ describe('titleField', () => {
 
   it('counts characters like the database does: an emoji is one', () => {
     expect(problem(field, '😀'.repeat(255))).toBeUndefined();
-    expect(problem(field, 'a'.repeat(256))).toBe('Не более 255 символов');
+    expect(problem(field, 'a'.repeat(256))).toBe('maxTitle');
   });
 });
 
@@ -57,7 +57,7 @@ describe('textField', () => {
   it('may stay empty and limits the size in bytes', () => {
     expect(problem(textField, '')).toBeUndefined();
     expect(problem(textField, 'a'.repeat(65_535))).toBeUndefined();
-    expect(problem(textField, '😀'.repeat(20_000))).toBe('Слишком длинный текст');
+    expect(problem(textField, '😀'.repeat(20_000))).toBe('maxText');
   });
 });
 
@@ -65,12 +65,12 @@ describe('date fields', () => {
   it('lets an optional date stay empty but not be half typed', () => {
     expect(problem(optionalDateField, '')).toBeUndefined();
     expect(problem(optionalDateField, '2017-06-29')).toBeUndefined();
-    expect(problem(optionalDateField, '2017-06')).toBe('Укажите дату полностью');
+    expect(problem(optionalDateField, '2017-06')).toBe('dateIncomplete');
   });
 
   it('requires a date', () => {
-    expect(problem(requiredDateField, '')).toBe('Укажите дату');
-    expect(problem(requiredDateField, '2017-02-30')).toBe('Укажите дату полностью');
+    expect(problem(requiredDateField, '')).toBe('dateRequired');
+    expect(problem(requiredDateField, '2017-02-30')).toBe('dateIncomplete');
     expect(problem(requiredDateField, '2017-06-29')).toBeUndefined();
   });
 });
@@ -85,11 +85,11 @@ describe('wholeNumberField', () => {
 
   it.each([
     ['', 'Введите номер'],
-    ['12a', 'Только цифры'],
-    ['1.5', 'Только цифры'],
-    ['-3', 'Только цифры'],
-    ['0', 'Число должно быть больше нуля'],
-    ['2147483648', 'Слишком большое число'],
+    ['12a', 'digits'],
+    ['1.5', 'digits'],
+    ['-3', 'digits'],
+    ['0', 'positive'],
+    ['2147483648', 'maxNumber'],
   ])('rejects %j: %s', (value, message) => {
     expect(problem(field, value)).toBe(message);
   });
@@ -107,7 +107,7 @@ describe('moneyField', () => {
   });
 
   it('refuses an amount that does not fit DECIMAL(12,2)', () => {
-    expect(problem(field, '10000000000')).toBe('Слишком большая сумма');
+    expect(problem(field, '10000000000')).toBe('maxMoney');
   });
 });
 

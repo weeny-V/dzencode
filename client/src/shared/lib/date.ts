@@ -2,30 +2,10 @@
 // are shown in UTC, so server rendering and the browser print the same text. Only the clock in the top menu
 // uses the visitor's local time.
 
-const MONTHS = [
-  'Янв',
-  'Фев',
-  'Мар',
-  'Апр',
-  'Май',
-  'Июн',
-  'Июл',
-  'Авг',
-  'Сен',
-  'Окт',
-  'Ноя',
-  'Дек',
-] as const;
-
-const WEEKDAYS = [
-  'Воскресенье',
-  'Понедельник',
-  'Вторник',
-  'Среда',
-  'Четверг',
-  'Пятница',
-  'Суббота',
-] as const;
+export interface CalendarNames {
+  months: string;
+  weekdays: string;
+}
 
 const pad = (value: number): string => String(value).padStart(2, '0');
 
@@ -53,12 +33,13 @@ const localParts = (date: Date): Parts => ({
   weekday: date.getDay(),
 });
 
-const monthName = (month: number): string => MONTHS[month - 1] ?? '';
+const monthName = (month: number, names: CalendarNames): string =>
+  names.months.split(' ')[month - 1] ?? '';
 
 /** `06 / Апр / 2017` */
-export const formatDate = (iso: string): string => {
+export const formatDate = (iso: string, names: CalendarNames): string => {
   const { day, month, year } = utcParts(iso);
-  return `${pad(day)} / ${monthName(month)} / ${year}`;
+  return `${pad(day)} / ${monthName(month, names)} / ${year}`;
 };
 
 /** `04 / 12`: the month number out of 12, shown above the date in the lists. */
@@ -71,12 +52,13 @@ export const formatNumericDate = (iso: string): string => {
 };
 
 /** `Вторник` (local time, for the clock). */
-export const formatWeekday = (date: Date): string => WEEKDAYS[localParts(date).weekday] ?? '';
+export const formatWeekday = (date: Date, names: CalendarNames): string =>
+  names.weekdays.split(' ')[localParts(date).weekday] ?? '';
 
 /** `06 Апр, 2017` (local time, for the clock). */
-export const formatClockDate = (date: Date): string => {
+export const formatClockDate = (date: Date, names: CalendarNames): string => {
   const { day, month, year } = localParts(date);
-  return `${pad(day)} ${monthName(month)}, ${year}`;
+  return `${pad(day)} ${monthName(month, names)}, ${year}`;
 };
 
 /** `17:20` (local time, for the clock). */

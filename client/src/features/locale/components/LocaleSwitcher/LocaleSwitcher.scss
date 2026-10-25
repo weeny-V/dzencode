@@ -1,0 +1,26 @@
+@use 'tokens' as *;
+.locale-switcher {
+  margin-left: auto;
+  flex: none;
+  &__button {
+    border: 0;
+    padding: 0.25rem;
+    border-radius: $radius;
+    color: $color-muted;
+    background: transparent;
+    font-size: 0.75rem;
+    cursor: pointer;
+    &[aria-pressed='true'] {
+      color: $color-primary-text;
+      font-weight: 700;
+    }
+    &:disabled {
+      opacity: $pending-opacity;
+    }
+  }
+  &__error {
+    position: absolute;
+    background: $color-surface;
+    color: $color-danger;
+  }
+}

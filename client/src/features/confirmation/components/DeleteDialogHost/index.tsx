@@ -1,5 +1,7 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
+
 import { ConfirmDialog } from '@/shared/ui/ConfirmDialog';
 import { ListIcon } from '@/shared/ui/icons';
 import { ItemSummary } from '@/shared/ui/ItemSummary';
@@ -9,11 +11,12 @@ import { type DeleteActions, useDeleteDialog } from './useDeleteDialog';
 
 /** Mount once outside Suspense and the rows, so refreshes preserve the closing animation. */
 export function DeleteDialogHost(actions: DeleteActions) {
+  const t = useTranslations('DeleteDialogHost');
   const { target, open, close, confirm, pending, error } = useDeleteDialog(actions);
   return (
     <ConfirmDialog
       open={open}
-      title={`Вы уверены, что хотите удалить этот ${target?.kind === 'product' ? 'продукт' : 'приход'}?`}
+      title={t(target?.kind === 'product' ? 'product' : 'order')}
       onClose={close}
       onConfirm={confirm}
       pending={pending}

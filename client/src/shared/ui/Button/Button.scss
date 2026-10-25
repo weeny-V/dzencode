@@ -82,4 +82,30 @@
       background: rgba($color-surface, 0.32);
     }
   }
+
+  &--icon {
+    flex: none;
+    width: $button-icon-size;
+    height: $button-icon-size;
+    min-height: $button-icon-size;
+    padding: 0;
+    border-radius: 50%;
+    background: $color-surface;
+    color: $color-muted;
+    font-size: $button-icon-font-size;
+    letter-spacing: normal;
+    text-transform: none;
+    box-shadow: $shadow-soft;
+
+    &:hover:not(:disabled) {
+      background: $color-bg;
+      box-shadow: $shadow-card;
+      color: $color-text;
+      transform: scale(1.08);
+    }
+
+    &:active:not(:disabled) {
+      transform: scale(0.94);
+    }
+  }
 }

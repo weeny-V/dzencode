@@ -25,6 +25,7 @@ export function NewProductContainer({ orderId, types, orders }: NewProductContai
       types={types}
       orders={orders}
       initialOrder={initialOrder}
+      draftKey={`product:order:${orderId ?? 'none'}`}
       cancelHref={`/orders${toQuery({ order: initialOrder === undefined ? undefined : String(initialOrder) })}`}
       onSubmit={create}
     />

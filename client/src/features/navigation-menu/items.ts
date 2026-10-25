@@ -10,11 +10,11 @@ export interface NavItem {
  * "coming soon" page, so every link works and highlights like the others.
  */
 export const NAV_ITEMS: readonly NavItem[] = [
-  { label: 'Приход', href: '/orders', searchable: true },
-  { label: 'Группы', href: '/groups' },
-  { label: 'Продукты', href: '/products', searchable: true },
-  { label: 'Пользователи', href: '/users' },
-  { label: 'Настройки', href: '/settings' },
+  { label: 'orders', href: '/orders', searchable: true },
+  { label: 'groups', href: '/groups' },
+  { label: 'products', href: '/products', searchable: true },
+  { label: 'users', href: '/users' },
+  { label: 'settings', href: '/settings' },
 ];
 
 /** `/orders` is active on `/orders` and on `/orders/...`, but not on `/orders-archive`. */

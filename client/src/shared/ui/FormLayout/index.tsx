@@ -1,5 +1,6 @@
 import './FormLayout.scss';
 
+import { useTranslations } from 'next-intl';
 import type { FormEventHandler, ReactNode } from 'react';
 
 import { Button, ButtonLink } from '../Button';
@@ -16,6 +17,8 @@ interface FormLayoutProps {
   /** Why the whole form was refused (the server's answer, a lost connection). Field errors sit under their fields. */
   error?: string;
   children: ReactNode;
+  onClear?: () => void;
+  draftUnavailable?: boolean;
 }
 
 /** The frame of a form page: the title, a white card with the fields, the error of the whole form and the buttons. */
@@ -27,7 +30,10 @@ export function FormLayout({
   cancelHref,
   error,
   children,
+  onClear,
+  draftUnavailable,
 }: FormLayoutProps) {
+  const t = useTranslations('FormLayout');
   return (
     <>
       <PageHeader title={title} />
@@ -36,18 +42,24 @@ export function FormLayout({
       <form className="form-layout" onSubmit={onSubmit} noValidate aria-busy={submitting}>
         <div className="form-layout__fields">{children}</div>
 
+        {draftUnavailable && <p role="status">{t('unavailable')}</p>}
         {error && (
           <p className="form-layout__error" role="alert">
-            {error}
+            {t('failed')}
           </p>
         )}
 
         <div className="form-layout__actions">
+          {onClear && (
+            <Button type="button" variant="ghost" disabled={submitting} onClick={onClear}>
+              {t('clear')}
+            </Button>
+          )}
           <ButtonLink href={cancelHref} variant="ghost">
-            Отмена
+            {t('cancel')}
           </ButtonLink>
           <Button type="submit" disabled={submitting}>
-            {submitting ? 'Сохранение…' : submitLabel}
+            {submitting ? t('saving') : submitLabel}
           </Button>
         </div>
       </form>

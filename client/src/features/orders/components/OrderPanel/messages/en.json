@@ -1,0 +1,11 @@
+{
+  "title": "Order",
+  "close": "Close panel",
+  "add": "Add product",
+  "failed": "Could not load the order.",
+  "empty": "This order has no products yet.",
+  "new": "New",
+  "used": "Used",
+  "delete": "Delete product {title}",
+  "loading": "Loading products…"
+}

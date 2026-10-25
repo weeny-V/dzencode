@@ -1,5 +1,7 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
+
+import { render } from '@/testing/i18n';
 
 import { ProductForm } from './index';
 
@@ -29,7 +31,7 @@ describe('ProductForm', () => {
       />,
     );
     fireEvent.click(screen.getByRole('button', { name: 'Создать продукт' }));
-    await screen.findByText('Введите название продукта');
+    await screen.findAllByText('Обязательное поле');
     expect(submit).not.toHaveBeenCalled();
     fireEvent.change(screen.getByRole('textbox', { name: /Название/ }), {
       target: { value: 'Monitor' },
@@ -63,6 +65,8 @@ describe('ProductForm', () => {
         }),
       ),
     );
-    expect(await screen.findByRole('alert')).toHaveTextContent('Product refused');
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Не удалось сохранить. Проверьте данные и повторите попытку.',
+    );
   });
 });

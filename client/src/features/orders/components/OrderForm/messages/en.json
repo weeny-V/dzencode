@@ -1,0 +1,10 @@
+{
+  "title": "New order",
+  "submit": "Create order",
+  "name": "Title",
+  "date": "Date",
+  "dateHint": "If omitted, today’s date will be used.",
+  "description": "Description",
+  "loading": "Loading form…",
+  "failed": "Could not load form data."
+}

@@ -2,7 +2,7 @@
 
 An "Orders / Products" SPA (Dzencode test task, **Middle** level). Requirements: [docs/TASK.md](docs/TASK.md). Work plan by stages: [docs/PLAN.md](docs/PLAN.md).
 
-> Status: stage 6a implementation. Orders and Products render API data on the Next server; forms and confirmed deletion use Server Actions. Redux owns the live session counter and confirmation UI. Groups, Users and Settings still show a coming-soon page. RU/EN is planned for 6b; JWT for 6c; charts/maps for 6d.
+> Status: stage 6b implementation. RU/EN uses component dictionaries loaded for the selected language; English is the default. Forms keep local drafts for seven days. Inventory remains server-rendered with Server Actions; Redux owns sessions and confirmation UI. JWT is planned for 6c; charts/maps for 6d.
 
 ## Stack
 

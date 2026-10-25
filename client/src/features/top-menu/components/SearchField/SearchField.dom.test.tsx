@@ -1,8 +1,9 @@
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, screen, waitFor } from '@testing-library/react';
 import { Suspense, use, useState } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { deferred } from '@/testing/fixtures';
+import { render } from '@/testing/i18n';
 import { navigation } from '@/testing/navigation';
 
 import { SearchField } from './index';

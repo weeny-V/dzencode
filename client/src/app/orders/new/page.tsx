@@ -1,14 +1,15 @@
-import type { Metadata } from 'next';
-
-import { NewOrderContainer } from '@/features/orders';
+import { NewOrderContent } from '@/features/orders';
+import { pageMetadata } from '@/shared/i18n/metadata';
 import { PageTransition } from '@/shared/ui/PageTransition';
 
-export const metadata: Metadata = { title: 'Новый приход' };
+import { text } from './messages.server';
+
+export const generateMetadata = () => pageMetadata(text);
 
 export default function Page() {
   return (
     <PageTransition>
-      <NewOrderContainer />
+      <NewOrderContent />
     </PageTransition>
   );
 }

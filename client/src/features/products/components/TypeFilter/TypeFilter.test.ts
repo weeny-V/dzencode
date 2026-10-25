@@ -1,6 +1,7 @@
 import { createElement } from 'react';
-import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
+
+import { renderToStaticMarkup } from '@/testing/i18n';
 
 import { TypeFilter } from './index';
 

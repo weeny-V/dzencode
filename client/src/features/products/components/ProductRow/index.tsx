@@ -10,6 +10,8 @@ import { DateStack } from '@/shared/ui/DateStack';
 import { PriceStack } from '@/shared/ui/PriceStack';
 import { ProductThumb } from '@/shared/ui/ProductThumb';
 
+import { text } from './messages.server';
+
 interface ProductRowProps {
   product: Product;
   /** Position in the list: rows appear one after another (see `stagger` in _transitions.scss). */
@@ -17,7 +19,8 @@ interface ProductRowProps {
 }
 
 /** One product in the products table. */
-export function ProductRow({ product, index }: ProductRowProps) {
+export async function ProductRow({ product, index }: ProductRowProps) {
+  const t = await text();
   return (
     <li className="product-row" style={{ '--i': index } as CSSProperties}>
       <ProductThumb />
@@ -32,12 +35,16 @@ export function ProductRow({ product, index }: ProductRowProps) {
       <span className="product-row__type">{product.type}</span>
 
       <span className={`product-row__state${product.isNew ? '' : ' product-row__state--used'}`}>
-        {product.isNew ? 'Новый' : 'Б / У'}
+        {product.isNew ? t('new') : t('used')}
       </span>
 
       <div className="product-row__guarantee">
-        <span>с {formatNumericDate(product.guarantee.start)}</span>
-        <span>по {formatNumericDate(product.guarantee.end)}</span>
+        <span>
+          {t('from')} {formatNumericDate(product.guarantee.start)}
+        </span>
+        <span>
+          {t('to')} {formatNumericDate(product.guarantee.end)}
+        </span>
       </div>
 
       <PriceStack prices={product.price} />
@@ -49,7 +56,7 @@ export function ProductRow({ product, index }: ProductRowProps) {
       <DateStack iso={product.date} />
 
       <DeleteButton
-        label={`Удалить продукт ${product.title}`}
+        label={t('delete', { title: product.title })}
         target={{
           kind: 'product',
           id: product.id,

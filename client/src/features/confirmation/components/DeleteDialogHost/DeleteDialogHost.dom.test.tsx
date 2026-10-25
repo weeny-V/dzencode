@@ -49,7 +49,7 @@ describe('DeleteDialogHost', () => {
       .mockResolvedValueOnce({ ok: true, data: undefined });
     const { store } = setup(remove);
     fireEvent.click(screen.getByRole('button', { name: 'Удалить' }));
-    expect(await screen.findByRole('alert')).toHaveTextContent('API offline');
+    expect(await screen.findByRole('alert')).toHaveTextContent('Не удалось удалить.');
     expect(store.getState().confirmation.open).toBe(true);
     const retry = await screen.findByRole('button', { name: 'Удалить' });
     await waitFor(() => expect(retry).toBeEnabled());
@@ -59,7 +59,7 @@ describe('DeleteDialogHost', () => {
   it('handles a Server Action transport failure in the dialog', async () => {
     setup(vi.fn().mockRejectedValue(new Error('Next offline')));
     fireEvent.click(screen.getByRole('button', { name: 'Удалить' }));
-    expect(await screen.findByRole('alert')).toHaveTextContent('Next offline');
+    expect(await screen.findByRole('alert')).toHaveTextContent('Не удалось удалить.');
   });
   it('does not close a new target or replace another panel after a late success', async () => {
     const response = deferred<ActionResult<void>>();
@@ -105,12 +105,12 @@ describe('DeleteDialogHost', () => {
         second.resolve({ ok: false, error: 'Current request failed' });
         await second.promise;
       });
-      expect(await screen.findByRole('alert')).toHaveTextContent('Current request failed');
+      expect(await screen.findByRole('alert')).toHaveTextContent('Не удалось удалить.');
       const retry = screen.getByRole('button', { name: 'Удалить' });
       expect(retry).toBeEnabled();
       fireEvent.click(retry);
       await waitFor(() => expect(remove).toHaveBeenNthCalledWith(3, nextTarget.id));
-      expect(await screen.findByRole('alert')).toHaveTextContent('Retry failed');
+      expect(await screen.findByRole('alert')).toHaveTextContent('Не удалось удалить.');
 
       await act(async () => {
         first.resolve({ ok: false, error: 'Cancelled request failed' });
@@ -120,7 +120,7 @@ describe('DeleteDialogHost', () => {
         open: true,
         target: { id: nextTarget.id },
       });
-      expect(screen.getByRole('alert')).toHaveTextContent('Retry failed');
+      expect(screen.getByRole('alert')).toHaveTextContent('Не удалось удалить.');
       expect(screen.getByRole('button', { name: 'Удалить' })).toBeEnabled();
     },
   );
@@ -147,7 +147,7 @@ describe('DeleteDialogHost', () => {
       second.resolve({ ok: false, error: 'Current request failed' });
       await second.promise;
     });
-    expect(await screen.findByRole('alert')).toHaveTextContent('Current request failed');
+    expect(await screen.findByRole('alert')).toHaveTextContent('Не удалось удалить.');
     expect(screen.getByRole('button', { name: 'Удалить' })).toBeEnabled();
   });
   it('sends the product parent id for cache invalidation', async () => {

@@ -1,0 +1,7 @@
+{
+  "title": "Orders",
+  "add": "Add order",
+  "failed": "Could not load orders.",
+  "empty": "No orders yet.",
+  "loading": "Loading orders…"
+}

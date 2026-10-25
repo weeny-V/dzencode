@@ -69,7 +69,7 @@ describe('productFormSchema', () => {
 
   it('refuses a guarantee that ends before it starts, under the end date', () => {
     expect(messages({ guaranteeStart: '2019-06-29', guaranteeEnd: '2017-06-29' })).toEqual([
-      'guaranteeEnd: Гарантия не может закончиться раньше, чем начаться',
+      'guaranteeEnd: guarantee',
     ]);
   });
 
@@ -79,14 +79,14 @@ describe('productFormSchema', () => {
 
   it('leaves the order of the dates alone while one of them is not a date yet', () => {
     expect(messages({ guaranteeStart: '2019-06-29', guaranteeEnd: '' })).toEqual([
-      'guaranteeEnd: Укажите дату',
+      'guaranteeEnd: dateRequired',
     ]);
   });
 
   it('words a bad serial number and a bad price', () => {
     expect(messages({ serialNumber: '12a', priceUsd: '1.234' })).toEqual([
-      'serialNumber: Только цифры',
-      'priceUsd: Введите сумму, например 100 или 99,50',
+      'serialNumber: digits',
+      'priceUsd: money',
     ]);
   });
 });

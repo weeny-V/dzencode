@@ -2,8 +2,10 @@
 
 import './Modal.scss';
 
+import { useTranslations } from 'next-intl';
 import { type ReactNode, useEffect, useId, useRef } from 'react';
 
+import { Button } from '../Button';
 import { CloseIcon } from '../icons';
 
 // If the closing animation never ends (for example the tab is in the background and the browser draws no
@@ -28,6 +30,7 @@ interface ModalProps {
  * so the window and the dimmed backdrop fade and move in both directions, whatever opens them.
  */
 export function Modal({ open, title, onClose, children, actions }: ModalProps) {
+  const t = useTranslations('Modal');
   const titleId = useId();
   const dialogRef = useRef<HTMLDialogElement>(null);
   // A click counts as "on the backdrop" only if the press started there too: selecting text inside the window
@@ -93,9 +96,9 @@ export function Modal({ open, title, onClose, children, actions }: ModalProps) {
       }}
     >
       <div className="modal__window">
-        <button type="button" className="modal__close" onClick={onClose} aria-label="Закрыть">
+        <Button variant="icon" className="modal__close" onClick={onClose} aria-label={t('close')}>
           <CloseIcon />
-        </button>
+        </Button>
         <h2 className="modal__title" id={titleId}>
           {title}
         </h2>

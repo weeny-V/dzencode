@@ -1,5 +1,7 @@
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+
+import { render } from '@/testing/i18n';
 
 import { Modal } from './index';
 
@@ -14,6 +16,9 @@ describe('Modal lifecycle', () => {
       </Modal>,
     );
     const dialog = screen.getByRole('dialog');
+    fireEvent.click(screen.getByRole('button', { name: 'Закрыть' }));
+    expect(close).toHaveBeenCalledOnce();
+    close.mockClear();
     fireEvent(dialog, new Event('cancel', { bubbles: false, cancelable: true }));
     expect(close).toHaveBeenCalledOnce();
     expect(dialog).toHaveAttribute('open');
