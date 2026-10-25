@@ -1,6 +1,6 @@
 # Stage 7a implementation and owner review
 
-Branch: `stage/7a-graphql-graph`, from `main` at stage 6d (`0df3eac`). The plan and the owner review checklist are in [STAGE_7A_PLAN.md](STAGE_7A_PLAN.md); decisions are in [ADR 0004](adr/0004-graphql-and-relations-graph.md). Nothing is committed or merged: that needs the owner's explicit OK.
+Branch: `stage/7a-graphql-graph`, from `main` at stage 6d (`0df3eac`). The plan and the owner review checklist are in [STAGE_7A_PLAN.md](STAGE_7A_PLAN.md); decisions are in [ADR 0004](adr/0004-graphql-and-relations-graph.md). The owner approved committing the stage and merging it into main after the verification below.
 
 ## Delivered behavior
 
