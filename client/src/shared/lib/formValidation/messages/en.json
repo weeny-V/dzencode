@@ -1,0 +1,13 @@
+{
+  "required": "This field is required",
+  "maxTitle": "Use at most 255 characters",
+  "maxText": "The text is too long",
+  "dateIncomplete": "Enter a complete valid date",
+  "dateRequired": "Enter a date",
+  "digits": "Use digits only",
+  "positive": "The number must be greater than zero",
+  "maxNumber": "The number is too large",
+  "money": "Enter an amount, e.g. 100 or 99.50",
+  "maxMoney": "The amount is too large",
+  "guarantee": "The warranty cannot end before it starts"
+}

@@ -4,10 +4,12 @@ import { type ReactNode, Suspense, ViewTransition } from 'react';
 
 import { loadOrError } from '@/shared/api/server';
 import type { OrderSummary } from '@/shared/api/types';
+import type { Text } from '@/shared/i18n/server';
 import type { ActionResult } from '@/shared/lib/actionResult';
 import { toQuery } from '@/shared/lib/searchParams';
 import { LoadError } from '@/shared/ui/LoadError';
 import { NoResults } from '@/shared/ui/NoResults';
+import { text as noResultsText } from '@/shared/ui/NoResults/messages.server';
 import { PageHeader } from '@/shared/ui/PageHeader';
 
 import { getOrder, getOrders } from '../../api/orders';
@@ -15,6 +17,7 @@ import { OrderItem } from '../OrderItem';
 import { OrderPanel } from '../OrderPanel/OrderPanel.server';
 import { OrderPanelSkeleton } from '../OrderPanel/OrderPanelSkeleton';
 import { PanelScroll } from '../PanelScroll';
+import { text } from './messages.server';
 
 export async function OrdersContent({ selectedId, query }: { selectedId?: number; query: string }) {
   // Begin the panel read alongside the list. Its independent boundary never blocks the list.
@@ -24,15 +27,30 @@ export async function OrdersContent({ selectedId, query }: { selectedId?: number
     selectedId === undefined ? undefined : (
       <OrderPanel id={selectedId} details={details} closeHref={`/orders${toQuery({ q: query })}`} />
     );
-  return <OrdersContentView result={result} selectedId={selectedId} query={query} panel={panel} />;
+  const t = await text();
+  const noResults = await noResultsText();
+  return (
+    <OrdersContentView
+      t={t}
+      noResults={noResults}
+      result={result}
+      selectedId={selectedId}
+      query={query}
+      panel={panel}
+    />
+  );
 }
 
 function OrdersContentView({
+  t,
   result,
   selectedId,
   query,
   panel,
+  noResults,
 }: {
+  t: Text;
+  noResults: Text;
   result: ActionResult<OrderSummary[]>;
   selectedId?: number;
   query: string;
@@ -41,22 +59,23 @@ function OrdersContentView({
   return (
     <>
       <PageHeader
-        title="Приходы"
+        title={t('title')}
         count={result.ok ? result.data.length : undefined}
-        add={{ label: 'Добавить приход', href: '/orders/new' }}
+        add={{ label: t('add'), href: '/orders/new' }}
       />
       <div className={`orders-page${selectedId === undefined ? '' : ' orders-page--with-panel'}`}>
         <div data-pending-target>
           {!result.ok ? (
-            <LoadError title="Не удалось загрузить приходы." message={result.error} />
+            <LoadError title={t('failed')} />
           ) : result.data.length === 0 ? (
             query ? (
               <NoResults
+                t={noResults}
                 query={query}
                 clearHref={`/orders${toQuery({ order: selectedId === undefined ? undefined : String(selectedId) })}`}
               />
             ) : (
-              <p className="orders-page__empty">Приходов пока нет.</p>
+              <p className="orders-page__empty">{t('empty')}</p>
             )
           ) : (
             <ul className="orders-page__list">

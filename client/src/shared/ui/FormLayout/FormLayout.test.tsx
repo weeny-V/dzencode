@@ -1,5 +1,6 @@
-import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
+
+import { renderToStaticMarkup } from '@/testing/i18n';
 
 import { FormLayout } from './index';
 
@@ -40,6 +41,6 @@ describe('FormLayout', () => {
     const html = render({ error: 'Unknown order: 9' });
 
     expect(html).toContain('role="alert"');
-    expect(html).toContain('Unknown order: 9');
+    expect(html).toContain('Не удалось сохранить. Проверьте данные и повторите попытку.');
   });
 });

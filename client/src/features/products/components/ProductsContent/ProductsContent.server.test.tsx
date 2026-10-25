@@ -1,4 +1,5 @@
-import { renderToStaticMarkup } from 'react-dom/server';
+import { renderServer } from '@/testing/i18n';
+vi.mock('next-intl/server', () => ({ getLocale: () => Promise.resolve('ru') }));
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { product } from '@/testing/fixtures';
@@ -25,7 +26,7 @@ beforeEach(() => {
 
 describe('server-rendered products', () => {
   it('renders rows and normalizes known type spelling', async () => {
-    const html = renderToStaticMarkup(
+    const html = await renderServer(
       await ProductsContent({ typeParam: 'monitors', query: 'test' }),
     );
     expect(api.getProducts).toHaveBeenCalledWith({ type: 'monitors', query: 'test' });
@@ -39,18 +40,18 @@ describe('server-rendered products', () => {
   });
   it('shows list failures alongside the type filter', async () => {
     api.getProducts.mockRejectedValue(new Error('API offline'));
-    const html = renderToStaticMarkup(await ProductsContent({ typeParam: '', query: '' }));
-    expect(html).toContain('API offline');
+    const html = await renderServer(await ProductsContent({ typeParam: '', query: '' }));
+    expect(html).toContain('Не удалось загрузить');
     expect(html).toContain('Monitors');
   });
   it('loads form options and passes the parent context to the form', async () => {
     api.getOrderOptions.mockResolvedValue([{ id: 7, title: 'Order seven' }]);
-    const html = renderToStaticMarkup(await NewProductContent({ orderId: 7 }));
+    const html = await renderServer(await NewProductContent({ orderId: 7 }));
     expect(html).toContain('/orders?order=7');
     expect(html).toContain('Order seven');
   });
   it('shows an error if form options cannot be loaded', async () => {
     api.getOrderOptions.mockRejectedValue(new Error('Orders unavailable'));
-    expect(renderToStaticMarkup(await NewProductContent({}))).toContain('Orders unavailable');
+    expect(await renderServer(await NewProductContent({}))).toContain('Не удалось загрузить');
   });
 });

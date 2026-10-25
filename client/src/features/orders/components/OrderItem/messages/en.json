@@ -1,0 +1,4 @@
+{
+  "products": "{count, plural, one {product} other {products}}",
+  "delete": "Delete order {title}"
+}

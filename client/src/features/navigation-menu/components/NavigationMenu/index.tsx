@@ -4,6 +4,7 @@ import './NavigationMenu.scss';
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { type ReactNode, ViewTransition } from 'react';
 
 import { GearIcon } from '@/shared/ui/icons';
@@ -23,14 +24,11 @@ interface NavigationMenuProps {
 
 /** The sidebar: avatar and links to the pages. */
 export function NavigationMenu({ id, open, onNavigate, footer }: NavigationMenuProps) {
+  const t = useTranslations('NavigationMenu');
   const pathname = usePathname();
 
   return (
-    <nav
-      id={id}
-      className={`nav-menu${open ? ' nav-menu--open' : ''}`}
-      aria-label="Основная навигация"
-    >
+    <nav id={id} className={`nav-menu${open ? ' nav-menu--open' : ''}`} aria-label={t('label')}>
       <div className="nav-menu__profile">
         <div className="nav-menu__avatar" aria-hidden="true">
           <svg viewBox="0 0 96 96" focusable="false">
@@ -64,7 +62,7 @@ export function NavigationMenu({ id, open, onNavigate, footer }: NavigationMenuP
                 transitionTypes={[navDirection(pathname, href)]}
                 onClick={onNavigate}
               >
-                {label}
+                {t(label)}
                 {active && (
                   // One underline for the whole menu: it has the same name on every item, so the browser
                   // glides it from the old item to the new one instead of drawing a new one.

@@ -81,7 +81,7 @@
 
   // Pushes the counter and the clock to the right edge.
   &__sessions {
-    margin-left: auto;
+    margin-left: 0;
   }
 
   &__clock {
@@ -113,6 +113,14 @@
     margin-left: 0.6rem;
     color: $color-primary;
     font-size: 1rem;
+  }
+
+  @media (max-width: 575.98px) {
+    gap: 0.4rem;
+    padding: 0 0.5rem;
+    &__brand-name {
+      display: none;
+    }
   }
 
   // Phones: only the time fits next to the logo.

@@ -1,5 +1,6 @@
 import './ConfirmDialog.scss';
 
+import { useTranslations } from 'next-intl';
 import type { ReactNode } from 'react';
 
 import { Button } from '../Button';
@@ -34,6 +35,7 @@ export function ConfirmDialog({
   error,
   children,
 }: ConfirmDialogProps) {
+  const t = useTranslations('ConfirmDialog');
   return (
     <Modal
       open={open}
@@ -42,11 +44,11 @@ export function ConfirmDialog({
       actions={
         <>
           <Button variant="text" onClick={onClose}>
-            Отменить
+            {t('cancel')}
           </Button>
           <Button variant="light-danger" onClick={onConfirm} disabled={pending}>
             <TrashIcon />
-            {pending ? 'Удаление…' : 'Удалить'}
+            {pending ? t('deleting') : t('delete')}
           </Button>
         </>
       }
@@ -54,7 +56,7 @@ export function ConfirmDialog({
       {children}
       {error !== undefined && (
         <p className="confirm-dialog__error" role="alert">
-          Не удалось удалить{error ? `: ${error}` : '.'}
+          {t('failed')}
         </p>
       )}
     </Modal>

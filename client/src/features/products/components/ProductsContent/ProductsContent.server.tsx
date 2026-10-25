@@ -1,19 +1,24 @@
 import './ProductsContent.scss';
 
+import { NextIntlClientProvider } from 'next-intl';
 import { ViewTransition } from 'react';
 
 import { loadOrError } from '@/shared/api/server';
 import type { Product } from '@/shared/api/types';
+import type { Text } from '@/shared/i18n/server';
 import type { ActionResult } from '@/shared/lib/actionResult';
 import { toQuery } from '@/shared/lib/searchParams';
 import { LoadError } from '@/shared/ui/LoadError';
 import { NoResults } from '@/shared/ui/NoResults';
+import { text as noResultsText } from '@/shared/ui/NoResults/messages.server';
 import { PageHeader } from '@/shared/ui/PageHeader';
 
 import { getProducts, getProductTypes } from '../../api/products';
 import { parseType } from '../../searchParams';
 import { ProductRow } from '../ProductRow';
 import { TypeFilter } from '../TypeFilter';
+import { dictionary as filterDictionary } from '../TypeFilter/messages.server';
+import { text } from './messages.server';
 
 export async function ProductsContent({ typeParam, query }: { typeParam: string; query: string }) {
   const [types, initialProducts] = await Promise.all([
@@ -28,6 +33,9 @@ export async function ProductsContent({ typeParam, query }: { typeParam: string;
       : initialProducts;
   return (
     <ProductsContentView
+      t={await text()}
+      noResults={await noResultsText()}
+      filter={await filterDictionary()}
       types={types}
       products={products}
       selectedType={selectedType}
@@ -37,11 +45,17 @@ export async function ProductsContent({ typeParam, query }: { typeParam: string;
 }
 
 function ProductsContentView({
+  t,
   types,
   products,
   selectedType,
   query,
+  noResults,
+  filter,
 }: {
+  t: Text;
+  noResults: Text;
+  filter: Awaited<ReturnType<typeof filterDictionary>>;
   types: ActionResult<string[]>;
   products: ActionResult<Product[]>;
   selectedType: string;
@@ -50,25 +64,29 @@ function ProductsContentView({
   if (!types.ok)
     return (
       <>
-        <PageHeader title="Продукты" />
-        <LoadError title="Не удалось загрузить типы продуктов." message={types.error} />
+        <PageHeader title={t('title')} />
+        <LoadError title={t('typesFailed')} />
       </>
     );
   return (
     <>
-      <PageHeader title="Продукты" count={products.ok ? products.data.length : undefined}>
-        <TypeFilter types={types.data} selected={selectedType} />
+      <PageHeader title={t('title')} count={products.ok ? products.data.length : undefined}>
+        <NextIntlClientProvider locale={filter.locale} messages={{ TypeFilter: filter.messages }}>
+          <TypeFilter types={types.data} selected={selectedType} />
+        </NextIntlClientProvider>
       </PageHeader>
       <div data-pending-target>
         {!products.ok ? (
-          <LoadError title="Не удалось загрузить продукты." message={products.error} />
+          <LoadError title={t('failed')} />
         ) : products.data.length === 0 ? (
           query ? (
-            <NoResults query={query} clearHref={`/products${toQuery({ type: selectedType })}`} />
+            <NoResults
+              t={noResults}
+              query={query}
+              clearHref={`/products${toQuery({ type: selectedType })}`}
+            />
           ) : (
-            <p className="products-page__empty">
-              {selectedType ? 'Продуктов такого типа нет.' : 'Продуктов пока нет.'}
-            </p>
+            <p className="products-page__empty">{selectedType ? t('emptyType') : t('empty')}</p>
           )
         ) : (
           <div className="products-page__scroll">

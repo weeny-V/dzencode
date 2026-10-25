@@ -15,11 +15,11 @@ describe('orderFormSchema', () => {
   });
 
   it('requires a title', () => {
-    expect(messages({ title: '  ' })).toEqual(['title: Введите название прихода']);
+    expect(messages({ title: '  ' })).toEqual(['title: required']);
   });
 
   it('points at a half typed date', () => {
-    expect(messages({ title: 'x', date: '2017-06' })).toEqual(['date: Укажите дату полностью']);
+    expect(messages({ title: 'x', date: '2017-06' })).toEqual(['date: dateIncomplete']);
   });
 
   it('reports every field at once', () => {

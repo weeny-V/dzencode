@@ -1,0 +1,18 @@
+{
+  "title": "New product",
+  "submit": "Create product",
+  "name": "Title",
+  "serial": "Serial number",
+  "type": "Type",
+  "selectType": "Select a type",
+  "order": "Order",
+  "selectOrder": "Select an order",
+  "start": "Warranty starts",
+  "end": "Warranty ends",
+  "usd": "Price, $",
+  "uah": "Price, UAH",
+  "isNew": "New product (unused)",
+  "specification": "Specification",
+  "loading": "Loading form…",
+  "failed": "Could not load form data."
+}

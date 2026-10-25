@@ -1,6 +1,8 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
+
+import { render } from '@/testing/i18n';
 
 import { OrderForm } from './index';
 
@@ -9,7 +11,7 @@ describe('OrderForm', () => {
     const submit = vi.fn();
     render(<OrderForm onSubmit={submit} />);
     fireEvent.click(screen.getByRole('button', { name: 'Создать приход' }));
-    expect(await screen.findByText('Введите название прихода')).toBeVisible();
+    expect(await screen.findByText('Обязательное поле')).toBeVisible();
     expect(submit).not.toHaveBeenCalled();
   });
   it('submits converted values and displays an API validation failure', async () => {
@@ -21,6 +23,8 @@ describe('OrderForm', () => {
     await waitFor(() =>
       expect(submit).toHaveBeenCalledWith(expect.objectContaining({ title: 'New order' })),
     );
-    expect(await screen.findByRole('alert')).toHaveTextContent('Server rejected title');
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Не удалось сохранить. Проверьте данные и повторите попытку.',
+    );
   });
 });

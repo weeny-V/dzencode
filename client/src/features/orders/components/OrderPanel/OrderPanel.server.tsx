@@ -6,6 +6,7 @@ import type { CSSProperties } from 'react';
 import { DeleteButton } from '@/features/confirmation';
 import { loadOrError } from '@/shared/api/server';
 import type { OrderDetails } from '@/shared/api/types';
+import type { Text } from '@/shared/i18n/server';
 import type { ActionResult } from '@/shared/lib/actionResult';
 import { toQuery } from '@/shared/lib/searchParams';
 import { CloseIcon, PlusIcon } from '@/shared/ui/icons';
@@ -13,6 +14,7 @@ import { LoadError } from '@/shared/ui/LoadError';
 import { ProductThumb } from '@/shared/ui/ProductThumb';
 
 import { getOrder } from '../../api/orders';
+import { text } from './messages.server';
 
 export async function OrderPanel({
   id,
@@ -24,25 +26,28 @@ export async function OrderPanel({
   details?: Promise<ActionResult<OrderDetails>>;
 }) {
   const result = await (details ?? loadOrError(() => getOrder(id)));
-  return <OrderPanelView result={result} closeHref={closeHref} />;
+  const t = await text();
+  return <OrderPanelView t={t} result={result} closeHref={closeHref} />;
 }
 
 /** The server-rendered view receives the completed read and does not load data itself. */
 function OrderPanelView({
+  t,
   result,
   closeHref,
 }: {
+  t: Text;
   result: ActionResult<OrderDetails>;
   closeHref: string;
 }) {
   return (
     <section className="order-panel" aria-labelledby="order-panel-title">
-      <Link href={closeHref} className="order-panel__close" aria-label="Закрыть панель">
+      <Link href={closeHref} className="order-panel__close" aria-label={t('close')}>
         <CloseIcon />
       </Link>
       <header className="order-panel__header">
         <h2 className="order-panel__title" id="order-panel-title">
-          {result.ok ? result.data.title : 'Приход'}
+          {result.ok ? result.data.title : t('title')}
         </h2>
         {result.ok && (
           <Link
@@ -50,16 +55,16 @@ function OrderPanelView({
             className="order-panel__add"
           >
             <PlusIcon />
-            Добавить продукт
+            {t('add')}
           </Link>
         )}
       </header>
       {!result.ok ? (
         <div className="order-panel__state">
-          <LoadError title="Не удалось загрузить приход." message={result.error} />
+          <LoadError title={t('failed')} />
         </div>
       ) : result.data.products.length === 0 ? (
-        <p className="order-panel__empty">В этом приходе пока нет продуктов.</p>
+        <p className="order-panel__empty">{t('empty')}</p>
       ) : (
         <ul className="order-panel__list">
           {result.data.products.map((product, index) => (
@@ -71,8 +76,8 @@ function OrderPanelView({
               <span
                 className={`order-panel__dot${product.isNew ? '' : ' order-panel__dot--used'}`}
                 role="img"
-                aria-label={product.isNew ? 'Новый' : 'Б / У'}
-                title={product.isNew ? 'Новый' : 'Б / У'}
+                aria-label={product.isNew ? t('new') : t('used')}
+                title={product.isNew ? t('new') : t('used')}
               />
               <ProductThumb />
               <div className="order-panel__product-main">
@@ -84,7 +89,7 @@ function OrderPanelView({
               <span className="order-panel__product-type">{product.type}</span>
               <div className="order-panel__product-delete">
                 <DeleteButton
-                  label={`Удалить продукт ${product.title}`}
+                  label={t('delete', { title: product.title })}
                   target={{
                     kind: 'product',
                     id: product.id,

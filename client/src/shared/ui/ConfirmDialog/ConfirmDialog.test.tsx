@@ -1,5 +1,6 @@
-import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
+
+import { renderToStaticMarkup } from '@/testing/i18n';
 
 import { ConfirmDialog } from './index';
 
@@ -39,7 +40,7 @@ describe('ConfirmDialog', () => {
     const html = render({ error: 'Order not found' });
 
     expect(html).toContain('role="alert"');
-    expect(html).toContain('Не удалось удалить: Order not found');
+    expect(html).toContain('Не удалось удалить.');
     expect(html).not.toMatch(/<button[^>]*disabled/);
   });
 

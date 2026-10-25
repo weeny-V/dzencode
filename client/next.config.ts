@@ -1,6 +1,7 @@
 import path from 'node:path';
 
 import type { NextConfig } from 'next';
+import createNextIntlPlugin from 'next-intl/plugin';
 
 const nextConfig: NextConfig = {
   // Self-contained server bundle for a small Docker image.
@@ -22,4 +23,6 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+const withNextIntl = createNextIntlPlugin('./src/shared/i18n/request.ts');
+
+export default withNextIntl(nextConfig);

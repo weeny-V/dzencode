@@ -3,6 +3,7 @@
 import './TypeFilter.scss';
 
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { startTransition, useId, useOptimistic } from 'react';
 
 import { withParam } from '@/shared/lib/searchParams';
@@ -21,6 +22,7 @@ interface TypeFilterProps {
  * wait for the server round trip.
  */
 export function TypeFilter({ types, selected }: TypeFilterProps) {
+  const t = useTranslations('TypeFilter');
   const id = useId();
   const router = useRouter();
   const pathname = usePathname();
@@ -31,7 +33,7 @@ export function TypeFilter({ types, selected }: TypeFilterProps) {
   return (
     <div className="type-filter" data-pending={pending ? '' : undefined}>
       <label className="type-filter__label" htmlFor={id}>
-        Тип:
+        {t('label')}
       </label>
       <select
         id={id}
@@ -48,7 +50,7 @@ export function TypeFilter({ types, selected }: TypeFilterProps) {
           });
         }}
       >
-        <option value="">Все</option>
+        <option value="">{t('all')}</option>
         {types.map((type) => (
           <option key={type} value={type}>
             {type}

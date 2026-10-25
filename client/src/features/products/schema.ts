@@ -14,16 +14,16 @@ import {
 /** The fields of the "new product" form, all as the visitor typed them (strings; the checkbox is a boolean). */
 export const productFormSchema = z
   .object({
-    title: titleField('Введите название продукта'),
-    serialNumber: wholeNumberField('Введите серийный номер'),
-    type: z.string().min(1, 'Выберите тип'),
-    order: z.string().min(1, 'Выберите приход'),
+    title: titleField('required'),
+    serialNumber: wholeNumberField('required'),
+    type: z.string().min(1, 'required'),
+    order: z.string().min(1, 'required'),
     isNew: z.boolean(),
     specification: textField,
     guaranteeStart: requiredDateField,
     guaranteeEnd: requiredDateField,
-    priceUsd: moneyField('Введите цену в долларах'),
-    priceUah: moneyField('Введите цену в гривнах'),
+    priceUsd: moneyField('required'),
+    priceUah: moneyField('required'),
   })
   .refine(
     ({ guaranteeStart, guaranteeEnd }) =>
@@ -31,7 +31,7 @@ export const productFormSchema = z
       !isValidIsoDate(guaranteeStart) ||
       !isValidIsoDate(guaranteeEnd) ||
       guaranteeEnd >= guaranteeStart,
-    { path: ['guaranteeEnd'], message: 'Гарантия не может закончиться раньше, чем начаться' },
+    { path: ['guaranteeEnd'], message: 'guarantee' },
   );
 
 export type ProductFormValues = z.infer<typeof productFormSchema>;

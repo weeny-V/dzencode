@@ -1,0 +1,8 @@
+{
+  "title": "Products",
+  "typesFailed": "Could not load product types.",
+  "failed": "Could not load products.",
+  "emptyType": "No products of this type.",
+  "empty": "No products yet.",
+  "loading": "Loading products…"
+}

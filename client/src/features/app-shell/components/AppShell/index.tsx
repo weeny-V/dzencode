@@ -3,6 +3,7 @@
 import './AppShell.scss';
 
 import { usePathname } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { type ReactNode, useEffect, useState } from 'react';
 
 import { ApiStatus } from '@/features/api-status';
@@ -15,6 +16,7 @@ const NAVIGATION_ID = 'main-navigation';
 
 /** The frame of every page: top bar, sidebar and the content area. Owns the sidebar drawer state. */
 export function AppShell({ children }: { children: ReactNode }) {
+  const t = useTranslations('AppShell');
   const pathname = usePathname();
   // The drawer is open for the page it was opened on, so any navigation (a link, the browser's Back button)
   // closes it without an effect that resets state.
@@ -51,7 +53,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="app-shell">
       <a className="visually-hidden-focusable app-shell__skip" href="#content">
-        Перейти к содержимому
+        {t('skip')}
       </a>
       <TopMenu
         menuOpen={menuOpen}
