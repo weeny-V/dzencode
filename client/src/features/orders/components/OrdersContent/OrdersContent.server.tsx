@@ -10,7 +10,6 @@ import { toQuery } from '@/shared/lib/searchParams';
 import { LoadError } from '@/shared/ui/LoadError';
 import { NoResults } from '@/shared/ui/NoResults';
 import { text as noResultsText } from '@/shared/ui/NoResults/messages.server';
-import { PageHeader } from '@/shared/ui/PageHeader';
 
 import { getOrder, getOrders } from '../../api/orders';
 import { OrderItem } from '../OrderItem';
@@ -58,11 +57,6 @@ function OrdersContentView({
 }) {
   return (
     <>
-      <PageHeader
-        title={t('title')}
-        count={result.ok ? result.data.length : undefined}
-        add={{ label: t('add'), href: '/orders/new' }}
-      />
       <div className={`orders-page${selectedId === undefined ? '' : ' orders-page--with-panel'}`}>
         <div data-pending-target>
           {!result.ok ? (

@@ -1,1 +1,5 @@
-export { GroupsContent, GroupsLoading } from './components/GroupsContent/GroupsContent.server';
+export {
+  GroupsContent,
+  GroupsHeader,
+  GroupsLoading,
+} from './components/GroupsContent/GroupsContent.server';

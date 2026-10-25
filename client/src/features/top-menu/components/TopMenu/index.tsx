@@ -53,7 +53,8 @@ export function TopMenu({
         <MenuIcon />
       </button>
 
-      <Link href="/orders" className="top-menu__brand">
+      {/* The name is hidden on narrow screens, so the link must name itself. */}
+      <Link href="/orders" className="top-menu__brand" aria-label="Inventory">
         <ShieldLogo className="top-menu__logo" />
         <span className="top-menu__brand-name">Inventory</span>
       </Link>

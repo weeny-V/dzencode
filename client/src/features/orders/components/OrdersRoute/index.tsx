@@ -8,6 +8,7 @@ import { parseSearch, type SearchParams } from '@/shared/lib/searchParams';
 import { deleteOrder } from '../../actions';
 import { parseOrderId } from '../../searchParams';
 import { OrdersContent } from '../OrdersContent/OrdersContent.server';
+import { OrdersHeader } from '../OrdersHeader/OrdersHeader.server';
 import { Loading } from './Loading.server';
 
 /**
@@ -22,6 +23,7 @@ async function OrdersRequest({ searchParams }: { searchParams: SearchParams }) {
 export function OrdersRoute({ searchParams }: { searchParams: SearchParams }) {
   return (
     <>
+      <OrdersHeader searchParams={searchParams} />
       <Suspense fallback={<Loading />}>
         <OrdersRequest searchParams={searchParams} />
       </Suspense>

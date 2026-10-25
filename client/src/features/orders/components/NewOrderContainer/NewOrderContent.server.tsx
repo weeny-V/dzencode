@@ -7,7 +7,8 @@ import { PageHeader } from '@/shared/ui/PageHeader';
 import { ListSkeleton } from '@/shared/ui/Skeleton';
 
 import { dictionary, text } from '../OrderForm/messages.server';
-import { NewOrderContainer } from '.';
+import { NewOrderLoader } from './NewOrderLoader';
+
 export async function NewOrderContent() {
   await requireSession();
   const [result, messages, t] = await Promise.all([
@@ -24,7 +25,7 @@ export async function NewOrderContent() {
     );
   return (
     <FormMessages name="OrderForm" dictionary={messages}>
-      <NewOrderContainer warehouses={result.data} />
+      <NewOrderLoader warehouses={result.data} />
     </FormMessages>
   );
 }

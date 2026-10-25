@@ -13,6 +13,9 @@ vi.mock('@/features/confirmation', () => ({
   DeleteButton: ({ label }: { label: string }) => <button>{label}</button>,
 }));
 vi.mock('@/shared/ui/RetryButton', () => ({ RetryButton: () => <button>Повторить</button> }));
+vi.mock('../ExportOrders/ExportOrders.server', () => ({
+  ExportOrdersControl: () => <button>Экспорт CSV</button>,
+}));
 beforeEach(() => vi.clearAllMocks());
 
 describe('server-rendered orders', () => {

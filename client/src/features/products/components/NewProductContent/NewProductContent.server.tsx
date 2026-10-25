@@ -6,7 +6,7 @@ import { LoadError } from '@/shared/ui/LoadError';
 import { PageHeader } from '@/shared/ui/PageHeader';
 
 import { getOrderOptions, getProductTypes, type OrderOption } from '../../api/products';
-import { NewProductContainer } from '../NewProductContainer';
+import { NewProductLoader } from '../NewProductContainer/NewProductLoader';
 import { dictionary, text } from '../ProductForm/messages.server';
 
 export async function NewProductContent({ orderId }: { orderId?: number }) {
@@ -36,6 +36,6 @@ function NewProductContentView({
     );
   const [types, orders] = result.data;
   return (
-    <NewProductContainer key={orderId ?? 'none'} types={types} orders={orders} orderId={orderId} />
+    <NewProductLoader key={orderId ?? 'none'} types={types} orders={orders} orderId={orderId} />
   );
 }

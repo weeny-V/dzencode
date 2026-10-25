@@ -1,0 +1,14 @@
+{
+  "export": "Export CSV",
+  "busy": "Preparing the file…",
+  "cancel": "Cancel",
+  "failed": "Could not export the orders.",
+  "id": "ID",
+  "title": "Title",
+  "description": "Description",
+  "date": "Date",
+  "warehouse": "Warehouse",
+  "products": "Products",
+  "totalUah": "Total UAH",
+  "totalUsd": "Total USD"
+}

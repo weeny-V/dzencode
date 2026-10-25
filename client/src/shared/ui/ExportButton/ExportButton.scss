@@ -1,0 +1,16 @@
+@use 'tokens' as *;
+
+.export-button {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: $space-sm $space-md;
+
+  &__status {
+    color: $color-text-subtle;
+  }
+
+  &__error {
+    color: $color-danger;
+  }
+}

@@ -19,6 +19,11 @@ beforeEach(() => {
   mocks.requireSession.mockResolvedValue({});
 });
 
+// next/dynamic renders nothing outside Next; the loader is replaced by the container it loads.
+vi.mock('./NewOrderLoader', async () => ({
+  NewOrderLoader: (await import('.')).NewOrderContainer,
+}));
+
 describe('protected request-time order options', () => {
   it('authorizes before loading cached options or rendering the form', async () => {
     const redirect = Object.assign(new Error('redirect'), {

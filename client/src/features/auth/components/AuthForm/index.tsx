@@ -5,6 +5,7 @@ import './AuthForm.scss';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 
+import { useHydrated } from '@/shared/hooks/useHydrated';
 import { Button } from '@/shared/ui/Button';
 import { FormField } from '@/shared/ui/FormField';
 
@@ -13,6 +14,9 @@ import { useAuthForm } from './useAuthForm';
 export function AuthForm({ mode, returnTo }: { mode: 'login' | 'register'; returnTo: string }) {
   const t = useTranslations('AuthForm');
   const { form, error, submit } = useAuthForm(mode, returnTo);
+  // The form arrives as server HTML before its code is ready. A native submit at that moment would put the
+  // credentials into the address, so sending is possible only once the page can handle it.
+  const hydrated = useHydrated();
   const {
     register,
     formState: { errors, isSubmitting },
@@ -23,6 +27,7 @@ export function AuthForm({ mode, returnTo }: { mode: 'login' | 'register'; retur
       <h1 className="auth-form__title">{t(mode)}</h1>
       <form
         className="auth-form__fields"
+        method="post"
         onSubmit={(event) => void submit(event)}
         noValidate
         aria-busy={isSubmitting}
@@ -103,7 +108,7 @@ export function AuthForm({ mode, returnTo }: { mode: 'login' | 'register'; retur
             {t(error)}
           </p>
         )}
-        <Button type="submit" disabled={isSubmitting}>
+        <Button type="submit" disabled={isSubmitting || !hydrated}>
           {t(isSubmitting ? 'pending' : mode)}
         </Button>
       </form>

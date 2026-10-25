@@ -1,0 +1,20 @@
+{
+  "export": "Export CSV",
+  "busy": "Preparing the file…",
+  "cancel": "Cancel",
+  "failed": "Could not export the products.",
+  "id": "ID",
+  "title": "Title",
+  "serialNumber": "Serial number",
+  "type": "Type",
+  "isNew": "New",
+  "guaranteeStart": "Guarantee from",
+  "guaranteeEnd": "Guarantee to",
+  "priceUah": "Price UAH",
+  "priceUsd": "Price USD",
+  "orderId": "Order ID",
+  "order": "Order",
+  "specification": "Specification",
+  "yes": "yes",
+  "no": "no"
+}
