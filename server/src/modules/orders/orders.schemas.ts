@@ -3,6 +3,7 @@ import {
   optionalDate,
   optionalText,
   parseSearchQuery,
+  requiredInt,
   requiredString,
 } from '../../shared/validation.js';
 import type { OrderFilter, OrderInput } from './orders.types.js';
@@ -13,6 +14,10 @@ export const parseOrderInput = (raw: unknown): OrderInput => {
     title: requiredString(body, 'title'),
     description: optionalText(body, 'description'),
     date: optionalDate(body, 'date'),
+    warehouseId:
+      body.warehouseId === undefined || body.warehouseId === null
+        ? null
+        : requiredInt(body, 'warehouseId'),
   };
 };
 

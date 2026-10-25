@@ -29,16 +29,27 @@ describe('orderFormSchema', () => {
 
 describe('toNewOrder', () => {
   it('trims the title and leaves out a blank description and date', () => {
-    expect(toNewOrder({ title: '  Order 1 ', description: '  ', date: '' })).toEqual({
+    expect(
+      toNewOrder({ title: '  Order 1 ', description: '  ', date: '', warehouseId: '' }),
+    ).toEqual({
       title: 'Order 1',
       description: null,
+      warehouseId: null,
     });
   });
 
   it('keeps a description and a date as typed', () => {
-    expect(toNewOrder({ title: 'Order 1', description: ' first ', date: '2017-06-29' })).toEqual({
+    expect(
+      toNewOrder({
+        title: 'Order 1',
+        description: ' first ',
+        date: '2017-06-29',
+        warehouseId: '2',
+      }),
+    ).toEqual({
       title: 'Order 1',
       description: ' first ',
+      warehouseId: 2,
       date: '2017-06-29',
     });
   });

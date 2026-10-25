@@ -13,10 +13,16 @@ export function useFormDraft<T extends FieldValues>(
   form: UseFormReturn<T>,
   defaults: T,
   normalize?: (values: T) => T,
+  optionalFields: readonly (keyof T)[] = [],
 ) {
   const session = useAuthSession();
   const [unavailable, setUnavailable] = useState(false);
-  const latest = useLatestRef({ defaults, normalize, dirtyFields: form.formState.dirtyFields });
+  const latest = useLatestRef({
+    defaults,
+    normalize,
+    optionalFields,
+    dirtyFields: form.formState.dirtyFields,
+  });
   const last = useRef<string | null>(null);
   const stopped = useRef(false);
   const storageKey = draftStorageKey('user:' + String(session.userId) + ':' + key);
@@ -30,7 +36,12 @@ export function useFormDraft<T extends FieldValues>(
     const fail = () => setUnavailable(true);
     try {
       const raw = localStorage.getItem(storageKey);
-      const saved = decodeDraft(raw, latest.current.defaults);
+      const saved = decodeDraft(
+        raw,
+        latest.current.defaults,
+        Date.now(),
+        latest.current.optionalFields,
+      );
       if (saved) {
         form.reset(latest.current.normalize?.(saved) ?? saved, { keepDirtyValues: true });
         last.current = raw;

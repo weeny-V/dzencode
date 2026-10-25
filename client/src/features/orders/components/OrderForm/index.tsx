@@ -3,9 +3,9 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 
-import type { NewOrder } from '@/shared/api/types';
+import type { NewOrder, Warehouse } from '@/shared/api/types';
 import { useAuthSession } from '@/shared/hooks/useAuthSession';
 import { useFormDraft } from '@/shared/hooks/useFormDraft';
 import { useMountedRef } from '@/shared/hooks/useMountedRef';
@@ -15,12 +15,13 @@ import { FormLayout } from '@/shared/ui/FormLayout';
 import { emptyOrderForm, orderFormSchema, type OrderFormValues, toNewOrder } from '../../schema';
 
 interface OrderFormProps {
+  warehouses: Warehouse[];
   /** Sends the order. Answers with the reason it was refused, or `undefined` when it was saved. */
   onSubmit: (order: NewOrder) => Promise<string | undefined>;
 }
 
 /** The form of a new order: a title, an optional description and an optional date. */
-export function OrderForm({ onSubmit }: OrderFormProps) {
+export function OrderForm({ onSubmit, warehouses }: OrderFormProps) {
   const mounted = useMountedRef();
   const session = useAuthSession();
   const t = useTranslations('OrderForm');
@@ -33,10 +34,24 @@ export function OrderForm({ onSubmit }: OrderFormProps) {
   const {
     register,
     handleSubmit,
+    setError,
+    control,
     formState: { errors, isSubmitting },
   } = form;
   const [submitError, setSubmitError] = useState<string>();
-  const draft = useFormDraft('order', form, emptyOrderForm);
+  const draft = useFormDraft(
+    'order',
+    form,
+    emptyOrderForm,
+    (values) => ({
+      ...values,
+      warehouseId: warehouses.some((warehouse) => String(warehouse.id) === values.warehouseId)
+        ? values.warehouseId
+        : '',
+    }),
+    ['warehouseId'],
+  );
+  const warehouseId = useWatch({ control, name: 'warehouseId' });
 
   return (
     <FormLayout
@@ -52,6 +67,13 @@ export function OrderForm({ onSubmit }: OrderFormProps) {
       draftUnavailable={draft.unavailable}
       onSubmit={(event) =>
         void handleSubmit(async (values) => {
+          if (
+            values.warehouseId !== '' &&
+            !warehouses.some((warehouse) => String(warehouse.id) === values.warehouseId)
+          ) {
+            setError('warehouseId', { message: 'staleWarehouse' });
+            return;
+          }
           const snapshot = draft.snapshot();
           const error = await onSubmit(toNewOrder(values));
           if (error === undefined) draft.complete(snapshot);
@@ -82,6 +104,35 @@ export function OrderForm({ onSubmit }: OrderFormProps) {
         error={errors.description?.message ? v(errors.description.message) : undefined}
       >
         {(control) => <textarea rows={4} {...control} {...register('description')} />}
+      </FormField>
+      <FormField
+        label={t('warehouse')}
+        wide
+        hint={t('warehouseHint')}
+        error={
+          errors.warehouseId?.message
+            ? errors.warehouseId.message === 'staleWarehouse'
+              ? t('staleWarehouse')
+              : v(errors.warehouseId.message)
+            : undefined
+        }
+      >
+        {(control) => (
+          <select {...control} {...register('warehouseId')}>
+            <option value="">{t('unassigned')}</option>
+            {warehouseId !== '' &&
+              !warehouses.some((warehouse) => String(warehouse.id) === warehouseId) && (
+                <option value={warehouseId} disabled>
+                  {t('unavailableWarehouse', { id: warehouseId })}
+                </option>
+              )}
+            {warehouses.map((warehouse) => (
+              <option key={warehouse.id} value={warehouse.id}>
+                {warehouse.name} — {warehouse.address}
+              </option>
+            ))}
+          </select>
+        )}
       </FormField>
     </FormLayout>
   );

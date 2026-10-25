@@ -15,6 +15,7 @@ export async function createProduct(product: NewProduct, expectedSessionId?: str
     updateTag(productsTag);
     updateTag('orders');
     updateTag(`order:${result.data.order}`);
+    updateTag('statistics');
   }
   return result;
 }
@@ -29,6 +30,7 @@ export async function deleteProduct(id: number, orderId: number, expectedSession
     updateTag(productsTag);
     updateTag('orders');
     updateTag(`order:${orderId}`);
+    updateTag('statistics');
     refresh();
   }
   return result;

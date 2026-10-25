@@ -1,14 +1,17 @@
-import { NotFoundError } from '../../shared/errors.js';
+import { ForeignKeyViolationError } from '../../shared/db/errors.js';
+import { NotFoundError, ValidationError } from '../../shared/errors.js';
 import type { ProductsService } from '../products/index.js';
+import type { WarehousesService } from '../warehouses/index.js';
 import type { OrdersRepository } from './orders.repository.js';
 import type { Order, OrderDetails, OrderFilter, OrderInput, OrderSummary } from './orders.types.js';
 
 interface OrdersServiceDeps {
   repository: OrdersRepository;
+  warehouses: Pick<WarehousesService, 'list'>;
   products: Pick<ProductsService, 'listByOrder' | 'summarizeByOrder' | 'findOrderIdsByQuery'>;
 }
 
-export const createOrdersService = ({ repository, products }: OrdersServiceDeps) => ({
+export const createOrdersService = ({ repository, products, warehouses }: OrdersServiceDeps) => ({
   /** A search keeps whole orders: the counts and totals still describe all of an order's products. */
   async list({ query }: OrderFilter = {}): Promise<OrderSummary[]> {
     const orders =
@@ -26,12 +29,23 @@ export const createOrdersService = ({ repository, products }: OrdersServiceDeps)
   async get(id: number): Promise<OrderDetails> {
     const order = await repository.findById(id);
     if (!order) throw new NotFoundError('Order not found');
-    return { ...order, products: await products.listByOrder(id) };
+    const warehouse =
+      order.warehouseId === null
+        ? null
+        : ((await warehouses.list()).find((item) => item.id === order.warehouseId) ?? null);
+    return { ...order, warehouse, products: await products.listByOrder(id) };
   },
 
   async create(input: OrderInput): Promise<OrderSummary> {
-    const order: Order = await repository.create(input);
-    return { ...order, productsCount: 0, totals: [] };
+    try {
+      const order: Order = await repository.create(input);
+      return { ...order, productsCount: 0, totals: [] };
+    } catch (error) {
+      if (error instanceof ForeignKeyViolationError && error.constraint === 'fk_orders_warehouse') {
+        throw new ValidationError(`Unknown warehouse: ${input.warehouseId}`);
+      }
+      throw error;
+    }
   },
 
   async remove(id: number): Promise<void> {

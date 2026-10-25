@@ -1,0 +1,18 @@
+@use 'tokens' as *;
+.inventory-chart {
+  position: relative;
+  min-height: $visualization-height;
+  --chart-bar: #{$color-primary-text};
+  --chart-text: #{$color-text};
+  &__canvas {
+    position: relative;
+    height: $visualization-height;
+  }
+  > p,
+  > div[role='alert'] {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: $color-surface;
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "title": "Groups",
+  "currency": "Currency",
+  "orders": "Orders",
+  "products": "Products",
+  "value": "Value",
+  "missing": "Without a price in the selected currency",
+  "partial": "The subtotal includes only products with a known price.",
+  "byType": "Product count by type",
+  "byWarehouse": "Product value by warehouse",
+  "type": "Type",
+  "warehouse": "Warehouse",
+  "unassigned": "Unassigned",
+  "empty": "The inventory has no products yet.",
+  "error": "Could not load inventory statistics.",
+  "loading": "Loading inventory statistics…",
+  "chartLoading": "Loading chart…",
+  "chartError": "The chart is unavailable. Exact values remain in the table.",
+  "retry": "Retry chart"
+}

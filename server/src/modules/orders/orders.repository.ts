@@ -1,16 +1,18 @@
 import type { ResultSetHeader, RowDataPacket } from 'mysql2/promise';
 
+import { asForeignKeyViolation } from '../../shared/db/errors.js';
 import { containsPattern } from '../../shared/db/like.js';
 import type { Pool } from '../../shared/db/pool.js';
 import type { Order, OrderInput } from './orders.types.js';
 
 interface OrderRow extends RowDataPacket, Order {}
 
-const toOrder = ({ id, title, description, date }: OrderRow): Order => ({
+const toOrder = ({ id, title, description, date, warehouseId }: OrderRow): Order => ({
   id,
   title,
   description,
   date,
+  warehouseId,
 });
 
 export const createOrdersRepository = (pool: Pool) => ({
@@ -30,7 +32,7 @@ export const createOrdersRepository = (pool: Pool) => ({
       }
     }
     const [rows] = await pool.query<OrderRow[]>(
-      `SELECT id, title, description, date FROM orders ${where} ORDER BY date DESC, id DESC`,
+      `SELECT id, title, description, date, warehouse_id AS warehouseId FROM orders ${where} ORDER BY date DESC, id DESC`,
       params,
     );
     return rows.map(toOrder);
@@ -38,7 +40,7 @@ export const createOrdersRepository = (pool: Pool) => ({
 
   async findById(id: number): Promise<Order | undefined> {
     const [rows] = await pool.query<OrderRow[]>(
-      'SELECT id, title, description, date FROM orders WHERE id = ?',
+      'SELECT id, title, description, date, warehouse_id AS warehouseId FROM orders WHERE id = ?',
       [id],
     );
     const row = rows[0];
@@ -46,11 +48,15 @@ export const createOrdersRepository = (pool: Pool) => ({
   },
 
   async create(input: OrderInput): Promise<Order> {
-    const [result] = await pool.query<ResultSetHeader>(
-      'INSERT INTO orders (title, description, date) VALUES (?, ?, ?)',
-      [input.title, input.description, input.date],
-    );
-    return { id: result.insertId, ...input };
+    try {
+      const [result] = await pool.query<ResultSetHeader>(
+        'INSERT INTO orders (title, description, date, warehouse_id) VALUES (?, ?, ?, ?)',
+        [input.title, input.description, input.date, input.warehouseId ?? null],
+      );
+      return { id: result.insertId, ...input, warehouseId: input.warehouseId ?? null };
+    } catch (error) {
+      throw asForeignKeyViolation(error) ?? error;
+    }
   },
 
   /** Products of the order and their prices are removed by `ON DELETE CASCADE`. */

@@ -1,4 +1,6 @@
-import { NewOrderContent } from '@/features/orders';
+import { Suspense } from 'react';
+
+import { NewOrderContent, NewOrderLoading } from '@/features/orders';
 import { pageMetadata } from '@/shared/i18n/metadata';
 import { PageTransition } from '@/shared/ui/PageTransition';
 
@@ -9,7 +11,9 @@ export const generateMetadata = () => pageMetadata(text);
 export default function Page() {
   return (
     <PageTransition>
-      <NewOrderContent />
+      <Suspense fallback={<NewOrderLoading />}>
+        <NewOrderContent />
+      </Suspense>
     </PageTransition>
   );
 }

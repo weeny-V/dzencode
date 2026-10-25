@@ -1,0 +1,11 @@
+# Isolated verification override. Always use project name dzencode6d (see docs/STAGE_6D_STATUS.md).
+services:
+  db:
+    ports: !override
+      - '3364:3306'
+  server:
+    ports: !override
+      - '4064:4000'
+  client:
+    ports: !override
+      - '3064:3000'

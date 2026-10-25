@@ -19,14 +19,24 @@ describe('product actions', () => {
     mocks.postProduct.mockResolvedValue(product);
     const { id: _id, orderTitle: _orderTitle, date: _date, ...body } = product;
     expect((await createProduct(body)).ok).toBe(true);
-    expect(mocks.updateTag.mock.calls).toEqual([['products'], ['orders'], ['order:7']]);
+    expect(mocks.updateTag.mock.calls).toEqual([
+      ['products'],
+      ['orders'],
+      ['order:7'],
+      ['statistics'],
+    ]);
     expect(mocks.refresh).not.toHaveBeenCalled();
   });
   it('deletes and refreshes lists and parent totals', async () => {
     mocks.removeProduct.mockResolvedValue(undefined);
     expect((await deleteProduct(9, 7)).ok).toBe(true);
     expect(mocks.removeProduct).toHaveBeenCalledWith(9);
-    expect(mocks.updateTag.mock.calls).toEqual([['products'], ['orders'], ['order:7']]);
+    expect(mocks.updateTag.mock.calls).toEqual([
+      ['products'],
+      ['orders'],
+      ['order:7'],
+      ['statistics'],
+    ]);
     expect(mocks.refresh).toHaveBeenCalledOnce();
   });
   it('keeps failed deletion retryable without invalidation', async () => {
