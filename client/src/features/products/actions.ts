@@ -2,14 +2,15 @@
 
 import { refresh, updateTag } from 'next/cache';
 
-import { loadOrError } from '@/shared/api/server';
+import { ApiError } from '@/shared/api/errors';
+import { mutateOrError } from '@/shared/api/mutation.server';
 import type { NewProduct } from '@/shared/api/types';
 import { MAX_INT } from '@/shared/lib/limits';
 
 import { postProduct, productsTag, removeProduct } from './api/products';
 
-export async function createProduct(product: NewProduct) {
-  const result = await loadOrError(() => postProduct(product));
+export async function createProduct(product: NewProduct, expectedSessionId?: string) {
+  const result = await mutateOrError(() => postProduct(product), expectedSessionId);
   if (result.ok) {
     updateTag(productsTag);
     updateTag('orders');
@@ -18,10 +19,12 @@ export async function createProduct(product: NewProduct) {
   return result;
 }
 
-export async function deleteProduct(id: number, orderId: number) {
-  if ([id, orderId].some((value) => !Number.isInteger(value) || value < 1 || value > MAX_INT))
-    return { ok: false as const, error: 'Invalid product or order id' };
-  const result = await loadOrError(() => removeProduct(id));
+export async function deleteProduct(id: number, orderId: number, expectedSessionId?: string) {
+  const result = await mutateOrError(async () => {
+    if ([id, orderId].some((value) => !Number.isInteger(value) || value < 1 || value > MAX_INT))
+      throw new ApiError(400, 'Invalid product or order id');
+    return await removeProduct(id);
+  }, expectedSessionId);
   if (result.ok) {
     updateTag(productsTag);
     updateTag('orders');

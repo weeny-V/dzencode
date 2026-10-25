@@ -1,0 +1,25 @@
+@use 'tokens' as *;
+.users-route {
+  display: grid;
+  overflow-wrap: anywhere;
+  gap: $auth-field-gap;
+  &__card {
+    padding: $page-gutter;
+    background: $color-surface;
+    border: 1px solid $color-border;
+    border-radius: $radius;
+  }
+  &__list {
+    padding: 0;
+    margin: 0;
+    list-style: none;
+  }
+  &__participant {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: $auth-field-gap;
+    padding: $auth-field-gap 0;
+    border-bottom: 1px solid $color-border;
+  }
+}

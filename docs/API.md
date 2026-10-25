@@ -2,7 +2,9 @@
 
 Base URL: `http://localhost:4000`. Request and response bodies are JSON, dates are ISO 8601 (UTC). Errors come as `{ "error": "..." }`.
 
-The Next server calls inventory REST endpoints for Server Component reads and Server Actions. Browser-to-API connections are limited to Socket.io and `GET /health`, so CORS remains enabled. `API_URL` controls the private Next-to-API address; `NEXT_PUBLIC_API_URL` controls the public socket/health address. Reads use Next's tagged cache with 60-second revalidation; direct REST writes do not invalidate it immediately.
+The API requires `Authorization: Bearer <JWT>` for every inventory read/write, the participant list and authenticated auth endpoints. Cookies are deliberately not accepted as REST authorization. Only `GET /health` and `POST /auth/register` / `POST /auth/login` are public. Protected and auth responses have `Cache-Control: no-store`.
+
+Next calls REST from Server Components and Server Actions, forwarding server-only bearer credentials. Browser-to-API connections are limited to Socket.io and `GET /health`. `API_URL` controls the private Next-to-API address; `NEXT_PUBLIC_API_URL` controls the public socket/health address. Protected page content verifies the session even when Next reuses its layout during navigation. Inventory reads verify the session before warmed cache lookups and isolate cache keys by non-credential user/session ids; see [the implementation and review checklist](AUTH_IMPLEMENTATION.md). The 60-second Next tagged cache is a separate layer from the no-store HTTP API; direct REST writes do not invalidate it immediately.
 
 The data shape follows `docs/task-materials/app.js`: `camelCase` fields, a product has a `price[]` array and a nested `guarantee { start, end }`, the product type is a string.
 
@@ -18,7 +20,43 @@ The data shape follows `docs/task-materials/app.js`: `camelCase` fields, a produ
 | `POST /products`       | Create a product (body below)                                                                   | 201     | 400      |
 | `GET /product-types`   | Type dictionary for the filter: `[{ id, name }]`                                                | 200     |          |
 
+## Authentication
+
+| Method and path       | Request                                                              | Success                           | Errors                            |
+| --------------------- | -------------------------------------------------------------------- | --------------------------------- | --------------------------------- |
+| `POST /auth/register` | `firstName`, `lastName`, `email`, `password`, `passwordConfirmation` | 201 `{ user, token }`             | 400, 409 duplicate email, 429     |
+| `POST /auth/login`    | `email`, `password`                                                  | 200 `{ user, token }`             | 400, 401 invalid credentials, 429 |
+| `POST /auth/logout`   | Bearer header, no body                                               | 204; revokes current session only | 401                               |
+| `GET /auth/me`        | Bearer header                                                        | 200 `{ user, sessionId }`         | 401                               |
+| `GET /users`          | Bearer header                                                        | 200 participant array             | 401                               |
+
+User: `{ id, firstName, lastName, email, registeredAt }`. Participant: `{ id, firstName, lastName, registeredAt }`. Dates are ISO UTC strings. Other users' email and all password hashes are excluded. The participant list is newest registration first, with id as the tie-breaker.
+
+Example registration:
+
+```json
+{
+  "firstName": "Ada",
+  "lastName": "Lovelace",
+  "email": "ada@example.com",
+  "password": "a long example password",
+  "passwordConfirmation": "a long example password"
+}
+```
+
+Names are trimmed and bounded to 100 characters each. Email is trimmed/lowercased, ASCII mailbox syntax, at most 254 characters (local part at most 64). Passwords are not trimmed; registration needs at least 12 characters and at most 1024 UTF-8 bytes, and exact confirmation. Unknown email and incorrect password both return 401 `{ "error": "Invalid email or password" }`. Duplicate normalized email returns 409 `{ "error": "Email is already registered" }`; concurrent duplicate registrations cannot create extra accounts/sessions.
+
+The API returns the token to the Next server, whose Server Actions set a host-only, Path=/, HttpOnly, SameSite=Lax `dzencode_auth` cookie with a one-year max-age. `AUTH_COOKIE_SECURE=true` is required under HTTPS; local HTTP examples explicitly set `false`. The API itself does not set/clear browser cookies. Next returns no token to application client JavaScript. Logout revokes via the API before clearing the cookie; an unavailable API does not count as successful logout. A separate locale cookie stays independent. Browser auth writes are serialized across tabs until their response cookies have been applied.
+
+JWTs use HS256 with a configured persistent random `AUTH_JWT_SECRET` (at least 32 bytes), fixed issuer/audience/type, user id, random session id and issued-at time, and deliberately no `exp`. Each authenticated request verifies both the JWT and the active MySQL session bound to its user. Revocation survives API restarts; other logins stay valid. Finite browser cookie persistence and manual cookie clearing may require login even though the JWT has no automatic expiry. No refresh token/Redis is used.
+
+Login is limited to 20 attempts per 15 minutes per peer IP, registration to 10. Malformed attempts count. The API does not trust `X-Forwarded-For`; requests proxied through one Next instance share that IP window. Limits are process-local and reset on restart. KDF work is additionally capped at two concurrent operations per process. Excess requests return 429 `{ "error": "Too many attempts. Try again later." }` and `Retry-After` in seconds. See [ADR 0002](adr/0002-authentication.md) for the scope and deployment limits.
+
+All inventory endpoints listed above also return 401 for missing, invalid or revoked credentials. A write already accepted before logout may complete; logout is not write cancellation.
+
 ## Examples
+
+All inventory examples require a bearer token. The shared inventory has no per-user ownership or roles.
 
 `GET /orders`
 
@@ -78,11 +116,13 @@ The serial number is matched as the lists print it, `SN-12345671`, so `sn-1234` 
 
 The same server (same host and port as the REST API, same allowed client origin) also speaks Socket.io. It carries the counter of active sessions in the top menu.
 
-| Direction        | Event            | Payload          | When                                                                          |
-| ---------------- | ---------------- | ---------------- | ----------------------------------------------------------------------------- |
-| server → clients | `sessions:count` | `{ "count": 3 }` | A connection opens or closes; every connected client gets it, the new one too |
+Socket.io accepts only the `dzencode_auth` cookie containing an active signed JWT. The browser uses credentials and the same hostname as the client app; different local ports are allowed. The client uses the WebSocket transport so Origin is present even with a same-origin reverse proxy; that proxy must forward WebSocket upgrades. Do not send a token through the socket `auth` payload or localStorage. CORS permits credentials for `CLIENT_ORIGIN`; exact Origin validation also applies to polling and WebSocket handshakes/upgrades. Missing or other origins are rejected. Logout disconnects all tabs belonging to that revoked auth session, denies their reconnect and preserves sockets from other sessions. A session is rechecked after joining its revocation room before counting the tab, covering logout during handshake. Counter broadcasts go only to the separate group of fully authorized tabs; sockets still awaiting the repeated check receive no count events.
 
-- **A session is an open browser tab,** which is one socket connection (the task asks for "the open tabs"). Two tabs of one person count as two. The app opens one connection per tab and keeps it while the tab is open, so moving between pages does not change the number.
+| Direction        | Event            | Payload          | When                                                                      |
+| ---------------- | ---------------- | ---------------- | ------------------------------------------------------------------------- |
+| server → clients | `sessions:count` | `{ "count": 3 }` | An authorized tab opens or closes; every fully authorized tab receives it |
+
+- **A counter session is an authenticated open browser tab,** which is one socket connection (the task asks for "the open tabs"). Two tabs of one person count as two. It is distinct from the persistent `auth_sessions` row, which represents one login/browser cookie and may cover several tabs. The integrated client must open one connection per protected tab and keep it while navigating.
 - A new client does not ask for the number: it receives `sessions:count` right after it connects. A client that loses the connection shows a dash until it reconnects (the library retries by itself) and gets a fresh number.
 - A tab that is closed or loses the network is dropped after Socket.io's ping timeout (about 45 s at most); a normal close is noticed at once.
 - **Limit: one server instance.** The registry of sessions lives in the memory of the Node.js process, so the number is right only while one instance runs. Several instances (or a restart of the server) would each count their own tabs; for that the Socket.io Redis adapter and a shared store would be needed. A restart resets the number, and the clients reconnect and report themselves again.

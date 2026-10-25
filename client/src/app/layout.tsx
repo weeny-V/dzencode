@@ -6,11 +6,8 @@ import { NextIntlClientProvider } from 'next-intl';
 import { getLocale } from 'next-intl/server';
 import type { ReactNode } from 'react';
 
-import { LocalizedAppShell } from '@/features/app-shell';
-
 import { dictionary as errorDictionary } from './error/messages.server';
 import { text as rootText } from './root/messages.server';
-import { StoreProvider } from './StoreProvider';
 
 // Self-hosted at build time; `--font-main` is read by the Bootstrap font variable in shared/styles/_tokens.scss.
 const montserrat = Montserrat({
@@ -38,13 +35,9 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   return (
     <html lang={locale} className={montserrat.variable}>
       <body>
-        <StoreProvider>
-          <LocalizedAppShell>
-            <NextIntlClientProvider locale={locale} messages={{ ErrorPage: errors.messages }}>
-              {children}
-            </NextIntlClientProvider>
-          </LocalizedAppShell>
-        </StoreProvider>
+        <NextIntlClientProvider locale={locale} messages={{ ErrorPage: errors.messages }}>
+          {children}
+        </NextIntlClientProvider>
       </body>
     </html>
   );

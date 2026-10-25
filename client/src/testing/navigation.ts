@@ -10,6 +10,15 @@ export const navigation = {
 };
 
 export const navigationMock = {
+  unstable_rethrow: (error: unknown) => {
+    if (
+      error instanceof Error &&
+      'digest' in error &&
+      typeof error.digest === 'string' &&
+      error.digest.startsWith('NEXT_')
+    )
+      throw error;
+  },
   useRouter: () => navigation,
   usePathname: () => navigation.pathname,
   useSearchParams: () => new URLSearchParams(navigation.search),

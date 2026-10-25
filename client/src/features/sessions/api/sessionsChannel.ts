@@ -1,6 +1,7 @@
 import { io } from 'socket.io-client';
 
 import { env } from '@/shared/config/env';
+import { requestAuthCheck } from '@/shared/lib/authLifecycle';
 
 /** The event of the server that carries the number of open sessions: `{ count: number }`. */
 export const SESSIONS_COUNT_EVENT = 'sessions:count';
@@ -27,11 +28,22 @@ export function openSessionsChannel({
   onConnectionChange,
 }: SessionsChannelHandlers): () => void {
   // A socket of its own, not one shared by address: closing it must really close the connection.
-  const socket = io(env.apiUrl, { forceNew: true });
+  // Browser WebSockets always send Origin, including behind a same-origin reverse proxy.
+  const socket = io(env.apiUrl, {
+    forceNew: true,
+    withCredentials: true,
+    transports: ['websocket'],
+  });
 
   socket.on('connect', () => onConnectionChange(true));
-  socket.on('disconnect', () => onConnectionChange(false));
-  socket.on('connect_error', () => onConnectionChange(false));
+  socket.on('disconnect', (reason) => {
+    onConnectionChange(false);
+    if (reason === 'io server disconnect') requestAuthCheck();
+  });
+  socket.on('connect_error', (error) => {
+    onConnectionChange(false);
+    if (error?.message === 'Authentication required') requestAuthCheck();
+  });
   socket.on(SESSIONS_COUNT_EVENT, (payload: unknown) => {
     if (isCountPayload(payload)) onCount(payload.count);
   });

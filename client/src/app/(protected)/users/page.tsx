@@ -1,16 +1,15 @@
+import { UsersRoute } from '@/features/users';
 import { pageMetadata } from '@/shared/i18n/metadata';
-import { ComingSoon } from '@/shared/ui/ComingSoon';
 import { PageTransition } from '@/shared/ui/PageTransition';
 
 import { text } from './messages.server';
 
 export const generateMetadata = () => pageMetadata(text);
 
-export default async function SettingsPage() {
-  const t = await text();
+export default function UsersPage() {
   return (
     <PageTransition>
-      <ComingSoon title={t('title')} />
+      <UsersRoute />
     </PageTransition>
   );
 }

@@ -28,6 +28,7 @@ describe('server REST boundary', () => {
     expect(await getJson('/orders?q=monitor', { tags: ['orders'] })).toEqual([{ id: 7 }]);
     expect(fetchMock).toHaveBeenCalledWith('http://server:4000/orders?q=monitor', {
       cache: 'no-store',
+      headers: { Authorization: 'Bearer test-token' },
       signal: expect.any(AbortSignal) as AbortSignal,
     });
     expect(nextCache.unstable_cache).toHaveBeenCalledWith(expect.any(Function), expect.any(Array), {
@@ -42,6 +43,7 @@ describe('server REST boundary', () => {
     await getJson('/products', { tags: ['products'], revalidate: 15 });
     expect(fetchMock).toHaveBeenCalledWith(expect.any(String), {
       cache: 'no-store',
+      headers: { Authorization: 'Bearer test-token' },
       signal: expect.any(AbortSignal) as AbortSignal,
     });
     expect(nextCache.unstable_cache).toHaveBeenCalledWith(expect.any(Function), expect.any(Array), {
@@ -131,6 +133,7 @@ describe('server REST boundary', () => {
     );
     vi.stubGlobal('fetch', fetchMock);
     const read = getJson('/orders', { tags: ['orders'], signal: controller.signal });
+    await vi.waitFor(() => expect(fetchMock).toHaveBeenCalledOnce());
     controller.abort();
     await expect(read).rejects.toMatchObject({ name: 'AbortError' });
     expect(nextCache.unstable_cache).not.toHaveBeenCalled();
@@ -192,6 +195,7 @@ describe('server REST boundary', () => {
     );
     const firstRead = getJson('/orders', { tags: ['orders'], signal: firstController.signal });
     const secondRead = getJson('/orders', { tags: ['orders'], signal: secondController.signal });
+    await vi.waitFor(() => expect(fetch).toHaveBeenCalledTimes(2));
     firstController.abort();
     await expect(firstRead).rejects.toMatchObject({ name: 'AbortError' });
     secondResponse.resolve(Response.json([{ id: 7 }]));
@@ -239,11 +243,18 @@ describe('server REST boundary', () => {
     expect(await deleteRequest('/orders/7')).toBeUndefined();
     expect(fetchMock.mock.calls[0]?.[1]).toEqual({
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: new Headers({
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer test-token',
+      }),
       body: '{"title":"New"}',
       cache: 'no-store',
     });
-    expect(fetchMock.mock.calls[1]?.[1]).toEqual({ method: 'DELETE', cache: 'no-store' });
+    expect(fetchMock.mock.calls[1]?.[1]).toEqual({
+      method: 'DELETE',
+      cache: 'no-store',
+      headers: new Headers({ Authorization: 'Bearer test-token' }),
+    });
   });
 
   it('preserves API status and validation errors', async () => {
@@ -280,4 +291,15 @@ describe('server REST boundary', () => {
       error: 'Request failed',
     });
   });
+});
+
+vi.mock('@/shared/api/session.server', async () => {
+  const { testSession } = await import('@/testing/auth');
+  return {
+    readSession: vi.fn(() => Promise.resolve(testSession)),
+    requireSession: vi.fn(() => Promise.resolve(testSession)),
+    redirectToLogin: vi.fn(() => {
+      throw new Error('NEXT_REDIRECT');
+    }),
+  };
 });

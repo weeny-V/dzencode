@@ -1,4 +1,5 @@
-export type ActionResult<T> = { ok: true; data: T } | { ok: false; error: string };
+export type ActionResult<T> =
+  { ok: true; data: T } | { ok: false; error: string; authenticationRequired?: true };
 
 /** Includes transport failures when a browser cannot reach the Next server. */
 export async function actionResult<T>(run: () => Promise<T>): Promise<ActionResult<T>> {

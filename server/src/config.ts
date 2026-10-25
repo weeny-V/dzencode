@@ -10,6 +10,7 @@ export interface Config {
   host: string;
   port: number;
   clientOrigin: string;
+  jwtSecret: string;
   db: DbConfig;
 }
 
@@ -17,6 +18,7 @@ export const loadConfig = (env: NodeJS.ProcessEnv = process.env): Config => ({
   host: env.HOST ?? '0.0.0.0',
   port: Number(env.PORT ?? 4000),
   clientOrigin: env.CLIENT_ORIGIN ?? 'http://localhost:3000',
+  jwtSecret: env.AUTH_JWT_SECRET ?? '',
   db: {
     host: env.DB_HOST ?? 'localhost',
     port: Number(env.DB_PORT ?? 3306),

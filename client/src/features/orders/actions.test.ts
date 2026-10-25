@@ -49,3 +49,14 @@ describe('order actions', () => {
     },
   );
 });
+
+vi.mock('@/shared/api/session.server', async () => {
+  const { testSession } = await import('@/testing/auth');
+  return {
+    readSession: vi.fn(() => Promise.resolve(testSession)),
+    requireSession: vi.fn(() => Promise.resolve(testSession)),
+    redirectToLogin: vi.fn(() => {
+      throw new Error('NEXT_REDIRECT');
+    }),
+  };
+});

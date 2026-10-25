@@ -6,7 +6,9 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 
 import type { NewOrder } from '@/shared/api/types';
+import { useAuthSession } from '@/shared/hooks/useAuthSession';
 import { useFormDraft } from '@/shared/hooks/useFormDraft';
+import { useMountedRef } from '@/shared/hooks/useMountedRef';
 import { FormField } from '@/shared/ui/FormField';
 import { FormLayout } from '@/shared/ui/FormLayout';
 
@@ -19,6 +21,8 @@ interface OrderFormProps {
 
 /** The form of a new order: a title, an optional description and an optional date. */
 export function OrderForm({ onSubmit }: OrderFormProps) {
+  const mounted = useMountedRef();
+  const session = useAuthSession();
   const t = useTranslations('OrderForm');
   const v = useTranslations('Validation');
   const form = useForm<OrderFormValues>({
@@ -51,7 +55,7 @@ export function OrderForm({ onSubmit }: OrderFormProps) {
           const snapshot = draft.snapshot();
           const error = await onSubmit(toNewOrder(values));
           if (error === undefined) draft.complete(snapshot);
-          setSubmitError(error);
+          if (mounted.current && session.isCurrent()) setSubmitError(error);
         })(event)
       }
     >

@@ -5,12 +5,13 @@ import type { RowDataPacket } from 'mysql2/promise';
 import { createApp } from '../../app.js';
 import { loadConfig } from '../../config.js';
 import { createPool, type Pool } from './../db/pool.js';
+import { TEST_JWT_SECRET } from './auth.js';
 
 /** An app wired to the test database; call `pool.end()` in `afterAll`. */
 export const createTestContext = () => {
   const { db, clientOrigin } = loadConfig();
   const pool = createPool({ ...db, database: `${db.database}_test` });
-  return { pool, app: createApp({ clientOrigin, pool }) };
+  return { pool, ...createApp({ clientOrigin, pool, jwtSecret: TEST_JWT_SECRET }) };
 };
 
 interface CountRow extends RowDataPacket {
@@ -31,7 +32,14 @@ export const count = async (pool: Pool, table: string): Promise<number> => {
  */
 export const resetData = async (pool: Pool) => {
   // Children are deleted before parents.
-  for (const table of ['product_prices', 'products', 'orders', 'product_types']) {
+  for (const table of [
+    'auth_sessions',
+    'users',
+    'product_prices',
+    'products',
+    'orders',
+    'product_types',
+  ]) {
     await pool.query(`DELETE FROM ${table}`);
   }
   await pool.query('INSERT INTO product_types (id, name) VALUES ?', [

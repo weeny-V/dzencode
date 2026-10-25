@@ -1,13 +1,17 @@
 // Integration tests: HTTP -> service -> repository -> real MySQL test database (see shared/testing/database.ts).
-import request from 'supertest';
 import { afterAll, beforeEach, describe, expect, it } from 'vitest';
 
+import { createTestClient } from '../../shared/testing/auth.js';
 import { count, createTestContext, resetData } from '../../shared/testing/database.js';
 import type { OrderDetails, OrderSummary } from './index.js';
 
-const { app, pool } = createTestContext();
+const { app, pool, auth } = createTestContext();
+const { client, register } = createTestClient(app, auth);
 
-beforeEach(() => resetData(pool));
+beforeEach(async () => {
+  await resetData(pool);
+  await register();
+});
 
 afterAll(async () => {
   await pool.end();
@@ -15,7 +19,7 @@ afterAll(async () => {
 
 describe('GET /orders', () => {
   it('lists orders, newest first, with product counts and totals per currency', async () => {
-    const res = await request(app).get('/orders');
+    const res = await client.get('/orders');
     const orders = res.body as OrderSummary[];
 
     expect(res.status).toBe(200);
@@ -39,7 +43,7 @@ describe('GET /orders', () => {
 
 describe('GET /orders?q=', () => {
   const ids = async (query: Record<string, string>) => {
-    const res = await request(app).get('/orders').query(query);
+    const res = await client.get('/orders').query(query);
     return { status: res.status, ids: (res.body as OrderSummary[]).map((order) => order.id) };
   };
 
@@ -61,7 +65,7 @@ describe('GET /orders?q=', () => {
   });
 
   it('keeps the whole order: the counts and totals do not shrink to the matched products', async () => {
-    const res = await request(app).get('/orders').query({ q: 'laptop' });
+    const res = await client.get('/orders').query({ q: 'laptop' });
 
     expect((res.body as OrderSummary[]).map((order) => order.productsCount)).toEqual([2]);
   });
@@ -73,13 +77,13 @@ describe('GET /orders?q=', () => {
 
   it('returns everything for a blank search and 400 for a repeated one', async () => {
     expect((await ids({ q: '  ' })).ids).toEqual([3, 2, 1]);
-    expect((await request(app).get('/orders?q=a&q=b')).status).toBe(400);
+    expect((await client.get('/orders?q=a&q=b')).status).toBe(400);
   });
 });
 
 describe('GET /orders/:id', () => {
   it('returns the order with its products', async () => {
-    const res = await request(app).get('/orders/1');
+    const res = await client.get('/orders/1');
     const order = res.body as OrderDetails;
 
     expect(res.status).toBe(200);
@@ -98,7 +102,7 @@ describe('GET /orders/:id', () => {
   });
 
   it('returns 404 for an unknown order', async () => {
-    const res = await request(app).get('/orders/999');
+    const res = await client.get('/orders/999');
     expect(res.status).toBe(404);
     expect(res.body).toEqual({ error: 'Order not found' });
   });
@@ -106,7 +110,7 @@ describe('GET /orders/:id', () => {
 
 describe('POST /orders', () => {
   it('creates an order', async () => {
-    const res = await request(app).post('/orders').send({ title: 'New order', description: 'x' });
+    const res = await client.post('/orders').send({ title: 'New order', description: 'x' });
 
     expect(res.status).toBe(201);
     expect(res.body).toMatchObject({ title: 'New order', description: 'x', productsCount: 0 });
@@ -114,18 +118,18 @@ describe('POST /orders', () => {
   });
 
   it('answers with the date exactly as it is stored: whole seconds, no rounding surprises', async () => {
-    const created = await request(app)
+    const created = await client
       .post('/orders')
       .send({ title: 'Precise', date: '2020-05-05T10:00:00.700Z' });
     const id = (created.body as OrderSummary).id;
-    const stored = await request(app).get(`/orders/${id}`);
+    const stored = await client.get(`/orders/${id}`);
 
     expect((created.body as OrderSummary).date).toBe('2020-05-05T10:00:00.000Z');
     expect((stored.body as OrderDetails).date).toBe('2020-05-05T10:00:00.000Z');
   });
 
   it('reads the app.js date format (no zone) as UTC', async () => {
-    const res = await request(app)
+    const res = await client
       .post('/orders')
       .send({ title: 'Legacy format', date: '2017-06-29 12:09:33' });
 
@@ -136,7 +140,7 @@ describe('POST /orders', () => {
   it.each(['Order 1', '2020', '+010000-01-01T00:00:00Z'])(
     'rejects the date %j with 400, not 500',
     async (date) => {
-      const res = await request(app).post('/orders').send({ title: 'x', date });
+      const res = await client.post('/orders').send({ title: 'x', date });
 
       expect(res.status).toBe(400);
       expect(await count(pool, 'orders')).toBe(3);
@@ -144,15 +148,13 @@ describe('POST /orders', () => {
   );
 
   it('rejects a description over the TEXT size with 400, not 500', async () => {
-    const res = await request(app)
-      .post('/orders')
-      .send({ title: 'x', description: '😀'.repeat(20_000) });
+    const res = await client.post('/orders').send({ title: 'x', description: '😀'.repeat(20_000) });
 
     expect(res.status).toBe(400);
   });
 
   it('rejects an order without a title', async () => {
-    const res = await request(app).post('/orders').send({ description: 'x' });
+    const res = await client.post('/orders').send({ description: 'x' });
 
     expect(res.status).toBe(400);
     expect(await count(pool, 'orders')).toBe(3);
@@ -161,16 +163,16 @@ describe('POST /orders', () => {
 
 describe('DELETE /orders/:id', () => {
   it('deletes the order together with its products and prices', async () => {
-    const res = await request(app).delete('/orders/1');
+    const res = await client.delete('/orders/1');
     expect(res.status).toBe(204);
 
-    expect((await request(app).get('/orders/1')).status).toBe(404);
+    expect((await client.get('/orders/1')).status).toBe(404);
     expect(await count(pool, 'products')).toBe(1);
     expect(await count(pool, 'product_prices')).toBe(2);
   });
 
   it('returns 404 for an unknown order', async () => {
-    const res = await request(app).delete('/orders/999');
+    const res = await client.delete('/orders/999');
 
     expect(res.status).toBe(404);
     expect(await count(pool, 'orders')).toBe(3);

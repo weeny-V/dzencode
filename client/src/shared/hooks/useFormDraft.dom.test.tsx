@@ -24,8 +24,8 @@ describe('form draft lifecycle', () => {
     void act(() => result.current.form.setValue('title', 'order eight'));
     void act(() => oldComplete(snapshot));
     void act(() => result.current.form.setValue('description', 'still saving'));
-    expect(localStorage.getItem(draftStorageKey('product:8'))).toContain('still saving');
-    expect(localStorage.getItem(draftStorageKey('product:7'))).toBeNull();
+    expect(localStorage.getItem(draftStorageKey('user:1:product:8'))).toContain('still saving');
+    expect(localStorage.getItem(draftStorageKey('user:1:product:7'))).toBeNull();
   });
 
   it('restores after a remount and keeps unsuccessful submissions', () => {
@@ -40,25 +40,25 @@ describe('form draft lifecycle', () => {
     void act(() => result.current.form.setValue('title', 'submitted'));
     const snapshot = result.current.draft.snapshot();
     const newer = encodeDraft({ ...defaults, title: 'newer draft' });
-    localStorage.setItem(draftStorageKey('order'), newer);
+    localStorage.setItem(draftStorageKey('user:1:order'), newer);
     void act(() => result.current.draft.complete(snapshot));
-    expect(localStorage.getItem(draftStorageKey('order'))).toBe(newer);
+    expect(localStorage.getItem(draftStorageKey('user:1:order'))).toBe(newer);
   });
   it('clears only its own draft on success and does not recreate it on unmount', () => {
     const first = renderHook(() => useDraft());
     void act(() => first.result.current.form.setValue('title', 'saved'));
     void act(() => first.result.current.draft.complete(first.result.current.draft.snapshot()));
     first.unmount();
-    expect(localStorage.getItem(draftStorageKey('order'))).toBeNull();
+    expect(localStorage.getItem(draftStorageKey('user:1:order'))).toBeNull();
   });
   it('resets fields and supports a new draft after clearing', () => {
     const { result } = renderHook(() => useDraft());
     void act(() => result.current.form.setValue('title', 'old'));
     void act(() => result.current.draft.clear());
     expect(result.current.form.getValues()).toEqual(defaults);
-    expect(localStorage.getItem(draftStorageKey('order'))).toBeNull();
+    expect(localStorage.getItem(draftStorageKey('user:1:order'))).toBeNull();
     void act(() => result.current.form.setValue('title', 'new'));
-    expect(localStorage.getItem(draftStorageKey('order'))).toContain('new');
+    expect(localStorage.getItem(draftStorageKey('user:1:order'))).toContain('new');
   });
   it('leaves editing available when browser storage is denied', () => {
     vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
@@ -69,4 +69,9 @@ describe('form draft lifecycle', () => {
     expect(result.current.form.getValues('title')).toBe('still editable');
     expect(result.current.draft.unavailable).toBe(true);
   });
+});
+
+vi.mock('./useAuthSession', () => {
+  const session = { userId: 1, sessionId: 'a'.repeat(64), isCurrent: () => true };
+  return { useAuthSession: () => session };
 });
