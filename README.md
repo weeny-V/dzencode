@@ -2,7 +2,7 @@
 
 An "Orders / Products" SPA (Dzencode test task, **Middle** level). Requirements: [docs/TASK.md](docs/TASK.md). Work plan by stages: [docs/PLAN.md](docs/PLAN.md).
 
-> Status: stage 2 (layout). The client shows the Orders and Products pages from the design on static data (the API is connected in stage 3); the "Groups", "Users" and "Settings" sections open a "coming soon" page. The search field in the top menu filters orders and products live. The UI texts are in Russian until i18n arrives in stage 6.
+> Status: stage 6a implementation. Orders and Products render API data on the Next server; forms and confirmed deletion use Server Actions. Redux owns the live session counter and confirmation UI. Groups, Users and Settings still show a coming-soon page. RU/EN is planned for 6b; JWT for 6c; charts/maps for 6d.
 
 ## Stack
 
@@ -11,7 +11,7 @@ An "Orders / Products" SPA (Dzencode test task, **Middle** level). Requirements:
 | Client         | Next.js 16 (App Router), React 19, TypeScript, Bootstrap 5 (SCSS) + BEM |
 | Server         | Node.js 22, Express 5, TypeScript, `mysql2`                             |
 | Database       | MySQL 8.4, migrations and seed through Liquibase                        |
-| Quality        | ESLint, Prettier, Vitest + Supertest                                    |
+| Quality        | ESLint, Prettier, Vitest + Supertest + React Testing Library/jsdom      |
 | Infrastructure | npm workspaces, Docker, docker-compose                                  |
 
 ## Structure
@@ -25,7 +25,7 @@ docs/     Task, stage plan, API, DB schema, materials (PDF, screenshots, app.js)
 
 ## Run locally
 
-You need Node.js ≥ 22.9 and Docker (for MySQL).
+You need Node.js 22.22.2+ (22.x), 24.15+ (24.x), or 26+, and Docker for MySQL. jsdom 30 sets this runtime requirement for tests.
 
 ```bash
 npm install
@@ -43,7 +43,7 @@ Without `.env` files everything works on the default values. To override them, c
 | Package | Example                                    | Copy to              | Variables                                                                                  |
 | ------- | ------------------------------------------ | -------------------- | ------------------------------------------------------------------------------------------ |
 | Server  | [server/.env.example](server/.env.example) | `server/.env`        | `HOST`, `PORT`, `CLIENT_ORIGIN`, `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD` |
-| Client  | [client/.env.example](client/.env.example) | `client/.env.local`  | `NEXT_PUBLIC_API_URL`                                                                      |
+| Client  | [client/.env.example](client/.env.example) | `client/.env.local`  | `NEXT_PUBLIC_API_URL`, `API_URL`                                                           |
 | Docker  | [.env.example](.env.example)               | `.env` (in the root) | only for `docker compose` (including the MySQL passwords)                                  |
 
 ## Run in Docker
@@ -54,7 +54,9 @@ docker compose up --build
 
 This starts `db` (MySQL), `liquibase` (a one-shot migration), `server` and `client`. The server starts only after a successful migration. MySQL data lives in the `db-data` volume. The client image build downloads the Google font, so it needs internet access.
 
-`NEXT_PUBLIC_API_URL` is baked into the client at build time; for a deployment to a server, set the public address of the API.
+`NEXT_PUBLIC_API_URL` is baked into the browser bundle at build time and is used for Socket.io and the health indicator. `API_URL` is private runtime configuration for Next's inventory REST calls; locally it falls back to `NEXT_PUBLIC_API_URL` and then `http://localhost:4000`. Compose defaults it to `http://server:4000`, reachable from the client container. Changing the public URL requires rebuilding the image.
+
+Inventory uses Server Components and Server Actions with tagged Next caching (60-second revalidation). Redux manages global client state (sessions and the confirmation target); inventory data itself is not stored in Redux. The API still validates inputs and performs CRUD through REST. See [ADR 0001](docs/adr/0001-server-first-data.md) for the decision and the RTK Query alternative.
 
 ## Database
 
@@ -85,15 +87,15 @@ If Workbench is not available, the schema can be opened from [docs/db/schema.sql
 
 ## npm scripts
 
-| Command                             | What it does                             |
-| ----------------------------------- | ---------------------------------------- |
-| `npm run dev`                       | server + client in watch mode            |
-| `npm run build` / `npm start`       | production build / run                   |
-| `npm run lint`                      | ESLint in all packages                   |
-| `npm run typecheck`                 | TypeScript in all packages               |
-| `npm test`                          | tests (Vitest), the server needs `db:up` |
-| `npm run db:up`                     | MySQL + Liquibase migrations             |
-| `npm run db:reset`                  | recreate the DB (deletes the data)       |
-| `npm run format` / `format:check`   | Prettier                                 |
-| `npm run audit:prod`                | npm audit without dev dependencies       |
-| `npm run docker:up` / `docker:down` | docker compose                           |
+| Command                             | What it does                                                        |
+| ----------------------------------- | ------------------------------------------------------------------- |
+| `npm run dev`                       | server + client in watch mode                                       |
+| `npm run build` / `npm start`       | production build / run                                              |
+| `npm run lint`                      | ESLint in all packages                                              |
+| `npm run typecheck`                 | TypeScript in all packages                                          |
+| `npm test`                          | tests (Vitest), the server needs `db:up`; client includes DOM tests |
+| `npm run db:up`                     | MySQL + Liquibase migrations                                        |
+| `npm run db:reset`                  | recreate the DB (deletes the data)                                  |
+| `npm run format` / `format:check`   | Prettier                                                            |
+| `npm run audit:prod`                | npm audit without dev dependencies                                  |
+| `npm run docker:up` / `docker:down` | docker compose                                                      |

@@ -13,7 +13,7 @@ interface DeletionState {
 /**
  * The state of one deletion request for a confirmation window: waiting for the answer, or why it failed.
  * `remove` does the request and answers with the failure text, or `undefined` when it worked (the feature's hook
- * dispatches its thunk there, so the shared code stays free of the store).
+ * calls its Server Action there, so the shared code stays free of the transport and the store).
  *
  * The window may be closed while the request runs and opened again for another item. Only the newest request may
  * change what the window shows (`pending`, the failure); the answer of an older one is not shown there. A deletion

@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { MAX_INT } from './limits';
+
 // Building blocks for the form schemas of the features. The limits mirror the API (docs/API.md, "Input rules and
 // limits"), which is the final judge: the form only saves a round trip and words the problem near the field.
 
@@ -8,8 +10,6 @@ const MAX_TEXT_BYTES = 65_535;
 const MAX_TITLE_CHARACTERS = 255;
 const MIN_YEAR = 1000;
 const MAX_YEAR = 9999;
-/** The largest value of a signed MySQL INT column. */
-export const MAX_INT = 2_147_483_647;
 /** DECIMAL(12,2). */
 const MAX_PRICE = 9_999_999_999.99;
 

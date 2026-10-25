@@ -2,6 +2,8 @@
 
 Base URL: `http://localhost:4000`. Request and response bodies are JSON, dates are ISO 8601 (UTC). Errors come as `{ "error": "..." }`.
 
+The Next server calls inventory REST endpoints for Server Component reads and Server Actions. Browser-to-API connections are limited to Socket.io and `GET /health`, so CORS remains enabled. `API_URL` controls the private Next-to-API address; `NEXT_PUBLIC_API_URL` controls the public socket/health address. Reads use Next's tagged cache with 60-second revalidation; direct REST writes do not invalidate it immediately.
+
 The data shape follows `docs/task-materials/app.js`: `camelCase` fields, a product has a `price[]` array and a nested `guarantee { start, end }`, the product type is a string.
 
 | Method and path        | What it does                                                                                    | Success | Errors   |

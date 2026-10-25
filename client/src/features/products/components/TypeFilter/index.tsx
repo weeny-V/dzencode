@@ -8,11 +8,8 @@ import { startTransition, useId, useOptimistic } from 'react';
 import { withParam } from '@/shared/lib/searchParams';
 
 interface TypeFilterProps {
-  /** Type names for the options; `undefined` while they load (the select is disabled meanwhile). */
-  types?: readonly string[];
-  /** Loading the names failed: the select stays disabled and a button offers to try again. */
-  failed?: boolean;
-  onRetry?: () => void;
+  /** Complete type names loaded by the server before the filter mounts. */
+  types: readonly string[];
   /** The type currently applied; empty means all. */
   selected: string;
 }
@@ -23,15 +20,16 @@ interface TypeFilterProps {
  * change is animated like a page change. The select shows the new choice at once (optimistically) and does not
  * wait for the server round trip.
  */
-export function TypeFilter({ types, failed = false, onRetry, selected }: TypeFilterProps) {
+export function TypeFilter({ types, selected }: TypeFilterProps) {
   const id = useId();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [value, setValue] = useOptimistic(selected);
+  const [pending, setPending] = useOptimistic(false);
 
   return (
-    <div className="type-filter">
+    <div className="type-filter" data-pending={pending ? '' : undefined}>
       <label className="type-filter__label" htmlFor={id}>
         Тип:
       </label>
@@ -39,11 +37,11 @@ export function TypeFilter({ types, failed = false, onRetry, selected }: TypeFil
         id={id}
         className="type-filter__select"
         value={value}
-        disabled={!types}
         onChange={(event) => {
           const type = event.target.value;
           startTransition(() => {
             setValue(type);
+            setPending(true);
             router.replace(`${pathname}${withParam(searchParams, 'type', type)}`, {
               scroll: false,
             });
@@ -51,18 +49,12 @@ export function TypeFilter({ types, failed = false, onRetry, selected }: TypeFil
         }}
       >
         <option value="">Все</option>
-        {/* While the names load, the chosen type from the address still has to be an option to show it. */}
-        {(types ?? (selected ? [selected] : [])).map((type) => (
+        {types.map((type) => (
           <option key={type} value={type}>
             {type}
           </option>
         ))}
       </select>
-      {failed && !types && (
-        <button type="button" className="type-filter__retry" onClick={onRetry}>
-          Не удалось загрузить типы. Повторить
-        </button>
-      )}
     </div>
   );
 }

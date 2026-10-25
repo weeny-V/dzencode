@@ -12,11 +12,31 @@ export default defineConfig({
   esbuild: { jsx: 'automatic' },
   resolve: {
     // Same `@/` alias as in tsconfig.json.
-    alias: { '@': path.resolve(import.meta.dirname, 'src') },
+    alias: {
+      '@': path.resolve(import.meta.dirname, 'src'),
+      'server-only': path.resolve(import.meta.dirname, 'src/testing/server-only.ts'),
+    },
   },
   test: {
-    // No DOM: components are rendered to a string (`renderToStaticMarkup`) and the markup is checked.
-    environment: 'node',
-    include: ['src/**/*.test.{ts,tsx}'],
+    projects: [
+      {
+        extends: true,
+        test: {
+          name: 'node',
+          environment: 'node',
+          include: ['src/**/*.test.{ts,tsx}'],
+          exclude: ['src/**/*.dom.test.{ts,tsx}'],
+        },
+      },
+      {
+        extends: true,
+        test: {
+          name: 'dom',
+          environment: 'jsdom',
+          include: ['src/**/*.dom.test.{ts,tsx}'],
+          setupFiles: ['src/testing/setup-dom.ts'],
+        },
+      },
+    ],
   },
 });
