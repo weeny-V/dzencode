@@ -1,0 +1,14 @@
+{
+  "export": "Экспорт CSV",
+  "busy": "Готовлю файл…",
+  "cancel": "Отмена",
+  "failed": "Не удалось экспортировать приходы.",
+  "id": "ID",
+  "title": "Название",
+  "description": "Описание",
+  "date": "Дата",
+  "warehouse": "Склад",
+  "products": "Продукты",
+  "totalUah": "Сумма UAH",
+  "totalUsd": "Сумма USD"
+}

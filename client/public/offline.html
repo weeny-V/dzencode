@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>Offline · Inventory</title>
+    <style>
+      :root {
+        color-scheme: light;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        padding: 1.5rem;
+        box-sizing: border-box;
+        font-family:
+          system-ui,
+          -apple-system,
+          'Segoe UI',
+          Roboto,
+          sans-serif;
+        color: #2c3c44;
+        background: #f0f3f5;
+      }
+      main {
+        max-width: 28rem;
+        padding: 2rem;
+        text-align: center;
+        background: #fff;
+        border: 1px solid #cfd8dc;
+        border-radius: 0.5rem;
+      }
+      img {
+        width: 4rem;
+        height: auto;
+      }
+      h1 {
+        margin: 1rem 0 0.5rem;
+        font-size: 1.5rem;
+      }
+      p {
+        margin: 0 0 1.5rem;
+        color: #546e7a;
+      }
+      button {
+        min-height: 2.6rem;
+        padding: 0.5rem 1.6rem;
+        border: 0;
+        border-radius: 1.5rem;
+        font: inherit;
+        font-weight: 700;
+        color: #fff;
+        background: #52762c;
+        cursor: pointer;
+      }
+      [hidden] {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <img src="/icons/icon-192.png" alt="" width="64" height="64" />
+      <section data-lang="en">
+        <h1>You are offline</h1>
+        <p>
+          Inventory needs a connection to show current orders and products. Check the network and
+          try again.
+        </p>
+        <button type="button">Try again</button>
+      </section>
+      <section data-lang="ru" hidden>
+        <h1>Нет подключения</h1>
+        <p>
+          Для показа актуальных приходов и продуктов нужна сеть. Проверьте подключение и повторите
+          попытку.
+        </p>
+        <button type="button">Повторить</button>
+      </section>
+    </main>
+    <script>
+      // The language cookie is HttpOnly, so the browser's own language is the best hint available here.
+      if ((navigator.language || '').toLowerCase().startsWith('ru')) {
+        document.documentElement.lang = 'ru';
+        document.title = 'Нет подключения · Inventory';
+        document.querySelector('[data-lang="en"]').hidden = true;
+        document.querySelector('[data-lang="ru"]').hidden = false;
+      }
+      for (const button of document.querySelectorAll('button')) {
+        button.addEventListener('click', () => location.reload());
+      }
+    </script>
+  </body>
+</html>

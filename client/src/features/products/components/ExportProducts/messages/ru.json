@@ -1,0 +1,20 @@
+{
+  "export": "Экспорт CSV",
+  "busy": "Готовлю файл…",
+  "cancel": "Отмена",
+  "failed": "Не удалось экспортировать продукты.",
+  "id": "ID",
+  "title": "Название",
+  "serialNumber": "Серийный номер",
+  "type": "Тип",
+  "isNew": "Новый",
+  "guaranteeStart": "Гарантия с",
+  "guaranteeEnd": "Гарантия по",
+  "priceUah": "Цена UAH",
+  "priceUsd": "Цена USD",
+  "orderId": "ID прихода",
+  "order": "Приход",
+  "specification": "Спецификация",
+  "yes": "да",
+  "no": "нет"
+}

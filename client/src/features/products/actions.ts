@@ -4,10 +4,20 @@ import { refresh, updateTag } from 'next/cache';
 
 import { ApiError } from '@/shared/api/errors';
 import { mutateOrError } from '@/shared/api/mutation.server';
-import type { NewProduct } from '@/shared/api/types';
+import { loadOrError } from '@/shared/api/server';
+import type { NewProduct, Product } from '@/shared/api/types';
+import type { ActionResult } from '@/shared/lib/actionResult';
 import { MAX_INT } from '@/shared/lib/limits';
+import { parseSearch } from '@/shared/lib/searchParams';
 
-import { postProduct, productsTag, removeProduct } from './api/products';
+import {
+  getProducts,
+  getProductTypes,
+  postProduct,
+  productsTag,
+  removeProduct,
+} from './api/products';
+import { parseType, parseTypeParam } from './searchParams';
 
 export async function createProduct(product: NewProduct, expectedSessionId?: string) {
   const result = await mutateOrError(() => postProduct(product), expectedSessionId);
@@ -34,4 +44,18 @@ export async function deleteProduct(id: number, orderId: number, expectedSession
     refresh();
   }
   return result;
+}
+
+/** What the CSV export of the products page is made of: every product of the current type filter and search. */
+export async function loadProductsExport(
+  type: unknown,
+  query: unknown,
+): Promise<ActionResult<Product[]>> {
+  const search = parseSearch(typeof query === 'string' ? query : undefined);
+  const typeParam = parseTypeParam(typeof type === 'string' ? type : undefined);
+  return loadOrError(async () => {
+    // As on the page, an unknown type means all products.
+    const selected = typeParam ? parseType(typeParam, await getProductTypes()) : '';
+    return getProducts({ type: selected, query: search });
+  });
 }

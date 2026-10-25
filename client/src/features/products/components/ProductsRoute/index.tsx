@@ -7,6 +7,7 @@ import { parseSearch, type SearchParams } from '@/shared/lib/searchParams';
 import { deleteProduct } from '../../actions';
 import { parseTypeParam } from '../../searchParams';
 import { ProductsContent } from '../ProductsContent/ProductsContent.server';
+import { ProductsHeader } from '../ProductsHeader/ProductsHeader.server';
 import { Loading } from './Loading.server';
 
 /**
@@ -21,6 +22,7 @@ async function ProductsRequest({ searchParams }: { searchParams: SearchParams })
 export function ProductsRoute({ searchParams }: { searchParams: SearchParams }) {
   return (
     <>
+      <ProductsHeader searchParams={searchParams} />
       <Suspense fallback={<Loading />}>
         <ProductsRequest searchParams={searchParams} />
       </Suspense>

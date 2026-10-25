@@ -106,3 +106,10 @@ describe('server inventory report', () => {
     expect(html).toContain('Retry');
   });
 });
+
+describe('groups title row', () => {
+  it('renders the page title on its own, so it can be painted before the report arrives', async () => {
+    const { GroupsHeader } = await import('./GroupsContent.server');
+    expect(await renderServer(await GroupsHeader())).toContain('Группы');
+  });
+});

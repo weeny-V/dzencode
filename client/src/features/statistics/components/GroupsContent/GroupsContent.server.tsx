@@ -68,7 +68,6 @@ function GroupsContentView({
   const chartMessages = { loading: m.chartLoading, error: m.chartError, retry: m.retry };
   return (
     <>
-      <PageHeader title={m.title} />
       <div className="groups-content" data-pending-target>
         <nav className="groups-content__currency" aria-label={m.currency}>
           {links.map(({ code, href }) => (
@@ -249,6 +248,12 @@ function GraphSection({
       )}
     </section>
   );
+}
+
+/** The title row of the page. It sits outside the report's Suspense boundary, so the title is painted at once. */
+export async function GroupsHeader() {
+  const { messages } = await dictionary();
+  return <PageHeader title={messages.title} />;
 }
 
 export async function GroupsLoading() {

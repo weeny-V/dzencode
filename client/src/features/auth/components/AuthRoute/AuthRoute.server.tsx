@@ -6,7 +6,7 @@ import { readSession } from '@/shared/api/session.server';
 import { safeReturnTo } from '@/shared/lib/authRedirect';
 import type { SearchParams } from '@/shared/lib/searchParams';
 
-import { AuthForm } from '../AuthForm';
+import { AuthFormLoader } from '../AuthForm/AuthFormLoader';
 import { dictionary } from '../AuthForm/messages.server';
 
 export async function authMetadata(mode: 'login' | 'register') {
@@ -32,7 +32,7 @@ export async function AuthRoute({
   const { locale, messages } = await dictionary();
   return (
     <NextIntlClientProvider locale={locale} messages={{ AuthForm: messages }}>
-      <AuthForm key={mode} mode={mode} returnTo={returnTo} />
+      <AuthFormLoader key={mode} mode={mode} returnTo={returnTo} />
     </NextIntlClientProvider>
   );
 }

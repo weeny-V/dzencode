@@ -18,10 +18,11 @@ RUN npm run build -w client
 FROM node:22-alpine
 WORKDIR /app
 ENV NODE_ENV=production PORT=3000 HOSTNAME=0.0.0.0
-# `public/` may not exist yet; the standalone output keeps the monorepo layout (client/server.js).
+# The standalone output keeps the monorepo layout (client/server.js) and does not copy public/ itself.
 # Next writes the tagged Data Cache at runtime as the unprivileged node user.
 COPY --from=build --chown=node:node /app/client/.next/standalone ./
 COPY --from=build --chown=node:node /app/client/.next/static client/.next/static
+COPY --from=build --chown=node:node /app/client/public client/public
 USER node
 EXPOSE 3000
 CMD ["node", "client/server.js"]
