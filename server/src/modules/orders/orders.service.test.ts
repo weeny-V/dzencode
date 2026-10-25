@@ -17,6 +17,7 @@ const order = (id: number): Order => ({
 });
 
 const setup = (orders: Order[]) => {
+  const publish = vi.fn();
   // Kept as a standalone mock so the assertions below do not read a method off the repository object.
   const list = vi.fn((_search?: Parameters<OrdersRepository['list']>[0]) =>
     Promise.resolve(orders),
@@ -42,9 +43,11 @@ const setup = (orders: Order[]) => {
   };
   return {
     list,
+    publish,
     products,
     service: createOrdersService({
       repository,
+      events: { publish },
       products,
       warehouses: { list: () => Promise.resolve([]) },
     }),
@@ -101,5 +104,22 @@ describe('OrdersService', () => {
 
     await expect(service.remove(7)).rejects.toBeInstanceOf(NotFoundError);
     await expect(service.remove(1)).resolves.toBeUndefined();
+  });
+});
+
+describe('OrdersService events', () => {
+  it('announces a created order', async () => {
+    const { service, publish } = setup([]);
+    await service.create({ title: 'New', description: null, date: new Date('2020-01-01') });
+    expect(publish).toHaveBeenCalledOnce();
+    expect(publish).toHaveBeenCalledWith({ type: 'order.created', orderId: 99 });
+  });
+  it('announces a removed order, and nothing for an unknown one', async () => {
+    const { service, publish } = setup([order(1)]);
+    await service.remove(1);
+    expect(publish).toHaveBeenCalledWith({ type: 'order.deleted', orderId: 1 });
+    publish.mockClear();
+    await expect(service.remove(2)).rejects.toBeInstanceOf(NotFoundError);
+    expect(publish).not.toHaveBeenCalled();
   });
 });

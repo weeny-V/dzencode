@@ -1,5 +1,6 @@
 import { ForeignKeyViolationError } from '../../shared/db/errors.js';
 import { NotFoundError, ValidationError } from '../../shared/errors.js';
+import type { EventBus } from '../../shared/events/eventBus.js';
 import type { ProductTypesService } from '../product-types/index.js';
 import { ORDER_FOREIGN_KEY, type ProductsRepository } from './products.repository.js';
 import type {
@@ -11,17 +12,26 @@ import type {
 
 interface ProductsServiceDeps {
   repository: ProductsRepository;
+  events: Pick<EventBus, 'publish'>;
   productTypes: Pick<ProductTypesService, 'resolveId'>;
 }
 
-export const createProductsService = ({ repository, productTypes }: ProductsServiceDeps) => ({
+export const createProductsService = ({
+  repository,
+  productTypes,
+  events,
+}: ProductsServiceDeps) => ({
   list: (filter: ProductFilter = {}): Promise<Product[]> => repository.list(filter),
 
   listByOrder: (orderId: number): Promise<Product[]> => repository.list({ orderId }),
 
   async remove(id: number): Promise<void> {
+    // The order is read first: the event must say which order lost a product, and the row is gone afterwards.
+    const [existing] = await repository.list({ id });
     const removed = await repository.remove(id);
     if (!removed) throw new NotFoundError('Product not found');
+    if (existing)
+      events.publish({ type: 'product.deleted', productId: id, orderId: existing.order });
   },
 
   /** Orders that have a product matching the search text (by its title or serial number). */
@@ -46,6 +56,7 @@ export const createProductsService = ({ repository, productTypes }: ProductsServ
 
     const [created] = await repository.list({ id });
     if (!created) throw new Error(`Product ${id} disappeared right after insert`);
+    events.publish({ type: 'product.created', productId: id, orderId: created.order });
     return created;
   },
 });

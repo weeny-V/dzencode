@@ -1,5 +1,6 @@
 import { ForeignKeyViolationError } from '../../shared/db/errors.js';
 import { NotFoundError, ValidationError } from '../../shared/errors.js';
+import type { EventBus } from '../../shared/events/eventBus.js';
 import type { ProductsService } from '../products/index.js';
 import type { WarehousesService } from '../warehouses/index.js';
 import type { OrdersRepository } from './orders.repository.js';
@@ -7,11 +8,17 @@ import type { Order, OrderDetails, OrderFilter, OrderInput, OrderSummary } from 
 
 interface OrdersServiceDeps {
   repository: OrdersRepository;
+  events: Pick<EventBus, 'publish'>;
   warehouses: Pick<WarehousesService, 'list'>;
   products: Pick<ProductsService, 'listByOrder' | 'summarizeByOrder' | 'findOrderIdsByQuery'>;
 }
 
-export const createOrdersService = ({ repository, products, warehouses }: OrdersServiceDeps) => ({
+export const createOrdersService = ({
+  repository,
+  products,
+  warehouses,
+  events,
+}: OrdersServiceDeps) => ({
   /** A search keeps whole orders: the counts and totals still describe all of an order's products. */
   async list({ query }: OrderFilter = {}): Promise<OrderSummary[]> {
     const orders =
@@ -39,6 +46,7 @@ export const createOrdersService = ({ repository, products, warehouses }: Orders
   async create(input: OrderInput): Promise<OrderSummary> {
     try {
       const order: Order = await repository.create(input);
+      events.publish({ type: 'order.created', orderId: order.id });
       return { ...order, productsCount: 0, totals: [] };
     } catch (error) {
       if (error instanceof ForeignKeyViolationError && error.constraint === 'fk_orders_warehouse') {
@@ -51,6 +59,7 @@ export const createOrdersService = ({ repository, products, warehouses }: Orders
   async remove(id: number): Promise<void> {
     const removed = await repository.remove(id);
     if (!removed) throw new NotFoundError('Order not found');
+    events.publish({ type: 'order.deleted', orderId: id });
   },
 });
 

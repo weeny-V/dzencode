@@ -4,7 +4,9 @@ import { Server, type Socket } from 'socket.io';
 
 import type { Config } from './config.js';
 import { type AuthService, readAuthCookie } from './modules/auth/index.js';
-import { createSessionsModule } from './modules/sessions/index.js';
+import { createInventoryEventsModule } from './modules/inventory-events/index.js';
+import { AUTHORIZED_TABS_ROOM, createSessionsModule } from './modules/sessions/index.js';
+import type { EventBus } from './shared/events/eventBus.js';
 
 /**
  * Composition root of the socket side, next to `createApp` for HTTP: puts Socket.io on the same HTTP server and
@@ -15,7 +17,11 @@ export const attachRealtime = (
   {
     clientOrigin,
     auth,
-  }: Pick<Config, 'clientOrigin'> & { auth: Pick<AuthService, 'authenticate' | 'onRevoked'> },
+    events,
+  }: Pick<Config, 'clientOrigin'> & {
+    auth: Pick<AuthService, 'authenticate' | 'onRevoked'>;
+    events: Pick<EventBus, 'publish' | 'on'>;
+  },
 ): Server => {
   const io = new Server(httpServer, {
     cors: { origin: clientOrigin, credentials: true },
@@ -48,12 +54,18 @@ export const attachRealtime = (
     void authorize();
   });
 
-  createSessionsModule().attach(io, async (socket) => {
+  const stopSessions = createSessionsModule().attach(io, events, async (socket) => {
     const sessionId = sessionIds.get(socket);
     if (!sessionId) throw new Error('Authentication required');
     await socket.join(room(sessionId));
     // Close the authenticate/join race: logout either sees this room or this second DB check fails.
     await auth.authenticate(readAuthCookie(socket.request.headers.cookie));
+  });
+
+  const stopInventory = createInventoryEventsModule().attach(io, events, AUTHORIZED_TABS_ROOM);
+  httpServer.once('close', () => {
+    stopSessions();
+    stopInventory();
   });
 
   return io;

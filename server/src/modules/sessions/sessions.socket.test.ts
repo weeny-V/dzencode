@@ -6,7 +6,9 @@ import { io as connect, type Socket } from 'socket.io-client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { attachRealtime } from '../../realtime.js';
+import { createEventBus, type EventBus } from '../../shared/events/eventBus.js';
 import type { AuthContext } from '../auth/index.js';
+import { INVENTORY_CHANGED_EVENT } from '../inventory-events/index.js';
 import { SESSIONS_COUNT_EVENT } from './index.js';
 
 const CLIENT_ORIGIN = 'http://localhost:3000';
@@ -16,6 +18,7 @@ let url: string;
 let clients: Socket[] = [];
 let revoke: (sessionId: string) => void;
 let revoked = false;
+let events: EventBus;
 const context: AuthContext = {
   sessionId: 'a'.repeat(64),
   user: {
@@ -36,8 +39,10 @@ beforeEach(async () => {
   httpServer = createServer();
   revoked = false;
   authenticate.mockClear();
+  events = createEventBus();
   attachRealtime(httpServer, {
     clientOrigin: CLIENT_ORIGIN,
+    events,
     auth: {
       authenticate,
       onRevoked: (listener) => {
@@ -190,5 +195,56 @@ describe('sessions over Socket.io', () => {
     socket.on(SESSIONS_COUNT_EVENT, ({ count }: { count: number }) => counts.push(count));
     await new Promise<void>((resolve) => socket.once('disconnect', () => resolve()));
     expect(counts).toEqual([]);
+  });
+});
+
+describe('inventory events over Socket.io', () => {
+  const nextChange = (client: Socket): Promise<unknown> =>
+    new Promise((resolve) => client.once(INVENTORY_CHANGED_EVENT, resolve));
+
+  it('forwards an inventory event to every authorized tab', async () => {
+    const first = open();
+    await nextCount(first);
+    const secondCount = nextCount(first);
+    const second = open();
+    await Promise.all([secondCount, nextCount(second)]);
+    const changes = Promise.all([nextChange(first), nextChange(second)]);
+    events.publish({ type: 'product.created', productId: 4, orderId: 2 });
+    expect(await changes).toEqual([
+      { type: 'product.created', productId: 4, orderId: 2 },
+      { type: 'product.created', productId: 4, orderId: 2 },
+    ]);
+  });
+
+  it('does not forward session events as inventory changes', async () => {
+    const first = open();
+    const received = vi.fn();
+    first.on(INVENTORY_CHANGED_EVENT, received);
+    await nextCount(first);
+    events.publish({ type: 'session.opened', sessionId: 'someone-else' });
+    await nextCount(first);
+    expect(received).not.toHaveBeenCalled();
+  });
+
+  it('sends nothing to a tab that is not authorized', async () => {
+    const guest = open({ Origin: CLIENT_ORIGIN });
+    const received = vi.fn();
+    guest.on(INVENTORY_CHANGED_EVENT, received);
+    await new Promise<void>((resolve) => guest.once('connect_error', () => resolve()));
+    events.publish({ type: 'order.deleted', orderId: 1 });
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    expect(received).not.toHaveBeenCalled();
+  });
+
+  it('keeps the counter correct when the count is driven by bus events', async () => {
+    const first = open();
+    expect(await nextCount(first)).toBe(1);
+    const second = open();
+    const seen = nextCount(first);
+    await nextCount(second);
+    expect(await seen).toBe(2);
+    const afterClose = nextCount(first);
+    second.disconnect();
+    expect(await afterClose).toBe(1);
   });
 });

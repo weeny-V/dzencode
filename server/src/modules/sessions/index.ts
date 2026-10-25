@@ -1,6 +1,7 @@
 // Public interface of the module: other modules import only from this file.
 import type { Server, Socket } from 'socket.io';
 
+import type { EventBus } from '../../shared/events/eventBus.js';
 import { attachSessionsGateway } from './sessions.gateway.js';
 import { createSessionsService } from './sessions.service.js';
 
@@ -8,10 +9,13 @@ export const createSessionsModule = () => {
   const service = createSessionsService();
   return {
     service,
-    attach: (io: Server, authorize: (socket: Socket) => Promise<void>) =>
-      attachSessionsGateway(io, service, authorize),
+    attach: (
+      io: Server,
+      events: Pick<EventBus, 'publish' | 'on'>,
+      authorize: (socket: Socket) => Promise<void>,
+    ) => attachSessionsGateway(io, service, events, authorize),
   };
 };
 
-export { SESSIONS_COUNT_EVENT } from './sessions.gateway.js';
+export { AUTHORIZED_TABS_ROOM, SESSIONS_COUNT_EVENT } from './sessions.gateway.js';
 export type { SessionsService } from './sessions.service.js';

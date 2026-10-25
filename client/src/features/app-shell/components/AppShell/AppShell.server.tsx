@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 
 import { apiStatusMessages } from '@/features/api-status';
 import { authMessages, LogoutButton } from '@/features/auth';
+import { InventorySync, inventorySyncMessages } from '@/features/inventory-sync';
 import { localeMessages } from '@/features/locale';
 import { navigationMenuMessages } from '@/features/navigation-menu';
 import { sessionsMessages } from '@/features/sessions';
@@ -14,7 +15,7 @@ import { AppShell } from '.';
 import { dictionary } from './messages.server';
 
 export async function LocalizedAppShell({ children }: { children: ReactNode }) {
-  const [shell, top, search, nav, sessions, api, locale, calendar, auth] = await Promise.all([
+  const [shell, top, search, nav, sessions, api, locale, calendar, auth, sync] = await Promise.all([
     dictionary(),
     getDictionary(topMenuMessages),
     getDictionary(searchMessages),
@@ -24,6 +25,7 @@ export async function LocalizedAppShell({ children }: { children: ReactNode }) {
     getDictionary(localeMessages),
     calendarMessages(),
     getDictionary(authMessages),
+    getDictionary(inventorySyncMessages),
   ]);
   return (
     <NextIntlClientProvider
@@ -38,9 +40,11 @@ export async function LocalizedAppShell({ children }: { children: ReactNode }) {
         LocaleSwitcher: locale.messages,
         Calendar: calendar.messages,
         AuthForm: auth.messages,
+        InventorySync: sync.messages,
       }}
     >
       <AppShell authControls={<LogoutButton />}>{children}</AppShell>
+      <InventorySync />
     </NextIntlClientProvider>
   );
 }

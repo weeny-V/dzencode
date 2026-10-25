@@ -22,7 +22,8 @@ const input: ProductInput = {
 };
 
 const setup = (create: ProductsRepository['create']) => {
-  const stored = { id: 10, title: 'Monitor' } as Product;
+  const stored = { id: 10, title: 'Monitor', order: 5 } as Product;
+  const publish = vi.fn();
   // Kept as standalone mocks so the assertions below do not read methods off the repository object.
   const list = vi.fn(() => Promise.resolve([stored]));
   const createMock = vi.fn(create);
@@ -43,9 +44,10 @@ const setup = (create: ProductsRepository['create']) => {
   };
   return {
     list,
+    publish,
     create: createMock,
     remove: removeMock,
-    service: createProductsService({ repository, productTypes }),
+    service: createProductsService({ repository, productTypes, events: { publish } }),
   };
 };
 
@@ -98,5 +100,29 @@ describe('ProductsService.remove', () => {
     const { service } = setup(() => Promise.resolve(10));
 
     await expect(service.remove(11)).rejects.toBeInstanceOf(NotFoundError);
+  });
+});
+
+describe('ProductsService events', () => {
+  it('announces a created product with its order after the insert', async () => {
+    const { service, publish } = setup(() => Promise.resolve(10));
+    await service.create(input);
+    expect(publish).toHaveBeenCalledOnce();
+    expect(publish).toHaveBeenCalledWith({ type: 'product.created', productId: 10, orderId: 5 });
+  });
+  it('announces nothing when the insert fails', async () => {
+    const { service, publish } = setup(() => Promise.reject(new Error('db down')));
+    await expect(service.create(input)).rejects.toThrow('db down');
+    expect(publish).not.toHaveBeenCalled();
+  });
+  it('announces a removed product with the order it belonged to', async () => {
+    const { service, publish } = setup(() => Promise.resolve(10));
+    await service.remove(10);
+    expect(publish).toHaveBeenCalledWith({ type: 'product.deleted', productId: 10, orderId: 5 });
+  });
+  it('announces nothing for an unknown product', async () => {
+    const { service, publish } = setup(() => Promise.resolve(10));
+    await expect(service.remove(11)).rejects.toBeInstanceOf(NotFoundError);
+    expect(publish).not.toHaveBeenCalled();
   });
 });

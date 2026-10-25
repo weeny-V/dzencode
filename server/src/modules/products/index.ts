@@ -1,5 +1,6 @@
 // Public interface of the module: other modules import only from this file.
 import type { Pool, ReadDatabase } from '../../shared/db/pool.js';
+import type { EventBus } from '../../shared/events/eventBus.js';
 import type { ProductTypesService } from '../product-types/index.js';
 import { createProductsInventoryRepository } from './products.inventory.repository.js';
 import { createProductsInventoryService } from './products.inventory.service.js';
@@ -9,12 +10,14 @@ import { createProductsService } from './products.service.js';
 
 interface ProductsModuleDeps {
   pool: Pool;
+  events: Pick<EventBus, 'publish'>;
   productTypes: Pick<ProductTypesService, 'resolveId'>;
 }
 
-export const createProductsModule = ({ pool, productTypes }: ProductsModuleDeps) => {
+export const createProductsModule = ({ pool, productTypes, events }: ProductsModuleDeps) => {
   const service = createProductsService({
     repository: createProductsRepository(pool),
+    events,
     productTypes,
   });
   return { service, router: createProductsRouter(service) };

@@ -1,5 +1,6 @@
 // Public interface of the module: other modules import only from this file.
 import type { Pool, ReadDatabase } from '../../shared/db/pool.js';
+import type { EventBus } from '../../shared/events/eventBus.js';
 import type { ProductsService } from '../products/index.js';
 import type { WarehousesService } from '../warehouses/index.js';
 import { createOrdersInventoryRepository } from './orders.inventory.repository.js';
@@ -10,13 +11,15 @@ import { createOrdersService } from './orders.service.js';
 
 interface OrdersModuleDeps {
   pool: Pool;
+  events: Pick<EventBus, 'publish'>;
   warehouses: Pick<WarehousesService, 'list'>;
   products: Pick<ProductsService, 'listByOrder' | 'summarizeByOrder' | 'findOrderIdsByQuery'>;
 }
 
-export const createOrdersModule = ({ pool, products, warehouses }: OrdersModuleDeps) => {
+export const createOrdersModule = ({ pool, products, warehouses, events }: OrdersModuleDeps) => {
   const service = createOrdersService({
     repository: createOrdersRepository(pool),
+    events,
     products,
     warehouses,
   });

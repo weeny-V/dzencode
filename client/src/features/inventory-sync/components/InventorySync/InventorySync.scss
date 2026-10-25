@@ -1,0 +1,20 @@
+@use 'tokens' as *;
+.inventory-sync {
+  position: fixed;
+  right: $space-md;
+  bottom: $space-md;
+  z-index: 1080;
+  max-width: min(100% - 2 * $space-md, 28rem);
+  &__notice {
+    display: flex;
+    align-items: center;
+    gap: $space-md;
+    padding: $space-sm $space-md;
+    color: $color-text;
+    background: $color-surface;
+    border: 1px solid $color-border;
+    border-left: 4px solid $color-primary;
+    border-radius: $radius;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+  }
+}

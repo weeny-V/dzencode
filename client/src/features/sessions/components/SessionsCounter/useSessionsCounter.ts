@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { useSelector } from 'react-redux';
 
+import { publishInventoryChange } from '@/shared/lib/inventoryEvents';
 import { useAppDispatch } from '@/shared/store/hooks';
 
 import { openSessionsChannel } from '../../api/sessionsChannel';
@@ -25,6 +26,8 @@ export function useSessionsCounter(): SessionsState {
       openSessionsChannel({
         onCount: (count) => dispatch(countReceived(count)),
         onConnectionChange: (connected) => dispatch(connectionChanged(connected)),
+        // The same socket carries the inventory events: a second connection would count as a second tab.
+        onInventoryChange: publishInventoryChange,
       }),
     [dispatch],
   );

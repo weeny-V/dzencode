@@ -228,7 +228,11 @@ describe('authentication REST and persistent sessions', () => {
     const first = await register();
     const second = await register('second@example.com');
     httpServer = createServer(context.app);
-    attachRealtime(httpServer, { clientOrigin: origin, auth: context.auth });
+    attachRealtime(httpServer, {
+      clientOrigin: origin,
+      auth: context.auth,
+      events: context.events,
+    });
     await new Promise<void>((resolve) => httpServer!.listen(0, '127.0.0.1', resolve));
     const url = `http://127.0.0.1:${(httpServer.address() as AddressInfo).port}`;
     const open = (token: string) => {
