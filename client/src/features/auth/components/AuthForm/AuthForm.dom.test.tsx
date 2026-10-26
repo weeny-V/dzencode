@@ -32,6 +32,59 @@ const show = (mode: 'login' | 'register', locale: 'en' | 'ru' = 'en') =>
     </NextIntlClientProvider>,
   );
 describe('public authentication forms', () => {
+  it.each(['en', 'ru'] as const)(
+    'shows localized password help on hover and keyboard focus in %s',
+    async (locale) => {
+      const t = locale === 'en' ? en : ru;
+      show('register', locale);
+      const user = userEvent.setup();
+      const help = screen.getByRole('button', { name: t.passwordRequirements });
+      const password = screen.getByLabelText(t.passwordLabel, {
+        exact: false,
+        selector: 'input[name="password"]',
+      });
+      expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+      await user.hover(help);
+      expect(screen.getByRole('tooltip')).toHaveTextContent(t.passwordMinimum);
+      expect(screen.getByRole('tooltip')).toHaveTextContent(t.passwordMaximum);
+      expect(screen.getByRole('tooltip')).toHaveTextContent(t.passwordCharacters);
+      await user.unhover(help);
+      expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+      await user.click(password);
+      expect(screen.getByRole('tooltip')).toBeVisible();
+      expect(password).toHaveFocus();
+      expect(password).toHaveAccessibleDescription(new RegExp(t.passwordMinimum));
+      await user.keyboard('{Escape}');
+      expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+      expect(password).toHaveFocus();
+      await user.tab();
+      expect(help).toHaveFocus();
+      expect(screen.getByRole('tooltip')).toBeVisible();
+      await user.tab();
+      expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+      expect(state.submitCredentials).not.toHaveBeenCalled();
+    },
+  );
+  it('opens help on a tap without submitting and keeps errors associated with the input', async () => {
+    show('register');
+    const user = userEvent.setup();
+    const help = screen.getByRole('button', { name: en.passwordRequirements });
+    fireEvent.click(help);
+    expect(screen.getByRole('tooltip')).toBeVisible();
+    const password = screen.getByLabelText(/^Password/, { selector: 'input' });
+    await user.click(password);
+    fireEvent.change(password, { target: { value: 'short' } });
+    await user.tab();
+    expect(await screen.findByText(en.passwordTooShort)).toBeVisible();
+    expect(password).toHaveAccessibleDescription(new RegExp(en.passwordTooShort));
+    expect(password).toHaveAccessibleDescription(new RegExp(en.passwordMinimum));
+    expect(state.submitCredentials).not.toHaveBeenCalled();
+  });
+  it('keeps registration requirements off the login form', () => {
+    show('login');
+    expect(screen.queryByRole('tooltip', { hidden: true })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: en.passwordRequirements })).not.toBeInTheDocument();
+  });
   it('allows 100 supplementary Unicode characters in both names and validates the next character', async () => {
     state.submitCredentials.mockResolvedValue({ ok: false, error: 'unavailable' });
     show('register');
@@ -46,7 +99,9 @@ describe('public authentication forms', () => {
     expect(first).toHaveValue(name);
     expect(last).toHaveValue(name);
     fireEvent.change(screen.getByLabelText(/Email/), { target: { value: 'test@example.com' } });
-    fireEvent.change(screen.getByLabelText(/^Password/), { target: { value: 'private password' } });
+    fireEvent.change(screen.getByLabelText(/^Password/, { selector: 'input' }), {
+      target: { value: 'private password' },
+    });
     fireEvent.change(screen.getByLabelText(/Confirm password/), {
       target: { value: 'private password' },
     });
@@ -66,6 +121,24 @@ describe('public authentication forms', () => {
     show('register');
     fireEvent.click(screen.getByRole('button', { name: 'Create account' }));
     expect(await screen.findAllByText('This field is required.')).not.toHaveLength(0);
+    expect(state.submitCredentials).not.toHaveBeenCalled();
+  });
+  it.each([
+    { locale: 'en', value: 'short', key: 'passwordTooShort' },
+    { locale: 'ru', value: 'short', key: 'passwordTooShort' },
+    { locale: 'en', value: '🔒'.repeat(257), key: 'passwordTooLong' },
+    { locale: 'ru', value: '🔒'.repeat(257), key: 'passwordTooLong' },
+  ] as const)('explains $key in $locale on registration', async ({ locale, value, key }) => {
+    const t = locale === 'en' ? en : ru;
+    show('register', locale);
+    const password = screen.getByLabelText(t.passwordLabel, {
+      exact: false,
+      selector: 'input[name="password"]',
+    });
+    fireEvent.change(password, { target: { value } });
+    fireEvent.blur(password);
+    expect(await screen.findByText(t[key])).toBeVisible();
+    expect(password).toHaveAttribute('aria-invalid', 'true');
     expect(state.submitCredentials).not.toHaveBeenCalled();
   });
   it.each(['en', 'ru'] as const)(
