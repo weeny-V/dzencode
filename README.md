@@ -2,7 +2,7 @@
 
 An "Orders / Products" SPA (Dzencode test task, **Middle** level). Requirements: [docs/TASK.md](docs/TASK.md). Work plan by stages: [docs/PLAN.md](docs/PLAN.md).
 
-> Status: stages 7a-7c are merged (read-only GraphQL and relations graph, live inventory events, worker CSV export and a minimal PWA). Stage 7d adds isolated integration checks and a repository-owned Playwright suite; see [verification and owner review](docs/STAGE_7D_STATUS.md). The [authentication contract](docs/AUTH_IMPLEMENTATION.md) still applies.
+> Demo: [dzencode-vgev.onrender.com](https://dzencode-vgev.onrender.com). Register an account to try the shared inventory. Render Free can take about a minute to wake after inactivity. Stage 8 deployment and self-check results are in the [handoff](docs/DEPLOYMENT_CHECKLIST.md) and [status](docs/STAGE_8_STATUS.md); operator instructions are in [deploy/README.md](deploy/README.md). Independent reviewer acceptance remains separate. The [authentication contract](docs/AUTH_IMPLEMENTATION.md) still applies.
 
 ## Stack
 
@@ -61,7 +61,7 @@ Set `AUTH_JWT_SECRET` in root `.env` first. Compose rejects an empty value. Open
 
 Use the same hostname for client and API (local ports may differ); do not mix `localhost` and `127.0.0.1`. Set `CLIENT_ORIGIN` to the exact client origin. Socket.io requires WebSocket forwarding and rejects missing/untrusted Origin. Use HTTPS outside local development and set `AUTH_COOKIE_SECURE=true` in `client/.env.local` or root `.env` for Compose. Local HTTP examples explicitly use `false`; the client otherwise defaults to Secure in production. Auth tokens stay server-only; passwords are submitted only for authentication and never stored in browser storage or Redux. Cross-tab cookie mutations use Web Locks, with an empty IndexedDB mutex on ordinary HTTP; if both coordination mechanisms are unavailable, the auth operation fails safely rather than racing another tab.
 
-`NEXT_PUBLIC_API_URL` is baked into the browser bundle at build time and is used for Socket.io and the health indicator. `API_URL` is private runtime configuration for Next's inventory REST calls; locally it falls back to `NEXT_PUBLIC_API_URL` and then `http://localhost:4000`. Compose defaults it to `http://server:4000`, reachable from the client container. Changing the public URL requires rebuilding the image.
+`NEXT_PUBLIC_API_URL` is baked into the browser bundle at build time and is used for the health indicator. Sockets use `NEXT_PUBLIC_SOCKET_URL` when set, otherwise the public API URL; an explicit empty socket URL selects the page origin. The hosted image uses `/api` for REST and the page origin for sockets. `API_URL` is private runtime configuration for Next's inventory REST calls; locally it falls back to `NEXT_PUBLIC_API_URL` and then `http://localhost:4000`. Compose defaults it to `http://server:4000`, reachable from the client container. Changing public build-time configuration requires rebuilding the image.
 
 Inventory uses Server Components and Server Actions with tagged Next caching (60-second revalidation). The current session is verified before every cache access, and keys include non-credential session/user ids. Redux manages global client state (sessions and the confirmation target); inventory data itself is not stored in Redux. Auth changes remount that state and synchronize tabs without transmitting credentials. Form drafts last seven days and belong to their user and form context; legacy anonymous drafts are not adopted. The API still validates inputs and performs CRUD through REST. See [ADR 0001](docs/adr/0001-server-first-data.md) for the cache decision.
 
@@ -139,6 +139,7 @@ The scenario matrix and limits are in [STAGE_7D_PLAN.md](docs/STAGE_7D_PLAN.md).
 | `npm run test:e2e:install`                  | install the pinned Playwright Chromium browser                               |
 | `npm run test:e2e`                          | disposable production stack and Playwright scenarios                         |
 | `npm run test:system`                       | integration and E2E checks in one disposable stack                           |
+| `npm run test:deploy`                       | combined deployment image and all E2E behind one proxy, capped at 512 MB     |
 | `npm run test:e2e:list` / `test:e2e:report` | list browser scenarios / open their HTML report                              |
 | `npm run db:up`                             | MySQL + Liquibase migrations                                                 |
 | `npm run db:reset`                          | recreate the DB (deletes the data)                                           |

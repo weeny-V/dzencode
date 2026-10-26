@@ -23,8 +23,7 @@ function interrupt() {
 }
 
 async function run(command, args, env = {}) {
-  const cleaning =
-    command === 'docker' && ['down', 'logs'].includes(args[args.indexOf('--file') + 2]);
+  const cleaning = command === 'docker' && (args.includes('down') || args.includes('logs'));
   if (interrupted && !cleaning) throw new Error('Verification interrupted.');
   let executable = command;
   if (command === 'npm') {
@@ -55,8 +54,8 @@ async function run(command, args, env = {}) {
 }
 
 async function main() {
-  if (!['integration', 'e2e', 'system'].includes(mode))
-    throw new Error('Use integration, e2e or system.');
+  if (!['integration', 'e2e', 'system', 'deploy'].includes(mode))
+    throw new Error('Use integration, e2e, system or deploy.');
   await mkdir(path.dirname(lockPath), { recursive: true });
   let lock;
   try {

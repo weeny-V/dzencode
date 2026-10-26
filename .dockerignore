@@ -9,3 +9,11 @@
 test-results
 playwright-report
 docs
+*.pem
+*.key
+*.crt
+**/*.pem
+**/*.key
+**/*.crt
+app.env
+deploy/backups

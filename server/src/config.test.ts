@@ -3,6 +3,14 @@ import { describe, expect, it } from 'vitest';
 import { loadConfig } from './config.js';
 
 describe('loadConfig', () => {
+  it('requires a CA for external TLS and decodes PEM line separators', () => {
+    expect(() => loadConfig({ DB_SSL: 'true' })).toThrow('DB_SSL_CA');
+    expect(() => loadConfig({ DB_SSL: 'yes' })).toThrow('DB_SSL must be true or false');
+    expect(loadConfig({ DB_SSL: 'true', DB_SSL_CA: 'certificate\\nline' }).db.tls).toEqual({
+      ca: 'certificate\nline',
+    });
+    expect(loadConfig({ DB_SSL: 'false' }).db.tls).toBeUndefined();
+  });
   it('falls back to defaults', () => {
     expect(loadConfig({})).toEqual({
       host: '0.0.0.0',

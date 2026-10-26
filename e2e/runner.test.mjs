@@ -70,3 +70,25 @@ test('invalid mode or project cannot mutate Docker', async () => {
   await assert.rejects(verifyStack('other', run, 'dzencode-tests-123', '/repo'));
   await assert.rejects(verifyStack('system', run, 'dzencode6d', '/repo'));
 });
+
+test('deployment verification runs the real browser suite through the single public proxy', async () => {
+  const calls = [];
+  await verifyStack(
+    'deploy',
+    async (...args) => {
+      calls.push(args);
+    },
+    'dzencode-tests-123',
+    '/repo',
+  );
+  assert.equal(
+    calls.some(([command]) => command === 'npm'),
+    false,
+  );
+  assert.ok(calls[2][1].includes('app'));
+  assert.equal(calls[3][2].E2E_PROXY, '1');
+  for (const [command, args] of calls) {
+    if (command === 'docker') assert.ok(args.includes('docker-compose.deploy-test.yml'));
+  }
+  assert.ok(calls.at(-1)[1].includes('down'));
+});

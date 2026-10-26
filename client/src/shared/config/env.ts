@@ -4,6 +4,11 @@ export const env = {
   mapTileUrl: process.env.NEXT_PUBLIC_MAP_TILE_URL ?? '',
   mapTileAttribution: process.env.NEXT_PUBLIC_MAP_TILE_ATTRIBUTION ?? '',
   apiUrl: process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000',
+  // Empty selects the current browser origin behind the deployment proxy.
+  socketUrl:
+    process.env.NEXT_PUBLIC_SOCKET_URL ??
+    process.env.NEXT_PUBLIC_API_URL ??
+    'http://localhost:4000',
   apiReadTimeoutMs: 10_000,
   // Only a production build registers the service worker: in development a cache would hide every change.
   serviceWorkerEnabled: process.env.NODE_ENV === 'production',

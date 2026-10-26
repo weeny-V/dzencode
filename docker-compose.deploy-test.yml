@@ -1,0 +1,33 @@
+# Used only by `npm run test:deploy` with the disposable verification project's DB and migrations.
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_MAP_TILE_URL: https://tiles.inventory.test/{z}/{x}/{y}.png
+        NEXT_PUBLIC_MAP_TILE_ATTRIBUTION: Controlled E2E tiles
+    mem_limit: 512m
+    environment:
+      PORT: 10000
+      PUBLIC_ORIGIN: http://localhost:3074
+      AUTH_COOKIE_SECURE: 'false'
+      AUTH_JWT_SECRET: disposable-verification-only-secret-at-least-32-bytes
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_NAME: dzencode_e2e
+      DB_USER: verification
+      DB_PASSWORD: verification
+    ports:
+      - '127.0.0.1:3074:10000'
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "void (async()=>{try{const r=await fetch('http://127.0.0.1:10000/api/health');process.exit(r.ok?0:1)}catch{process.exit(1)}})()",
+        ]
+      interval: 2s
+      timeout: 5s
+      retries: 30
