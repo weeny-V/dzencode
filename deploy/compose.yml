@@ -1,0 +1,9 @@
+services:
+  migrate:
+    build: ../db
+    env_file: .env.local
+    volumes:
+      - ../db/changelog:/liquibase/changelog:ro
+      - ./migrate.sh:/liquibase/migrate.sh:ro
+      - ./aiven-ca.pem:/run/aiven-ca.pem:ro
+    entrypoint: ['/bin/sh', '/liquibase/migrate.sh']

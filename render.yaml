@@ -1,0 +1,31 @@
+# Secrets are supplied through Render's initial Blueprint setup, never committed.
+services:
+  - type: web
+    name: dzencode
+    runtime: docker
+    plan: free
+    repo: https://github.com/weeny-V/dzencode
+    branch: stage/8-deploy
+    dockerfilePath: ./deploy/Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/health
+    autoDeployTrigger: 'off'
+    envVars:
+      - key: AUTH_JWT_SECRET
+        generateValue: true
+      - key: AUTH_COOKIE_SECURE
+        value: 'true'
+      - key: DB_HOST
+        sync: false
+      - key: DB_PORT
+        sync: false
+      - key: DB_NAME
+        sync: false
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: DB_SSL
+        value: 'true'
+      - key: DB_SSL_CA
+        sync: false

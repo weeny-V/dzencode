@@ -12,3 +12,6 @@ next-env.d.ts
 *.log
 .DS_Store
 .idea
+deploy/.env.local
+deploy/*.pem
+deploy/*.crt

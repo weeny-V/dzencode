@@ -9,7 +9,9 @@ Branch: `stage/8-deploy`, from accepted stage 7 on `main` (`e159824`).
 - Prepare deployment instructions, a from-scratch README self-check and a factual handoff for the reviewer.
 - The project owner's self-check is not independent acceptance. The customer/reviewer owns final acceptance criteria.
 
-## Proposed hosting, pending owner agreement
+## Hosting choice
+
+The owner selected the free Render + Aiven path and created the accounts and MySQL service described below. The alternatives document the initial comparison.
 
 Research checked on 2026-10-26 against the providers' official documentation:
 
@@ -19,9 +21,9 @@ Research checked on 2026-10-26 against the providers' official documentation:
 | Koyeb Free + Aiven MySQL Free  | Alternative Docker host with an HTTPS platform address                                                     | One free 512 MB instance; sleeps after one hour; account verification requires a payment card                                                        |
 | Railway Free                   | Possible short evaluation, not the recommended baseline for the full continuously running stack            | Trial credit is temporary; the continuing free plan provides $1 monthly credit, not guaranteed always-on capacity for these services                 |
 
-No provider account, service, payment method or deployment has been created. Plan availability and account verification still need to be checked in the owner's accounts. Free-tier limits are provider-controlled; this is a demo deployment, without an uptime guarantee.
+Free-tier limits are provider-controlled; this is a demo deployment, without an uptime guarantee. Hosted resource usage and behavior still require verification after deployment.
 
-Account/access check on 2026-10-26: the GitHub connector confirms the owner login `weeny-V` and write access to the owner's newly created public repository [weeny-V/dzencode](https://github.com/weeny-V/dzencode). The owner explicitly authorized uploading the project. The owner also confirmed creating Render and Aiven accounts. The Render integration is not yet confirmed installed/connected; account creation alone does not grant deployment access. No hosted database or Render service has been provisioned by this work.
+Account/access check on 2026-10-26: all 16 project branches are uploaded to [weeny-V/dzencode](https://github.com/weeny-V/dzencode). The Render plugin is installed, but resource tools were not exposed in this session. Render CLI 2.31.0 is authenticated through the browser and uses the owner-confirmed `My Workspace`. Its service list is empty. The owner created Aiven service `dzencode` in project `vladkruglovfencer-dbf9`. No Render service has been provisioned by this work.
 
 Sources:
 
@@ -50,7 +52,7 @@ Platform HTTPS address
   -> external Aiven MySQL over verified TLS
 ```
 
-One container would run the proxy, Next and Express for the free-tier demo, with explicit supervision and shutdown of all processes. The existing separate-service Compose setup remains useful for development and testing. This is a proposed hosting adaptation, not an implemented or measured result.
+The prepared `deploy/Dockerfile` runs nginx, Next and Express with explicit supervision and bounded shutdown. The existing separate-service Compose setup remains available. `npm run test:deploy` exercised all 12 browser scenarios through the public proxy at a 512 MB cap; the recorded local cgroup peak was 280 MB. These local results do not establish hosted latency, capacity or HTTPS behavior.
 
 Required preparation after the hosting choice:
 
@@ -69,6 +71,6 @@ Required preparation after the hosting choice:
 
 Use [DEPLOYMENT_CHECKLIST.md](DEPLOYMENT_CHECKLIST.md) to record evidence and the delivered address. It is a deployment/self-check record, not a claim that an independent tester has approved the work.
 
-Remaining decisions/access: deployment access to the owner's Render/Aiven accounts, database service configuration and the actual platform address. Source delivery uses the owner's GitHub repository; the accepted application stays on `main`, with deployment preparation on `stage/8-deploy`.
+Remaining inputs/checks: Aiven connection settings in ignored `deploy/.env.local`, its CA certificate in ignored `deploy/aiven-ca.pem`, migrations with verified TLS, the deployed platform address, and live/restart/backup/clean-checkout evidence. See [deploy instructions](../deploy/README.md) and [current status](STAGE_8_STATUS.md). The accepted application stays on `main`, with deployment work on `stage/8-deploy`.
 
-No implementation, live verification, commit, merge or publication is implied by this plan.
+Infrastructure preparation is implemented locally. Stage 8 is not complete until the remaining live and from-scratch checks are recorded. No merge into `main` is implied.

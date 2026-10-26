@@ -7,13 +7,14 @@ export type { Pool };
 export type ReadDatabase = Pick<Pool, 'query'>;
 
 /** Connections are opened lazily, so creating a pool does not require a running database. */
-export const createPool = ({ host, port, user, password, database }: DbConfig): Pool =>
+export const createPool = ({ host, port, user, password, database, tls }: DbConfig): Pool =>
   createMysqlPool({
     host,
     port,
     user,
     password,
     database,
+    ...(tls ? { ssl: { ca: tls.ca, rejectUnauthorized: true, verifyIdentity: true } } : {}),
     connectionLimit: 10,
     // DATETIME has no time zone: treat it as UTC so dates serialize to the same ISO string everywhere.
     timezone: 'Z',

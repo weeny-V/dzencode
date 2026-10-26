@@ -159,7 +159,7 @@ export const test = base.extend<
   browserChecks: [
     async ({ context, account: _account }, use) => {
       const errors: string[] = [];
-      const allowed = [baseURL, apiURL];
+      const allowed = [new URL(baseURL).origin, new URL(apiURL).origin];
       await context.route('**/*', async (route) => {
         const url = new URL(route.request().url());
         if (url.hostname === 'tiles.inventory.test') {

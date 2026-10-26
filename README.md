@@ -2,7 +2,7 @@
 
 An "Orders / Products" SPA (Dzencode test task, **Middle** level). Requirements: [docs/TASK.md](docs/TASK.md). Work plan by stages: [docs/PLAN.md](docs/PLAN.md).
 
-> Status: stages 7a-7c are merged (read-only GraphQL and relations graph, live inventory events, worker CSV export and a minimal PWA). Stage 7d adds isolated integration checks and a repository-owned Playwright suite; see [verification and owner review](docs/STAGE_7D_STATUS.md). The [authentication contract](docs/AUTH_IMPLEMENTATION.md) still applies.
+> Status: stage 7 is complete (GraphQL/relations, live events, worker CSV, PWA and Playwright). Stage 8 prepares Render + Aiven deployment: see [setup](deploy/README.md) and [verification/remaining work](docs/STAGE_8_STATUS.md). No live application URL is available yet. The [authentication contract](docs/AUTH_IMPLEMENTATION.md) still applies.
 
 ## Stack
 
@@ -139,6 +139,7 @@ The scenario matrix and limits are in [STAGE_7D_PLAN.md](docs/STAGE_7D_PLAN.md).
 | `npm run test:e2e:install`                  | install the pinned Playwright Chromium browser                               |
 | `npm run test:e2e`                          | disposable production stack and Playwright scenarios                         |
 | `npm run test:system`                       | integration and E2E checks in one disposable stack                           |
+| `npm run test:deploy`                       | combined deployment image and all E2E behind one proxy, capped at 512 MB     |
 | `npm run test:e2e:list` / `test:e2e:report` | list browser scenarios / open their HTML report                              |
 | `npm run db:up`                             | MySQL + Liquibase migrations                                                 |
 | `npm run db:reset`                          | recreate the DB (deletes the data)                                           |

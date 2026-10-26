@@ -40,7 +40,7 @@ export function openSessionsChannel({
 }: SessionsChannelHandlers): () => void {
   // A socket of its own, not one shared by address: closing it must really close the connection.
   // Browser WebSockets always send Origin, including behind a same-origin reverse proxy.
-  const socket = io(env.apiUrl, {
+  const socket = io(env.socketUrl || undefined, {
     forceNew: true,
     withCredentials: true,
     transports: ['websocket'],
