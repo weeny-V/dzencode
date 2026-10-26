@@ -1,6 +1,6 @@
 # Stage 8 status
 
-Deployment and operator self-check completed on 2026-10-26 on `stage/8-deploy`. Public demo: [dzencode-vgev.onrender.com](https://dzencode-vgev.onrender.com). Independent reviewer acceptance remains with the customer. No merge into `main` has been performed.
+Deployment and operator self-check completed on 2026-10-26 on `stage/8-deploy`. Public demo: [dzencode-vgev.onrender.com](https://dzencode-vgev.onrender.com). The owner explicitly approved merging stage 8 into `main` on 2026-10-26; merge commit `c94e035` integrates the complete stage. Independent reviewer acceptance remains with the customer. This Git merge does not redeploy the hosted service; the recorded application deployment below remains `925d79e`.
 
 ## Deployment identity
 

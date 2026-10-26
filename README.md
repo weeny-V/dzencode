@@ -2,7 +2,7 @@
 
 An "Orders / Products" SPA (Dzencode test task, **Middle** level). Requirements: [docs/TASK.md](docs/TASK.md). Work plan by stages: [docs/PLAN.md](docs/PLAN.md).
 
-> Demo: [dzencode-vgev.onrender.com](https://dzencode-vgev.onrender.com). Register an account to try the shared inventory. Render Free can take about a minute to wake after inactivity. Stage 8 deployment and self-check results are in the [handoff](docs/DEPLOYMENT_CHECKLIST.md) and [status](docs/STAGE_8_STATUS.md); operator instructions are in [deploy/README.md](deploy/README.md). Independent reviewer acceptance remains separate. The [authentication contract](docs/AUTH_IMPLEMENTATION.md) still applies.
+> Demo: [dzencode-vgev.onrender.com](https://dzencode-vgev.onrender.com). Stages 0-8 are integrated into main following the owner-approved stage-8 merge on 2026-10-26. Register an account to try the shared inventory. Deployment results are in the [handoff](docs/DEPLOYMENT_CHECKLIST.md) and [status](docs/STAGE_8_STATUS.md); operator instructions are in [deploy/README.md](deploy/README.md). A merge does not automatically redeploy the hosted service. Independent reviewer acceptance remains separate. The [authentication contract](docs/AUTH_IMPLEMENTATION.md) still applies.
 
 ## Stack
 

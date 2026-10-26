@@ -18,7 +18,7 @@ The migration container creates a temporary Java truststore from the provider CA
 
 ## Render
 
-The deployment is prepared for the committed source on `stage/8-deploy`, repository-root Dockerfile/context, the Free plan and `/api/health`, with auto-deploy off. `render.yaml` remains a validated Blueprint alternative. A configuration that exists only locally cannot be read by Render.
+The deployment source is integrated into `main` following the owner-approved stage-8 merge. The recorded hosted application uses commit `925d79e` from `stage/8-deploy`, the repository-root Dockerfile/context, the Free plan and `/api/health`, with auto-deploy off. New main commits require an explicit deployment. `render.yaml` remains a validated Blueprint alternative. A configuration that exists only locally cannot be read by Render.
 
 For direct CLI creation, runtime secrets use Render secret files instead of command arguments: `app.env` contains the local database settings and a persistent `AUTH_JWT_SECRET`, and `aiven-ca.pem` contains the provider CA. Node loads `/etc/secrets/app.env` only for the API process. Non-secret flags enable `DB_SSL=true`, `DB_SSL_CA_FILE=/etc/secrets/aiven-ca.pem` and Secure cookies. Local secret-file paths, not their contents, are passed to the CLI. Both files are excluded from image builds. Secret files on the service are the source of truth for this direct deployment; do not sync a second Blueprint over it without reconciling the configuration.
 

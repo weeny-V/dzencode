@@ -58,3 +58,5 @@ Stage 7c decisions (agreed): CSV export on Orders and Products (current search a
 Stage 7d decisions (agreed): repository-owned Playwright/Chromium tests against a disposable production Compose stack; separate commands for tests without MySQL, database integration and browser E2E, plus an aggregate quality command. Cover authentication and tab logout, inventory forms/search/filter/deletion, EN/RU and drafts, live events and reconnect, GraphQL-backed charts/graph, fixture-backed maps, real CSV downloads and PWA/offline. Keep CI and additional browser engines outside this stage. See [STAGE_7D_PLAN.md](STAGE_7D_PLAN.md) and [STAGE_7D_STATUS.md](STAGE_7D_STATUS.md).
 
 After verification, the owner approved committing stage 7d and merging it into main. Stage 7 is complete; deployment and the from-scratch self-check remain in stage 8.
+
+On 2026-10-26 the owner explicitly approved merging the complete stage 8 into main. Merge commit `c94e035` integrates deployment and its operator verification. The recorded hosted commit remains `925d79e`; this merge does not imply redeployment or acceptance of separate uncommitted review fixes.

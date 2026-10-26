@@ -4,13 +4,13 @@ Operator verification: 2026-10-26. The customer/reviewer performs independent ac
 
 ## Deployment identity
 
-| Field                         | Value                                                                                                                                                       |
-| ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Public HTTPS URL              | [dzencode-vgev.onrender.com](https://dzencode-vgev.onrender.com)                                                                                            |
-| Source / deployed application | [weeny-V/dzencode](https://github.com/weeny-V/dzencode), `stage/8-deploy`, commit `925d79e01472c2619410d19801102622cad8991d`                                |
-| Host                          | Render Free, Frankfurt, `My Workspace`, service `dzencode`; auto-deploy off                                                                                 |
-| Persistent database           | Aiven MySQL Free 8.4.11, service `dzencode`, project `vladkruglovfencer-dbf9`; region not recorded                                                          |
-| Limits                        | Render: 512 MB/0.15 CPU; 15-minute idle sleep and approximately one-minute wake per provider documentation; free quotas and Aiven inactivity policies apply |
+| Field                         | Value                                                                                                                                                                            |
+| ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Public HTTPS URL              | [dzencode-vgev.onrender.com](https://dzencode-vgev.onrender.com)                                                                                                                 |
+| Source / deployed application | [weeny-V/dzencode](https://github.com/weeny-V/dzencode), deployed commit `925d79e01472c2619410d19801102622cad8991d` from `stage/8-deploy`; stage 8 is now integrated into `main` |
+| Host                          | Render Free, Frankfurt, `My Workspace`, service `dzencode`; auto-deploy off                                                                                                      |
+| Persistent database           | Aiven MySQL Free 8.4.11, service `dzencode`, project `vladkruglovfencer-dbf9`; region not recorded                                                                               |
+| Limits                        | Render: 512 MB/0.15 CPU; 15-minute idle sleep and approximately one-minute wake per provider documentation; free quotas and Aiven inactivity policies apply                      |
 
 Register a demonstration account; no shared password is needed. Do not enter confidential or real personal data into this shared demo.
 
