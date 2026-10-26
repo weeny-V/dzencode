@@ -1,0 +1,89 @@
+# Disposable verification only. e2e/run.mjs supplies a unique project name and removes its volumes.
+# This file deliberately does not inherit .env or the application's Compose configuration.
+services:
+  db:
+    image: mysql:8.4
+    environment:
+      MYSQL_ROOT_PASSWORD: verification-root
+      MYSQL_DATABASE: dzencode_e2e
+      MYSQL_USER: verification
+      MYSQL_PASSWORD: verification
+    ports:
+      - '127.0.0.1:3374:3306'
+    volumes:
+      - test-db:/var/lib/mysql
+      - ./db/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ['CMD-SHELL', 'mysqladmin ping -h 127.0.0.1 -p"$$MYSQL_ROOT_PASSWORD" --silent']
+      interval: 2s
+      timeout: 5s
+      retries: 60
+  liquibase:
+    build: ./db
+    environment:
+      DB_NAME: dzencode_e2e
+      DB_USER: verification
+      DB_PASSWORD: verification
+    volumes:
+      - ./db/changelog:/liquibase/changelog:ro
+    entrypoint: ['/bin/sh', '-c']
+    command:
+      - |
+        set -eu
+        for target in dzencode_e2e:seed dzencode_e2e_test:test; do
+          liquibase --searchPath=/liquibase/changelog --changeLogFile=db.changelog-root.yaml \
+            --url="jdbc:mysql://db:3306/$${target%%:*}" \
+            --username=verification --password=verification --contexts="$${target##*:}" update
+        done
+  server:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    environment:
+      PORT: 4000
+      CLIENT_ORIGIN: http://localhost:3074
+      AUTH_JWT_SECRET: disposable-verification-only-secret-at-least-32-bytes
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_NAME: dzencode_e2e
+      DB_USER: verification
+      DB_PASSWORD: verification
+    ports:
+      - '127.0.0.1:4074:4000'
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "void (async()=>{try{const r=await fetch('http://127.0.0.1:4000/health');process.exit(r.ok?0:1)}catch{process.exit(1)}})()",
+        ]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+  client:
+    build:
+      context: .
+      dockerfile: client/Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:4074
+        NEXT_PUBLIC_MAP_TILE_URL: https://tiles.inventory.test/{z}/{x}/{y}.png
+        NEXT_PUBLIC_MAP_TILE_ATTRIBUTION: Controlled E2E tiles
+    environment:
+      API_URL: http://server:4000
+      AUTH_COOKIE_SECURE: 'false'
+    ports:
+      - '127.0.0.1:3074:3000'
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "void (async()=>{try{const r=await fetch('http://127.0.0.1:3000/health');process.exit(r.ok?0:1)}catch{process.exit(1)}})()",
+        ]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+volumes:
+  test-db:

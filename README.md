@@ -2,17 +2,17 @@
 
 An "Orders / Products" SPA (Dzencode test task, **Middle** level). Requirements: [docs/TASK.md](docs/TASK.md). Work plan by stages: [docs/PLAN.md](docs/PLAN.md).
 
-> Status: stage 6d is integrated with accepted 6b localization/drafts and 6c authentication. Groups provides warehouse inventory statistics and lazy Chart.js bars; order forms/panels include an optional warehouse and deferred Leaflet map. See [stage 6d verification and owner review](docs/STAGE_6D_STATUS.md) and the accepted [authentication contract](docs/AUTH_IMPLEMENTATION.md).
+> Status: stages 7a-7c are merged (read-only GraphQL and relations graph, live inventory events, worker CSV export and a minimal PWA). Stage 7d adds isolated integration checks and a repository-owned Playwright suite; see [verification and owner review](docs/STAGE_7D_STATUS.md). The [authentication contract](docs/AUTH_IMPLEMENTATION.md) still applies.
 
 ## Stack
 
-| Area           | Technologies                                                            |
-| -------------- | ----------------------------------------------------------------------- |
-| Client         | Next.js 16 (App Router), React 19, TypeScript, Bootstrap 5 (SCSS) + BEM |
-| Server         | Node.js 22, Express 5, TypeScript, `mysql2`                             |
-| Database       | MySQL 8.4, migrations and seed through Liquibase                        |
-| Quality        | ESLint, Prettier, Vitest + Supertest + React Testing Library/jsdom      |
-| Infrastructure | npm workspaces, Docker, docker-compose                                  |
+| Area           | Technologies                                                                            |
+| -------------- | --------------------------------------------------------------------------------------- |
+| Client         | Next.js 16 (App Router), React 19, TypeScript, Bootstrap 5 (SCSS) + BEM                 |
+| Server         | Node.js 22, Express 5, TypeScript, `mysql2`                                             |
+| Database       | MySQL 8.4, migrations and seed through Liquibase                                        |
+| Quality        | ESLint, Prettier, Vitest + Supertest + React Testing Library/jsdom, Playwright/Chromium |
+| Infrastructure | npm workspaces, Docker, docker-compose                                                  |
 
 ## Structure
 
@@ -95,17 +95,53 @@ The `.mwb` file is built by Workbench itself from a live database:
 
 If Workbench is not available, the schema can be opened from [docs/db/schema.sql](docs/db/schema.sql) (**File → Open SQL Script**).
 
+## Verification
+
+Quick checks need installed dependencies and Node, but no Docker or configured `.env`:
+
+```bash
+npm run check
+```
+
+This runs formatting, lint (including E2E code), TypeScript and all tests without MySQL. Socket and HTTP tests still use local loopback connections.
+
+For reproducible checks with MySQL and a production client/server, start Docker Desktop (or Docker Engine with Compose v2), then run:
+
+```bash
+npm run test:e2e:install
+npm run test:system
+```
+
+The runner creates a unique `dzencode-tests-<pid>` Compose project using [docker-compose.test.yml](docker-compose.test.yml), applies Liquibase, runs integration tests, builds/starts production services and runs Playwright. It removes its containers, network and database volume on success, failure or a handled interruption. First use needs network access for images, npm dependencies, the font used by the client build and Chromium. On Linux, install browser system dependencies too (`npx playwright install --with-deps chromium`).
+
+The disposable stack uses loopback ports **3374** (MySQL), **4074** (API) and **3074** (client). It uses fixed test-only credentials, ignores the owner's `.env` files and never connects to the development database. Integration tests reset `dzencode_e2e_test`; browser tests use seeded `dzencode_e2e`. These checks run in sequence. `test-results/stack.lock` prevents simultaneous managed runs from competing for the fixed ports. Existing Compose projects are not stopped.
+
+Use `npm run test:integration` for database checks only, or `npm run test:e2e` for production browser checks only. Playwright options are forwarded, for example `npm run test:e2e -- --grep "CSV"` or `npm run test:e2e -- --headed`. Each invocation starts a fresh stack, with no retries by default. `npm run test:e2e:list` lists scenarios without Docker. `npm test` retains its original meaning: all Vitest tests against the locally configured `<DB_NAME>_test`; it does not run Playwright.
+
+Open the latest browser report with `npm run test:e2e:report`. Screenshots and traces for failures are in `test-results/e2e/`; the HTML report is in `playwright-report/`. These ignored artifacts can contain disposable test credentials and should not be published unredacted. Historical stage smoke scripts remain in `scripts/` as investigation tools; Playwright is the maintained acceptance suite.
+
+After a forced process kill or Docker outage, automatic cleanup cannot be guaranteed. Read `test-results/stack.lock` for the exact owned project name, remove that project with `docker compose --project-name <project-from-lock> --env-file e2e/compose.env -f docker-compose.test.yml down --volumes --remove-orphans`, then remove the lock. Do not substitute a development project name.
+
+The scenario matrix and limits are in [STAGE_7D_PLAN.md](docs/STAGE_7D_PLAN.md). CI setup, other browser engines and deployment remain outside this stage.
+
 ## npm scripts
 
-| Command                             | What it does                                                        |
-| ----------------------------------- | ------------------------------------------------------------------- |
-| `npm run dev`                       | server + client in watch mode                                       |
-| `npm run build` / `npm start`       | production build / run                                              |
-| `npm run lint`                      | ESLint in all packages                                              |
-| `npm run typecheck`                 | TypeScript in all packages                                          |
-| `npm test`                          | tests (Vitest), the server needs `db:up`; client includes DOM tests |
-| `npm run db:up`                     | MySQL + Liquibase migrations                                        |
-| `npm run db:reset`                  | recreate the DB (deletes the data)                                  |
-| `npm run format` / `format:check`   | Prettier                                                            |
-| `npm run audit:prod`                | npm audit without dev dependencies                                  |
-| `npm run docker:up` / `docker:down` | docker compose                                                      |
+| Command                                     | What it does                                                                 |
+| ------------------------------------------- | ---------------------------------------------------------------------------- |
+| `npm run dev`                               | server + client in watch mode                                                |
+| `npm run build` / `npm start`               | production build / run                                                       |
+| `npm run lint`                              | ESLint in all packages                                                       |
+| `npm run typecheck`                         | TypeScript in all packages                                                   |
+| `npm test`                                  | tests (Vitest), the server needs `db:up`; client includes DOM tests          |
+| `npm run check`                             | formatting, lint, types and tests without MySQL                              |
+| `npm run test:unit`                         | server tests without MySQL, client Node/DOM tests and runner lifecycle tests |
+| `npm run test:integration`                  | disposable MySQL, migrations and server integration tests                    |
+| `npm run test:e2e:install`                  | install the pinned Playwright Chromium browser                               |
+| `npm run test:e2e`                          | disposable production stack and Playwright scenarios                         |
+| `npm run test:system`                       | integration and E2E checks in one disposable stack                           |
+| `npm run test:e2e:list` / `test:e2e:report` | list browser scenarios / open their HTML report                              |
+| `npm run db:up`                             | MySQL + Liquibase migrations                                                 |
+| `npm run db:reset`                          | recreate the DB (deletes the data)                                           |
+| `npm run format` / `format:check`           | Prettier                                                                     |
+| `npm run audit:prod`                        | npm audit without dev dependencies                                           |
+| `npm run docker:up` / `docker:down`         | docker compose                                                               |

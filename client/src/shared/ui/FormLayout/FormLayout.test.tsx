@@ -37,6 +37,13 @@ describe('FormLayout', () => {
     expect(html).not.toContain('Создать приход');
   });
 
+  it('keeps server-rendered fields and submission disabled until hydration and avoids a native GET', () => {
+    const html = render({});
+    expect(html).toContain('method="post"');
+    expect(html).toMatch(/<fieldset[^>]*disabled/);
+    expect(html).toMatch(/<button[^>]*disabled[^>]*>Создать приход/);
+  });
+
   it('announces why the whole form was refused', () => {
     const html = render({ error: 'Unknown order: 9' });
 

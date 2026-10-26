@@ -13,5 +13,22 @@ export default defineConfig({
   test: {
     // The API tests share one test database, so test files run one after another.
     fileParallelism: false,
+    projects: [
+      {
+        test: {
+          name: 'unit',
+          include: ['src/**/*.test.ts'],
+          exclude: ['src/**/*.api.test.ts', 'src/**/*.repository.test.ts'],
+          fileParallelism: false,
+        },
+      },
+      {
+        test: {
+          name: 'integration',
+          include: ['src/**/*.api.test.ts', 'src/**/*.repository.test.ts'],
+          fileParallelism: false,
+        },
+      },
+    ],
   },
 });
