@@ -3,6 +3,8 @@ import './FormLayout.scss';
 import { useTranslations } from 'next-intl';
 import type { FormEventHandler, ReactNode } from 'react';
 
+import { useHydrated } from '@/shared/hooks/useHydrated';
+
 import { Button, ButtonLink } from '../Button';
 import { PageHeader } from '../PageHeader';
 
@@ -34,13 +36,22 @@ export function FormLayout({
   draftUnavailable,
 }: FormLayoutProps) {
   const t = useTranslations('FormLayout');
+  const hydrated = useHydrated();
   return (
     <>
       <PageHeader title={title} />
 
       {/* The browser's own validation is off: the schema of the form checks and words the errors. */}
-      <form className="form-layout" onSubmit={onSubmit} noValidate aria-busy={submitting}>
-        <div className="form-layout__fields">{children}</div>
+      <form
+        className="form-layout"
+        method="post"
+        onSubmit={onSubmit}
+        noValidate
+        aria-busy={submitting}
+      >
+        <fieldset className="form-layout__fields" disabled={!hydrated}>
+          {children}
+        </fieldset>
 
         {draftUnavailable && <p role="status">{t('unavailable')}</p>}
         {error && (
@@ -51,14 +62,19 @@ export function FormLayout({
 
         <div className="form-layout__actions">
           {onClear && (
-            <Button type="button" variant="ghost" disabled={submitting} onClick={onClear}>
+            <Button
+              type="button"
+              variant="ghost"
+              disabled={!hydrated || submitting}
+              onClick={onClear}
+            >
               {t('clear')}
             </Button>
           )}
           <ButtonLink href={cancelHref} variant="ghost">
             {t('cancel')}
           </ButtonLink>
-          <Button type="submit" disabled={submitting}>
+          <Button type="submit" disabled={!hydrated || submitting}>
             {submitting ? t('saving') : submitLabel}
           </Button>
         </div>

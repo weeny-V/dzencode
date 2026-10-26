@@ -7,8 +7,10 @@ import { afterAll, afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { loadConfig } from '../../config.js';
 import { attachRealtime } from '../../realtime.js';
+import type { InventoryEvent } from '../../shared/events/events.js';
 import { createTestClient, TEST_REGISTRATION } from '../../shared/testing/auth.js';
 import { createTestContext, resetData } from '../../shared/testing/database.js';
+import type { OrderDetails } from '../orders/index.js';
 import { INVENTORY_CHANGED_EVENT } from './index.js';
 
 const { clientOrigin } = loadConfig();
@@ -49,6 +51,57 @@ afterAll(async () => {
 const settle = () => new Promise((resolve) => setTimeout(resolve, 150));
 
 describe('inventory events from real REST writes', () => {
+  it('makes complete product prices and GraphQL aggregates readable when a write is announced', async () => {
+    const readStatistics = async () => {
+      const response = await client.get('/graphql').query({
+        query: '{ inventoryStatistics(currency: UAH) { productsCount value } }',
+      });
+      expect(response.status).toBe(200);
+      return (
+        response.body as {
+          data: { inventoryStatistics: { productsCount: number; value: number } };
+        }
+      ).data.inventoryStatistics;
+    };
+    const before = await readStatistics();
+    // Subscribe before sending: Socket.io can deliver before the HTTP response arrives.
+    const announced = new Promise<InventoryEvent>((resolve) =>
+      socket.once(INVENTORY_CHANGED_EVENT, resolve),
+    );
+    const response = await client.post('/products').send({
+      title: 'Committed product',
+      serialNumber: 909,
+      isNew: true,
+      type: 'Monitors',
+      order: 1,
+      guarantee: { start: '2026-01-01', end: '2027-01-01' },
+      price: [
+        { value: 50, symbol: 'UAH', isDefault: true },
+        { value: 2, symbol: 'USD', isDefault: false },
+      ],
+    });
+    expect(response.status).toBe(201);
+    const id = (response.body as { id: number }).id;
+    expect(await announced).toEqual({ type: 'product.created', productId: id, orderId: 1 });
+    const details = (await client.get('/orders/1')).body as OrderDetails;
+    expect(details.products.find((product) => product.id === id)?.price).toEqual(
+      expect.arrayContaining([
+        { value: 50, symbol: 'UAH', isDefault: true },
+        { value: 2, symbol: 'USD', isDefault: false },
+      ]),
+    );
+    expect(await readStatistics()).toEqual({
+      productsCount: before.productsCount + 1,
+      value: before.value + 50,
+    });
+    const deleted = new Promise<InventoryEvent>((resolve) =>
+      socket.once(INVENTORY_CHANGED_EVENT, resolve),
+    );
+    expect((await client.delete(`/products/${id}`)).status).toBe(204);
+    expect(await deleted).toEqual({ type: 'product.deleted', productId: id, orderId: 1 });
+    expect(await readStatistics()).toEqual(before);
+  });
+
   it('announces a created order, a created product and their deletion in order', async () => {
     const order = await client.post('/orders').send({ title: 'Live order' });
     const orderId = (order.body as { id: number }).id;
