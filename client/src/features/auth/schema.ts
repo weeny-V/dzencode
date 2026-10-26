@@ -3,7 +3,7 @@ import { z } from 'zod';
 const password = z
   .string()
   .min(1, 'required')
-  .refine((value) => new TextEncoder().encode(value).length <= 1024, 'passwordLength');
+  .refine((value) => new TextEncoder().encode(value).length <= 1024, 'passwordTooLong');
 export const loginSchema = z.object({
   email: z
     .string()
@@ -44,7 +44,7 @@ export const registrationSchema = loginSchema
       .trim()
       .min(1, 'required')
       .refine((value) => Array.from(value).length <= 100, 'nameLength'),
-    password: password.refine((value) => Array.from(value).length >= 12, 'passwordLength'),
+    password: password.refine((value) => Array.from(value).length >= 12, 'passwordTooShort'),
     passwordConfirmation: z.string(),
   })
   .refine((value) => value.password === value.passwordConfirmation, {
