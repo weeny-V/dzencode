@@ -19,56 +19,25 @@
     color: $color-danger;
   }
   &__password {
-    --auth-password-help-size: #{$auth-password-help-size};
+    --auth-password-toggle-size: #{$auth-password-toggle-size};
     position: relative;
     min-width: 0;
   }
-  &__password-help {
+  &__password-toggle {
     position: absolute;
     inset-block-start: 0;
     inset-inline-end: 0;
     display: grid;
     place-items: center;
-    width: $auth-password-help-size;
-    height: $auth-password-help-size;
+    width: $auth-password-toggle-size;
+    height: $auth-password-toggle-size;
     padding: $space-sm;
     border: 0;
     border-radius: $radius;
     background: transparent;
     color: $color-muted;
-    cursor: help;
-  }
-  &__password-help-mark {
-    display: grid;
-    place-items: center;
-    width: $auth-password-help-mark-size;
-    height: $auth-password-help-mark-size;
-    border: 1px solid currentColor;
-    border-radius: 50%;
-    font-size: $auth-password-hint-font-size;
-    font-weight: 700;
-    line-height: 1;
-  }
-  &__password-hint {
-    position: absolute;
-    inset-block-start: 100%;
-    inset-inline-end: 0;
-    z-index: $auth-password-hint-layer;
-    width: min(100%, $auth-password-hint-width);
-    // This transparent bridge lets the pointer reach the hint without closing it.
-    padding-block-start: $space-sm;
-    font-size: $auth-password-hint-font-size;
-    color: $color-muted;
-  }
-  &__password-rules {
-    display: grid;
-    gap: $space-sm;
-    margin: 0;
-    padding: $space-md $space-md $space-md $space-lg;
-    border: 1px solid $color-border;
-    border-radius: $radius;
-    background: $color-surface;
-    box-shadow: $shadow-soft;
+    cursor: pointer;
+    font-size: $button-icon-font-size;
   }
   &__alternate {
     display: inline-block;

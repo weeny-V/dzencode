@@ -32,58 +32,100 @@ const show = (mode: 'login' | 'register', locale: 'en' | 'ru' = 'en') =>
     </NextIntlClientProvider>,
   );
 describe('public authentication forms', () => {
-  it.each(['en', 'ru'] as const)(
-    'shows localized password help on hover and keyboard focus in %s',
-    async (locale) => {
-      const t = locale === 'en' ? en : ru;
-      show('register', locale);
+  it.each(['login', 'register'] as const)(
+    'does not trigger blur validation before a click on the %s switch link',
+    async (mode) => {
+      show(mode);
       const user = userEvent.setup();
-      const help = screen.getByRole('button', { name: t.passwordRequirements });
-      const password = screen.getByLabelText(t.passwordLabel, {
-        exact: false,
-        selector: 'input[name="password"]',
+      const email = screen.getByLabelText(en.emailLabel, { exact: false });
+      const link = screen.getByRole('link', {
+        name: mode === 'login' ? en.registerLink : en.loginLink,
       });
-      expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
-      await user.hover(help);
-      expect(screen.getByRole('tooltip')).toHaveTextContent(t.passwordMinimum);
-      expect(screen.getByRole('tooltip')).toHaveTextContent(t.passwordMaximum);
-      expect(screen.getByRole('tooltip')).toHaveTextContent(t.passwordCharacters);
-      await user.unhover(help);
-      expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+      const activate = vi.fn((event: MouseEvent) => event.preventDefault());
+      link.addEventListener('click', activate);
+      await user.type(email, 'invalid');
+      await user.click(link);
+      expect(activate).toHaveBeenCalledOnce();
+      expect(link).toHaveAttribute(
+        'href',
+        `${mode === 'login' ? '/register' : '/login'}?returnTo=%2Fusers`,
+      );
+      expect(screen.queryByText(en.email)).not.toBeInTheDocument();
+      expect(state.submitCredentials).not.toHaveBeenCalled();
+      // Ordinary blur still validates; only leaving through the link skips it.
+      fireEvent.blur(email);
+      expect(await screen.findByText(en.email)).toBeVisible();
+    },
+  );
+  it.each(['login', 'register'] as const)(
+    'shows no password requirements on the %s form',
+    async (mode) => {
+      show(mode);
+      const user = userEvent.setup();
+      const password = screen.getByLabelText(/^Password/, { selector: 'input' });
+      await user.hover(password);
       await user.click(password);
-      expect(screen.getByRole('tooltip')).toBeVisible();
-      expect(password).toHaveFocus();
-      expect(password).toHaveAccessibleDescription(new RegExp(t.passwordMinimum));
-      await user.keyboard('{Escape}');
-      expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
-      expect(password).toHaveFocus();
-      await user.tab();
-      expect(help).toHaveFocus();
-      expect(screen.getByRole('tooltip')).toBeVisible();
-      await user.tab();
-      expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+      expect(screen.queryByRole('tooltip', { hidden: true })).not.toBeInTheDocument();
+      expect(password).not.toHaveAccessibleDescription();
       expect(state.submitCredentials).not.toHaveBeenCalled();
     },
   );
-  it('opens help on a tap without submitting and keeps errors associated with the input', async () => {
+  it('keeps the validation error associated with the password input', async () => {
     show('register');
     const user = userEvent.setup();
-    const help = screen.getByRole('button', { name: en.passwordRequirements });
-    fireEvent.click(help);
-    expect(screen.getByRole('tooltip')).toBeVisible();
     const password = screen.getByLabelText(/^Password/, { selector: 'input' });
     await user.click(password);
     fireEvent.change(password, { target: { value: 'short' } });
     await user.tab();
     expect(await screen.findByText(en.passwordTooShort)).toBeVisible();
     expect(password).toHaveAccessibleDescription(new RegExp(en.passwordTooShort));
-    expect(password).toHaveAccessibleDescription(new RegExp(en.passwordMinimum));
     expect(state.submitCredentials).not.toHaveBeenCalled();
   });
-  it('keeps registration requirements off the login form', () => {
-    show('login');
-    expect(screen.queryByRole('tooltip', { hidden: true })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: en.passwordRequirements })).not.toBeInTheDocument();
+  it.each([
+    { mode: 'login', locale: 'en' },
+    { mode: 'login', locale: 'ru' },
+    { mode: 'register', locale: 'en' },
+    { mode: 'register', locale: 'ru' },
+  ] as const)(
+    'toggles the $mode password by keyboard in $locale without changing or submitting it',
+    async ({ mode, locale }) => {
+      const t = locale === 'en' ? en : ru;
+      show(mode, locale);
+      const user = userEvent.setup();
+      const password = screen.getByLabelText(t.passwordLabel, {
+        exact: false,
+        selector: 'input[name="password"]',
+      });
+      fireEvent.change(password, { target: { value: 'example password' } });
+      expect(password).toHaveAttribute('type', 'password');
+      await user.click(password);
+      await user.tab();
+      const toggle = screen.getByRole('button', { name: t.showPassword });
+      expect(toggle).toHaveFocus();
+      expect(toggle).toHaveAttribute('aria-controls', password.id);
+      await user.keyboard(' ');
+      expect(password).toHaveAttribute('type', 'text');
+      expect(password).toHaveValue('example password');
+      expect(screen.getByRole('button', { name: t.hidePassword })).toHaveFocus();
+      await user.keyboard('{Enter}');
+      expect(password).toHaveAttribute('type', 'password');
+      expect(password).toHaveValue('example password');
+      expect(state.submitCredentials).not.toHaveBeenCalled();
+    },
+  );
+  it('toggles password confirmation independently of the password', async () => {
+    show('register');
+    const user = userEvent.setup();
+    const password = screen.getByLabelText(/^Password/, { selector: 'input' });
+    const confirmation = screen.getByLabelText(/Confirm password/, { selector: 'input' });
+    fireEvent.change(confirmation, { target: { value: 'matching password' } });
+    await user.click(screen.getByRole('button', { name: en.showPasswordConfirmation }));
+    expect(confirmation).toHaveAttribute('type', 'text');
+    expect(confirmation).toHaveValue('matching password');
+    expect(password).toHaveAttribute('type', 'password');
+    await user.click(screen.getByRole('button', { name: en.hidePasswordConfirmation }));
+    expect(confirmation).toHaveAttribute('type', 'password');
+    expect(state.submitCredentials).not.toHaveBeenCalled();
   });
   it('allows 100 supplementary Unicode characters in both names and validates the next character', async () => {
     state.submitCredentials.mockResolvedValue({ ok: false, error: 'unavailable' });
@@ -149,10 +191,15 @@ describe('public authentication forms', () => {
       show('login', locale);
       const user = userEvent.setup();
       await user.type(screen.getByLabelText(t.emailLabel, { exact: false }), 'test@example.com');
-      await user.type(screen.getByLabelText(t.passwordLabel, { exact: false }), 'private password');
+      await user.type(
+        screen.getByLabelText(t.passwordLabel, { exact: false, selector: 'input' }),
+        'private password',
+      );
       await user.click(screen.getByRole('button', { name: t.login }));
       expect(await screen.findByRole('alert')).toHaveTextContent(t.invalidCredentials);
-      expect(screen.getByLabelText(t.passwordLabel, { exact: false })).toHaveValue('');
+      expect(
+        screen.getByLabelText(t.passwordLabel, { exact: false, selector: 'input' }),
+      ).toHaveValue('');
       expect(localStorage.length).toBe(0);
       expect(state.navigateAfterAuth).not.toHaveBeenCalled();
     },

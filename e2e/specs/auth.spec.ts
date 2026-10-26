@@ -1,6 +1,28 @@
 import { authenticatedCookie, expect, login, newAccount, settledAt, test } from '../fixtures';
 import { apiURL, baseURL } from '../settings';
 
+test('auth switch links navigate on the first press before blur errors can move them', async ({
+  page,
+}) => {
+  for (const route of ['/login', '/register']) {
+    const target = route === '/login' ? '/register' : '/login';
+    for (const field of ['email', 'password']) {
+      await page.goto(`${route}?returnTo=%2Fusers`);
+      await expect(page.locator('button[type="submit"]')).toBeEnabled();
+      const input = page.locator(`input[name="${field}"]`);
+      await input.fill('invalid');
+      if (route === '/login' && field === 'password') await input.fill('');
+      const link = page.getByRole('link', {
+        name: route === '/login' ? 'Create an account' : 'Already have an account? Sign in',
+        exact: true,
+      });
+      // A physical press lets asynchronous blur validation finish before release.
+      await link.click({ delay: 150 });
+      await expect(page).toHaveURL(new RegExp(`${target}\\?returnTo=%2Fusers$`));
+    }
+  }
+});
+
 test('guests and tampered cookies cannot read protected pages or APIs', async ({
   page,
   context,
@@ -41,7 +63,10 @@ test('registration validates input and creates a persistent HttpOnly session', a
   await page.getByLabel('First name').fill(account.firstName);
   await page.getByLabel('Last name').fill(account.lastName);
   await page.getByLabel('Email').fill(account.email);
-  await page.getByLabel('Password', { exact: false }).first().fill(account.password);
+  await page
+    .getByLabel('Password', { exact: false })
+    .and(page.locator('input[name="password"]'))
+    .fill(account.password);
   await page.getByLabel('Confirm password').fill(account.password);
   await submit.click();
   await settledAt(page, '/users');

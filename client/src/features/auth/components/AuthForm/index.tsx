@@ -4,12 +4,13 @@ import './AuthForm.scss';
 
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
-import { useId, useState } from 'react';
+import { useState } from 'react';
 import type { UseFormRegisterReturn } from 'react-hook-form';
 
 import { useHydrated } from '@/shared/hooks/useHydrated';
 import { Button } from '@/shared/ui/Button';
 import { type FieldControlProps, FormField } from '@/shared/ui/FormField';
+import { EyeIcon, EyeOffIcon } from '@/shared/ui/icons';
 
 import { useAuthForm } from './useAuthForm';
 
@@ -71,38 +72,23 @@ export function AuthForm({ mode, returnTo }: { mode: 'login' | 'register'; retur
             />
           )}
         </FormField>
-        <FormField
+        <PasswordField
           label={t('passwordLabel')}
-          required
           error={errors.password?.message ? t(errors.password.message) : undefined}
-        >
-          {(control) => (
-            <PasswordInput
-              control={control}
-              field={register('password')}
-              registering={registering}
-            />
-          )}
-        </FormField>
+          field={register('password')}
+          autoComplete={registering ? 'new-password' : 'current-password'}
+        />
         {registering && (
-          <FormField
+          <PasswordField
             label={t('passwordConfirmation')}
-            required
             error={
               errors.passwordConfirmation?.message
                 ? t(errors.passwordConfirmation.message)
                 : undefined
             }
-          >
-            {(control) => (
-              <input
-                {...control}
-                {...register('passwordConfirmation')}
-                type="password"
-                autoComplete="new-password"
-              />
-            )}
-          </FormField>
+            field={register('passwordConfirmation')}
+            autoComplete="new-password"
+          />
         )}
         {error && (
           <p className="auth-form__error" role="alert">
@@ -115,6 +101,8 @@ export function AuthForm({ mode, returnTo }: { mode: 'login' | 'register'; retur
       </form>
       <Link
         className="auth-form__alternate"
+        // A pointer press must not blur the field: its error would push the link away before the click lands.
+        onMouseDown={(event) => event.preventDefault()}
         href={(registering ? '/login' : '/register') + '?returnTo=' + encodeURIComponent(returnTo)}
       >
         {t(registering ? 'loginLink' : 'registerLink')}
@@ -123,73 +111,58 @@ export function AuthForm({ mode, returnTo }: { mode: 'login' | 'register'; retur
   );
 }
 
-/** Local help stays separate from validation and never moves focus away from the password. */
+function PasswordField({
+  label,
+  error,
+  field,
+  autoComplete,
+}: {
+  label: string;
+  error?: string;
+  field: UseFormRegisterReturn<'password' | 'passwordConfirmation'>;
+  autoComplete: 'new-password' | 'current-password';
+}) {
+  return (
+    <FormField label={label} required error={error}>
+      {(control) => <PasswordInput control={control} field={field} autoComplete={autoComplete} />}
+    </FormField>
+  );
+}
+
 function PasswordInput({
   control,
   field,
-  registering,
+  autoComplete,
 }: {
   control: FieldControlProps;
-  field: UseFormRegisterReturn<'password'>;
-  registering: boolean;
+  field: UseFormRegisterReturn<'password' | 'passwordConfirmation'>;
+  autoComplete: 'new-password' | 'current-password';
 }) {
   const t = useTranslations('AuthForm');
-  const hintId = useId();
-  const [open, setOpen] = useState(false);
-  const input = (
-    <input
-      {...control}
-      {...field}
-      style={registering ? { paddingInlineEnd: 'var(--auth-password-help-size)' } : undefined}
-      aria-describedby={
-        [control['aria-describedby'], registering ? hintId : undefined].filter(Boolean).join(' ') ||
-        undefined
-      }
-      type="password"
-      autoComplete={registering ? 'new-password' : 'current-password'}
-    />
-  );
-  if (!registering) return input;
-
+  const [visible, setVisible] = useState(false);
+  const confirmation = field.name === 'passwordConfirmation';
+  const toggleLabel = confirmation
+    ? t(visible ? 'hidePasswordConfirmation' : 'showPasswordConfirmation')
+    : t(visible ? 'hidePassword' : 'showPassword');
   return (
-    <div
-      className="auth-form__password"
-      onMouseEnter={() => setOpen(true)}
-      onMouseLeave={(event) => {
-        if (!event.currentTarget.contains(event.currentTarget.ownerDocument.activeElement))
-          setOpen(false);
-      }}
-      onFocus={() => setOpen(true)}
-      onBlur={(event) => {
-        if (!event.currentTarget.contains(event.relatedTarget)) setOpen(false);
-      }}
-      onKeyDown={(event) => {
-        if (event.key === 'Escape' && open) {
-          event.preventDefault();
-          event.stopPropagation();
-          setOpen(false);
-        }
-      }}
-    >
-      {input}
+    <div className="auth-form__password">
+      <input
+        {...control}
+        {...field}
+        style={{ paddingInlineEnd: 'var(--auth-password-toggle-size)' }}
+        type={visible ? 'text' : 'password'}
+        autoComplete={autoComplete}
+      />
       <button
         type="button"
-        className="auth-form__password-help"
-        aria-label={t('passwordRequirements')}
-        aria-describedby={hintId}
-        onClick={() => setOpen(true)}
+        className="auth-form__password-toggle"
+        aria-label={toggleLabel}
+        aria-controls={control.id}
+        onMouseDown={(event) => event.preventDefault()}
+        onClick={() => setVisible((current) => !current)}
       >
-        <span className="auth-form__password-help-mark" aria-hidden="true">
-          i
-        </span>
+        {visible ? <EyeOffIcon /> : <EyeIcon />}
       </button>
-      <div id={hintId} role="tooltip" className="auth-form__password-hint" hidden={!open}>
-        <ul className="auth-form__password-rules">
-          <li>{t('passwordMinimum')}</li>
-          <li>{t('passwordMaximum')}</li>
-          <li>{t('passwordCharacters')}</li>
-        </ul>
-      </div>
     </div>
   );
 }

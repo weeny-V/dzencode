@@ -104,7 +104,10 @@ export async function login(page: Page, account: Account, returnTo = '/orders') 
   const submit = page.getByRole('button', { name: 'Sign in', exact: true });
   await expect(submit).toBeEnabled();
   await page.getByLabel('Email', { exact: false }).fill(account.email);
-  await page.getByLabel('Password', { exact: false }).fill(account.password);
+  await page
+    .getByLabel('Password', { exact: false })
+    .and(page.locator('input[name="password"]'))
+    .fill(account.password);
   await submit.click();
   await settledAt(page, new URL(returnTo, baseURL).pathname);
   await expect(page.locator('.sessions-counter--online')).toBeVisible();
