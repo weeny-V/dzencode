@@ -15,3 +15,4 @@ next-env.d.ts
 deploy/.env.local
 deploy/*.pem
 deploy/*.crt
+deploy/backups/

@@ -1,44 +1,41 @@
 # Stage 8 status
 
-Branch: `stage/8-deploy`. Hosting: Render Free with external Aiven MySQL Free. Setup and secret locations are in [deploy/README.md](../deploy/README.md).
+Deployment and operator self-check completed on 2026-10-26 on `stage/8-deploy`. Public demo: [dzencode-vgev.onrender.com](https://dzencode-vgev.onrender.com). Independent reviewer acceptance remains with the customer. No merge into `main` has been performed.
 
-## Prepared locally
+## Deployment identity
 
-- One public unprivileged Docker container with nginx, Next and Express. Browser REST uses `/api`; Socket.io uses the page origin and its existing path. Private API requests stay on loopback.
-- MySQL TLS verifies both CA and server hostname. CA can come from PEM environment content or a file. The Blueprint explicitly enables TLS.
-- A supervisor starts the proxy after both listeners respond, stops remaining children on a process failure and forwards shutdown signals.
-- `render.yaml` uses the Free plan and runtime secrets, with automatic deploys disabled. A one-shot Liquibase helper applies application schema/seed using a verified TLS Java truststore.
-- Local credentials/certificates are ignored by Git and excluded from image builds. No hosted credentials or values were committed.
+- Source: [weeny-V/dzencode](https://github.com/weeny-V/dzencode), application commit `925d79e01472c2619410d19801102622cad8991d`.
+- Render: `dzencode`, `srv-dbfhph2jnfac73cekos0`, owner-confirmed `My Workspace`, Free, Frankfurt, auto-deploy off.
+- First deploy `dep-dbfhphqjnfac73cekqng`: live at 09:28:42 UTC. Control redeploy `dep-dbfhtodg1s2s73fssb70`: live at 09:36:28 UTC, same commit.
+- Database: Aiven `dzencode`, project `vladkruglovfencer-dbf9`, MySQL 8.4.11; region not recorded. Credentials/CA and the persistent JWT secret are ignored local/runtime secret files.
 
-## Verified on 2026-10-26
+## Implementation and evidence
 
-| Check                                   | Result                                                                                                      |
-| --------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| `npm run check`                         | pass: formatting, lint, types, 201 server tests, 544 client tests, 11 runner/deployment configuration tests |
-| Combined production Docker build/start  | pass after fixing nginx's non-root temporary directories                                                    |
-| `npm run test:deploy`                   | 12 Chromium scenarios pass through the combined proxy; local HTTP only                                      |
-| Cgroup memory under that browser suite  | peak 280 MiB, limit 512 MiB                                                                                 |
-| Blueprint official JSON Schema          | pass                                                                                                        |
-| Render CLI 2.31.0 `blueprints validate` | `valid: true`, one planned service `dzencode`                                                               |
-| Render account/workspace                | browser login succeeded; owner selected `My Workspace`; no existing services                                |
-| Liquibase helper                        | shell syntax checked; keytool available in the Liquibase image                                              |
+The root Dockerfile builds an unprivileged container with supervised nginx, Next and Express. One public origin serves pages/Server Actions, `/api` and WebSocket upgrades. Only nginx listens publicly on the assigned port. MySQL verifies CA and hostname. The Blueprint is an alternative to direct CLI configuration, not a second configuration owner.
 
-The combined suite covers authentication, tab logout, forms/search/filter/deletion, language/drafts, charts/graph, fixture map, real CSV worker downloads, PWA/offline, events and reconnect. A failing initial nginx start stopped the remaining processes and the runner removed the disposable environment. This is local evidence, not a live deployment result.
+Liquibase applied all 14 schema/seed changeSets over verified JDBC TLS; an immediate repeat applied zero. The migrator alone uses Aiven's documented session primary-key override for Liquibase metadata. Global settings/application keys are unchanged. No test database was created on Aiven.
 
-The separate API/Next regression run also passed: 8 files / 102 integration tests and 12 Chromium scenarios. Ignored logs: `test-results/stage8-check.log`, `test-results/stage8-proxy.log`, `test-results/stage8-system.log`. Test containers/volumes were removed and pre-existing Docker projects were preserved.
+| Check                     | Actual result                                                                                                                                                              |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Quality                   | `npm run check`: formatting/lint/types, 201 server tests, 544 client tests, 11 runner/deployment tests passed                                                              |
+| Separate production stack | 102 MySQL integration tests and 12 Chromium scenarios passed                                                                                                               |
+| Combined proxy            | All 12 permanent Chromium scenarios passed; latest local peak 274 MiB at a 512 MiB cap                                                                                     |
+| Blueprint                 | Official JSON Schema and Render CLI 2.31.0 validation passed                                                                                                               |
+| Public auth               | HTTP redirects to HTTPS; guests rejected; browser registration works with a persistent Secure/HttpOnly/SameSite=Lax cookie hidden from JavaScript                          |
+| Public data/UI            | Order/product creation, search/filter, cancel/confirm deletion, EN/RU/URL/draft restoration and filtered worker CSV passed                                                 |
+| Public realtime           | WebSocket upgrade, changes in both tabs, tab counter and reconnection after offline mode passed                                                                            |
+| Public reports/PWA        | GraphQL tables, lazy charts/relations, 390 px viewport, manifest/icons, service worker, offline fallback and static-only cache passed                                      |
+| Hosted redeploy           | Existing cookie stayed authenticated; order/product remained and were subsequently removed                                                                                 |
+| Logout                    | Current session's tabs signed out; separate login survived; both verification logins were then signed out                                                                  |
+| Recovery                  | Owner-approved TLS export restored in network-isolated MySQL 8.4; complete schema/data round-trip exports were byte-identical                                              |
+| Clean README startup      | Git archive of deployed commit, `npm ci`, examples/random secret, `npm run db:up` twice, `docker compose up --build --detach`; client/registration/seeded inventory passed |
 
-## Remaining work
+Owned verification containers/volumes were removed; pre-existing Docker projects were preserved. One normal Deployment Verification participant remains; its test inventory was deleted and its sessions revoked. Private exports remain in ignored `deploy/backups`; logs/browser state remain in ignored `test-results`. Do not publish these artifacts.
 
-- Aiven Running state, connection settings and CA; remote schema/seed migration and verified TLS connectivity.
-- Render deployment and actual HTTPS address; Secure cookies, origin handling and service-worker verification over HTTPS.
-- Persistence across a hosted redeploy, export/restore rehearsal against an isolated target and a from-scratch README self-check.
-- Optional map provider setup with its attribution/usage conditions.
-- Final observations in [DEPLOYMENT_CHECKLIST.md](DEPLOYMENT_CHECKLIST.md).
+In the final check, formatting/lint/types passed. The sandbox denied loopback connections (`EACCES`) in socket/HTTP unit tests; rerunning `npm run test:unit` with local network access passed all 756 tests. Earlier complete quality, integration and proxy runs also passed. The live error-level log query returned no entries after browser verification.
 
-## Aiven verification
+## Limits and handoff
 
-The owner's saved connection settings and CA passed an authenticated connection/ping with CA and hostname verification. All 14 schema/seed changeSets were then applied to Aiven MySQL 8.4.11 over verified JDBC TLS. An immediate repeat applied 0 changes and reported 14 previously run. Aiven's primary-key requirement is overridden only for the migration connection, as documented by Aiven, to accommodate Liquibase's small metadata table. The global setting and application keys are unchanged.
+Detailed hosted CPU/memory graphs require paid compute; the Free dashboard reports limits of 512 MB/0.15 CPU. No paid upgrade was made. Local memory and hosted smoke results do not establish sustained capacity. An actual 15-minute idle/wake cycle was not timed; wake instructions follow provider documentation. No off-device backup store/failover is configured. The optional map provider is unconfigured; the hosted unavailable/retry state preserved the warehouse address, and fixture tile behavior passed locally.
 
-The final repository-root image, including API runtime-secret-file loading, passed the 12-scenario proxy suite again; latest cgroup peak: 274 MiB of 512 MiB. Secret files are the intended source of truth for direct CLI service creation; the Blueprint is an alternative, not a second concurrent configuration owner.
-
-The hosted service has not been created yet. Stage 8 is incomplete. No merge into main has been performed.
+This is one application instance with a ten-connection MySQL pool and shared inventory. Any registered visitor can change that inventory. Use [the reviewer handoff](DEPLOYMENT_CHECKLIST.md) and [operator instructions](../deploy/README.md). Independent customer acceptance remains separate.

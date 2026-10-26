@@ -1,6 +1,6 @@
 # Render + Aiven deployment
 
-The application is prepared for one public Docker web service with Next, Express and nginx, backed by external MySQL. Authentication and sockets share the public hostname. The combined image uses the repository-root `Dockerfile`; this directory holds runtime and migration helpers. Live deployment results are recorded separately.
+The application runs at [dzencode-vgev.onrender.com](https://dzencode-vgev.onrender.com) as one Render Free Docker service with Next, Express and nginx, backed by Aiven MySQL. Authentication and sockets share the public hostname. The combined image uses the repository-root `Dockerfile`; this directory holds runtime, migration and backup helpers. Live results are in [the handoff](../docs/DEPLOYMENT_CHECKLIST.md).
 
 ## Aiven
 
@@ -48,6 +48,32 @@ npm run test:deploy
 
 The combined image runs as an unprivileged user. Its supervisor stops the remaining processes if one fails, and forwards shutdown signals with a bounded fallback. nginx disables response buffering for streamed Server Components. No application pages or API responses are added to the PWA cache.
 
-## Remaining live checks
+## Database export and isolated recovery rehearsal
 
-Record actual results in the stage status/handoff: remote migrations over verified TLS, HTTPS registration/login and cookie flags, two-tab sockets/reconnect, charts/graph/map configuration, CSV, PWA/offline, memory under demo load, persistence across redeploy, and a database export/restore rehearsal against an isolated target. Do not mark these checked from local HTTP tests alone.
+With Docker running and the same ignored Aiven settings/CA configured:
+
+```bash
+docker compose --env-file deploy/.env.local -f deploy/backup.compose.yml run --rm backup
+```
+
+The helper uses `mysqldump` from MySQL 8.4 with `VERIFY_IDENTITY`, an InnoDB consistent snapshot, no tablespace export and GTID output disabled. It creates a timestamped SQL file and SHA-256 sidecar in `deploy/backups/`. The directory is excluded from Git and Docker build contexts. Credentials stay in the container environment, outside command arguments. Do not change the schema during an export.
+
+Treat exports as private: they contain inventory, account details, password hashes and session metadata. The working copy is not an off-device backup. Keep a protected copy in an owner-controlled encrypted backup location, and check its SHA-256 after transfer. No external backup storage is configured by this project.
+
+On Windows with PowerShell 7 and Docker Desktop, rehearse recovery using the printed filename:
+
+```powershell
+./deploy/verify-backup.ps1 -BackupFile inventory-YYYYMMDDTHHMMSSZ.sql
+```
+
+The script accepts timestamped exports inside `deploy/backups` only. It creates a new MySQL container with no external network and a temporary in-memory data directory, restores into `inventory_restore`, exports again and requires byte-identical schema/data hashes. It removes its own container on completion/failure and leaves both private exports for inspection. It never restores over Aiven. This procedure passed on 2026-10-26. For an actual provider recovery, first select a separate empty approved target, import the SQL there, verify application access, and deliberately switch connection settings; no destructive live restore or failover is automated. See [Aiven backup/restore guidance](https://aiven.io/docs/products/mysql/howto/migrate-database-mysqldump).
+
+## Operating the demo
+
+The service is `dzencode` in `My Workspace`, Frankfurt, Free plan: [Render Dashboard](https://dashboard.render.com/web/srv-dbfhph2jnfac73cekos0). Auto-deploy is disabled. Deploy an explicit reviewed commit through the Dashboard or `render deploys create srv-dbfhph2jnfac73cekos0 --commit <sha> --confirm --output json`, then wait for that deploy to become `live` and check both `/api/health` and an authenticated database-backed page. Preserve `app.env`, its JWT secret, the CA and Aiven data. Do not rerun seed scripts outside Liquibase.
+
+After about 15 minutes without inbound HTTP/WebSocket traffic, Render Free sleeps. Open the application and allow about a minute for wake-up; refresh once if needed. This timing comes from [Render's Free documentation](https://render.com/docs/free), not an observed idle cycle in this verification. Aiven may power down unused free services; if database-backed pages fail while `/api/health` succeeds, check that `dzencode` is Running in its Aiven project before changing application settings. See [Aiven Free limits](https://aiven.io/docs/products/mysql/concepts/mysql-free-tier).
+
+Render's Free dashboard reports limits of 512 MB and 0.15 CPU; detailed CPU/memory graphs require paid compute. No paid upgrade was selected. The local proxy suite peaked at 274 MiB under a 512 MiB cap; this is not a measurement of hosted memory or a load-capacity claim. There is one application instance, a ten-connection MySQL pool and no high availability. Check the dashboard's usage quotas before sharing a long-running demo.
+
+The map provider is intentionally unconfigured. Warehouse addresses remain visible; map requests show the existing unavailable/retry state. Setting a provider requires agreeing its usage/attribution conditions and rebuilding. Independent reviewer acceptance and real idle/wake/load behavior remain outside the recorded smoke results.

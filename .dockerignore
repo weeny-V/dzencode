@@ -16,3 +16,4 @@ docs
 **/*.key
 **/*.crt
 app.env
+deploy/backups

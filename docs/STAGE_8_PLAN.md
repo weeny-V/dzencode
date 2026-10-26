@@ -23,7 +23,7 @@ Research checked on 2026-10-26 against the providers' official documentation:
 
 Free-tier limits are provider-controlled; this is a demo deployment, without an uptime guarantee. Hosted resource usage and behavior still require verification after deployment.
 
-Account/access check on 2026-10-26: all 16 project branches are uploaded to [weeny-V/dzencode](https://github.com/weeny-V/dzencode). The Render plugin is installed, but resource tools were not exposed in this session. Render CLI 2.31.0 is authenticated through the browser and uses the owner-confirmed `My Workspace`. Its service list is empty. The owner created Aiven service `dzencode` in project `vladkruglovfencer-dbf9`. No Render service has been provisioned by this work.
+Account/access check on 2026-10-26: all 16 project branches were uploaded to [weeny-V/dzencode](https://github.com/weeny-V/dzencode). Render CLI 2.31.0 uses the owner-confirmed `My Workspace`. The deployed Free service is `dzencode` in Frankfurt, [public HTTPS URL](https://dzencode-vgev.onrender.com), backed by the owner's Aiven service `dzencode` in project `vladkruglovfencer-dbf9`. Direct CLI creation was used because Render resource tools were not exposed in this session.
 
 Sources:
 
@@ -71,6 +71,6 @@ Required preparation after the hosting choice:
 
 Use [DEPLOYMENT_CHECKLIST.md](DEPLOYMENT_CHECKLIST.md) to record evidence and the delivered address. It is a deployment/self-check record, not a claim that an independent tester has approved the work.
 
-Remaining inputs/checks: Aiven connection settings in ignored `deploy/.env.local`, its CA certificate in ignored `deploy/aiven-ca.pem`, migrations with verified TLS, the deployed platform address, and live/restart/backup/clean-checkout evidence. See [deploy instructions](../deploy/README.md) and [current status](STAGE_8_STATUS.md). The accepted application stays on `main`, with deployment work on `stage/8-deploy`.
+Completed evidence includes Aiven TLS/migrations, public HTTPS/browser checks, a control redeploy preserving records/authentication, owner-approved export/isolated recovery and clean README/Docker startup. See [deploy instructions](../deploy/README.md) and [current status](STAGE_8_STATUS.md). Deployment work stays on `stage/8-deploy`.
 
-Infrastructure preparation is implemented locally. Stage 8 is not complete until the remaining live and from-scratch checks are recorded. No merge into `main` is implied.
+Deployment and operator self-check are complete with recorded limits: hosted resource graphs require paid compute, the real idle/wake cycle was not timed, and no optional map provider/off-device backup store was configured. Independent acceptance belongs to the reviewer. No merge into `main` is implied.
