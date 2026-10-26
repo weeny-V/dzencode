@@ -1,4 +1,4 @@
-# Build from the repository root. Runtime secrets never enter the build.
+# Combined public deployment image. Build from the repository root; secrets stay at runtime.
 FROM node:22-alpine AS build
 WORKDIR /app
 COPY package.json package-lock.json ./

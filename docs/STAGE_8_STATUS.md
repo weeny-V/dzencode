@@ -35,4 +35,10 @@ The separate API/Next regression run also passed: 8 files / 102 integration test
 - Optional map provider setup with its attribution/usage conditions.
 - Final observations in [DEPLOYMENT_CHECKLIST.md](DEPLOYMENT_CHECKLIST.md).
 
-The hosted service has not been created. Stage 8 is incomplete. No merge into main has been performed.
+## Aiven verification
+
+The owner's saved connection settings and CA passed an authenticated connection/ping with CA and hostname verification. All 14 schema/seed changeSets were then applied to Aiven MySQL 8.4.11 over verified JDBC TLS. An immediate repeat applied 0 changes and reported 14 previously run. Aiven's primary-key requirement is overridden only for the migration connection, as documented by Aiven, to accommodate Liquibase's small metadata table. The global setting and application keys are unchanged.
+
+The final repository-root image, including API runtime-secret-file loading, passed the 12-scenario proxy suite again; latest cgroup peak: 274 MiB of 512 MiB. Secret files are the intended source of truth for direct CLI service creation; the Blueprint is an alternative, not a second concurrent configuration owner.
+
+The hosted service has not been created yet. Stage 8 is incomplete. No merge into main has been performed.

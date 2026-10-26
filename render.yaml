@@ -6,7 +6,7 @@ services:
     plan: free
     repo: https://github.com/weeny-V/dzencode
     branch: stage/8-deploy
-    dockerfilePath: ./deploy/Dockerfile
+    dockerfilePath: ./Dockerfile
     dockerContext: .
     healthCheckPath: /api/health
     autoDeployTrigger: 'off'

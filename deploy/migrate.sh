@@ -14,5 +14,7 @@ keytool -importcert -noprompt -alias inventory-db -file /run/aiven-ca.pem \
   -keystore /tmp/inventory-ca.p12 -storetype PKCS12 -storepass changeit >/dev/null 2>&1
 export LIQUIBASE_COMMAND_USERNAME="$DB_USER"
 export LIQUIBASE_COMMAND_PASSWORD="$DB_PASSWORD"
-export LIQUIBASE_COMMAND_URL="jdbc:mysql://$DB_HOST:$DB_PORT/$DB_NAME?sslMode=VERIFY_IDENTITY&trustCertificateKeyStoreUrl=file:/tmp/inventory-ca.p12&trustCertificateKeyStoreType=PKCS12&trustCertificateKeyStorePassword=changeit"
+# Aiven documents a session-only override for small third-party metadata tables without primary keys.
+# Application tables still declare their keys through the existing Liquibase changeSets.
+export LIQUIBASE_COMMAND_URL="jdbc:mysql://$DB_HOST:$DB_PORT/$DB_NAME?sslMode=VERIFY_IDENTITY&trustCertificateKeyStoreUrl=file:/tmp/inventory-ca.p12&trustCertificateKeyStoreType=PKCS12&trustCertificateKeyStorePassword=changeit&sessionVariables=sql_require_primary_key=0"
 exec liquibase --searchPath=/liquibase/changelog --changeLogFile=db.changelog-root.yaml --contexts=seed update

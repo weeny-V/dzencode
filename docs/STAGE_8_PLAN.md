@@ -52,7 +52,7 @@ Platform HTTPS address
   -> external Aiven MySQL over verified TLS
 ```
 
-The prepared `deploy/Dockerfile` runs nginx, Next and Express with explicit supervision and bounded shutdown. The existing separate-service Compose setup remains available. `npm run test:deploy` exercised all 12 browser scenarios through the public proxy at a 512 MB cap; the recorded local cgroup peak was 280 MB. These local results do not establish hosted latency, capacity or HTTPS behavior.
+The prepared repository-root `Dockerfile` runs nginx, Next and Express with explicit supervision and bounded shutdown. The existing separate-service Compose setup remains available. `npm run test:deploy` exercised all 12 browser scenarios through the public proxy at a 512 MB cap; the recorded local cgroup peak was 280 MB. These local results do not establish hosted latency, capacity or HTTPS behavior.
 
 Required preparation after the hosting choice:
 

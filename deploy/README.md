@@ -1,6 +1,6 @@
 # Render + Aiven deployment
 
-The application is prepared for one public Docker web service with Next, Express and nginx, backed by external MySQL. Authentication and sockets share the public hostname. This directory contains deployment assets; it is not a record that the live deployment has succeeded.
+The application is prepared for one public Docker web service with Next, Express and nginx, backed by external MySQL. Authentication and sockets share the public hostname. The combined image uses the repository-root `Dockerfile`; this directory holds runtime and migration helpers. Live deployment results are recorded separately.
 
 ## Aiven
 
@@ -14,13 +14,15 @@ The owner created service `dzencode` in project `vladkruglovfencer-dbf9`. Wait f
 docker compose --env-file deploy/.env.local -f deploy/compose.yml run --rm --build migrate
 ```
 
-The migration container creates a temporary Java truststore from the provider CA and uses Connector/J `VERIFY_IDENTITY`. The password is supplied in the container environment. It applies the application's changelog only, without creating/resetting a test database. Re-running applied changeSets preserves existing data. Live Aiven execution and server privileges must still be verified.
+The migration container creates a temporary Java truststore from the provider CA and uses Connector/J `VERIFY_IDENTITY`. The password is supplied in the container environment. It applies the application's changelog only, without creating/resetting a test database. Re-running applied changeSets preserves existing data. Aiven requires primary keys by default, while Liquibase 4.33 creates its small history table without one. The JDBC connection uses Aiven's documented session-only `sql_require_primary_key=0` override for the migrator; global settings and the application's declared keys are unchanged. See [Aiven guidance](https://aiven.io/docs/products/mysql/howto/create-tables-without-primary-keys).
 
 ## Render
 
-Use the committed `render.yaml` from `stage/8-deploy` after the implementation is reviewed and pushed. The service uses `deploy/Dockerfile`, repository-root build context, the Free plan and `/api/health`. Auto-deploy is off. The official Blueprint UI allows selection of the source branch. A configuration that exists only locally cannot be read by Render.
+The deployment is prepared for the committed source on `stage/8-deploy`, repository-root Dockerfile/context, the Free plan and `/api/health`, with auto-deploy off. `render.yaml` remains a validated Blueprint alternative. A configuration that exists only locally cannot be read by Render.
 
-Supply the following values in the initial Blueprint environment prompts:
+For direct CLI creation, runtime secrets use Render secret files instead of command arguments: `app.env` contains the local database settings and a persistent `AUTH_JWT_SECRET`, and `aiven-ca.pem` contains the provider CA. Node loads `/etc/secrets/app.env` only for the API process. Non-secret flags enable `DB_SSL=true`, `DB_SSL_CA_FILE=/etc/secrets/aiven-ca.pem` and Secure cookies. Local secret-file paths, not their contents, are passed to the CLI. Both files are excluded from image builds. Secret files on the service are the source of truth for this direct deployment; do not sync a second Blueprint over it without reconciling the configuration.
+
+If using the Blueprint alternative, supply the following values in the initial environment prompts:
 
 | Variable                                                  | Source                                                       |
 | --------------------------------------------------------- | ------------------------------------------------------------ |

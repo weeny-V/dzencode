@@ -44,11 +44,16 @@ function start(name, command, args, env = {}) {
 
 process.on('SIGTERM', () => stop(0));
 process.on('SIGINT', () => stop(0));
-start('API', process.execPath, ['api/server/dist/index.js'], {
-  HOST: '127.0.0.1',
-  PORT: '4000',
-  CLIENT_ORIGIN: origin,
-});
+start(
+  'API',
+  process.execPath,
+  ['--env-file-if-exists=/etc/secrets/app.env', 'api/server/dist/index.js'],
+  {
+    HOST: '127.0.0.1',
+    PORT: '4000',
+    CLIENT_ORIGIN: origin,
+  },
+);
 start('Next', process.execPath, ['web/client/server.js'], {
   HOSTNAME: '127.0.0.1',
   PORT: '3000',

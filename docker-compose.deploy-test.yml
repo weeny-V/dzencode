@@ -3,7 +3,7 @@ services:
   app:
     build:
       context: .
-      dockerfile: deploy/Dockerfile
+      dockerfile: Dockerfile
       args:
         NEXT_PUBLIC_MAP_TILE_URL: https://tiles.inventory.test/{z}/{x}/{y}.png
         NEXT_PUBLIC_MAP_TILE_ATTRIBUTION: Controlled E2E tiles
