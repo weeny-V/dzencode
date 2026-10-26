@@ -10,7 +10,7 @@ import { SearchField } from './index';
 
 vi.mock('next/navigation', async () => (await import('@/testing/navigation')).navigationMock);
 beforeEach(() => {
-  vi.clearAllMocks();
+  vi.resetAllMocks();
   navigation.pathname = '/orders';
   navigation.search = 'order=7';
   window.history.replaceState({}, '', '/orders?order=7');
@@ -50,7 +50,90 @@ describe('SearchField', () => {
     rerender(<SearchField enabled />);
     expect(input).toHaveValue('other');
   });
-  it('marks the existing UI pending until the server navigation completes', async () => {
+  it('keeps newer typing when an earlier search commits before the next debounce', () => {
+    vi.useFakeTimers();
+    const { rerender } = render(<SearchField enabled />);
+    const input = screen.getByRole('searchbox');
+    fireEvent.change(input, { target: { value: 'mon' } });
+    void act(() => vi.advanceTimersByTime(250));
+    fireEvent.change(input, { target: { value: 'monitor' } });
+    navigation.search = 'order=7&q=mon';
+    window.history.replaceState({}, '', '/orders?order=7&q=mon');
+    rerender(<SearchField enabled />);
+    expect(input).toHaveValue('monitor');
+    void act(() => vi.advanceTimersByTime(250));
+    expect(navigation.replace).toHaveBeenLastCalledWith('/orders?order=7&q=monitor', {
+      scroll: false,
+    });
+  });
+  it('keeps the latest input through multiple outstanding search completions', () => {
+    vi.useFakeTimers();
+    const { rerender } = render(<SearchField enabled />);
+    const input = screen.getByRole('searchbox');
+    for (const value of ['mon', 'monitor']) {
+      fireEvent.change(input, { target: { value } });
+      void act(() => vi.advanceTimersByTime(250));
+    }
+    for (const query of ['mon', 'monitor']) {
+      navigation.search = `order=7&q=${query}`;
+      rerender(<SearchField enabled />);
+      expect(input).toHaveValue('monitor');
+    }
+    // Once acknowledged, an earlier query is an external navigation again.
+    navigation.search = 'order=7&q=mon';
+    rerender(<SearchField enabled />);
+    expect(input).toHaveValue('mon');
+  });
+  it('does not restore an older search after clearing the input', () => {
+    vi.useFakeTimers();
+    const { rerender } = render(<SearchField enabled />);
+    const input = screen.getByRole('searchbox');
+    fireEvent.change(input, { target: { value: 'mon' } });
+    void act(() => vi.advanceTimersByTime(250));
+    fireEvent.keyDown(input, { key: 'Escape' });
+    navigation.search = 'order=7&q=mon';
+    rerender(<SearchField enabled />);
+    expect(input).toHaveValue('');
+    navigation.search = 'order=7';
+    rerender(<SearchField enabled />);
+    expect(input).toHaveValue('');
+  });
+  it('cancels an abandoned debounce after an external search change', () => {
+    vi.useFakeTimers();
+    const { rerender } = render(<SearchField enabled />);
+    fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'monitor' } });
+    navigation.search = 'order=7&q=other';
+    window.history.replaceState({}, '', '/orders?order=7&q=other');
+    rerender(<SearchField enabled />);
+    expect(screen.getByRole('searchbox')).toHaveValue('other');
+    void act(() => vi.advanceTimersByTime(250));
+    expect(navigation.replace).not.toHaveBeenCalled();
+  });
+  it('honors browser history even when it matches an outstanding search', () => {
+    vi.useFakeTimers();
+    const { rerender } = render(<SearchField enabled />);
+    const input = screen.getByRole('searchbox');
+    fireEvent.change(input, { target: { value: 'mon' } });
+    void act(() => vi.advanceTimersByTime(250));
+    fireEvent.change(input, { target: { value: 'monitor' } });
+    window.history.replaceState({}, '', '/orders?order=7&q=mon');
+    fireEvent.popState(window);
+    navigation.search = 'order=7&q=mon';
+    rerender(<SearchField enabled />);
+    expect(input).toHaveValue('mon');
+    void act(() => vi.advanceTimersByTime(250));
+    expect(navigation.replace).toHaveBeenCalledTimes(1);
+  });
+  it('preserves raw whitespace when its trimmed search is acknowledged', () => {
+    vi.useFakeTimers();
+    const { rerender } = render(<SearchField enabled />);
+    fireEvent.change(screen.getByRole('searchbox'), { target: { value: ' mon ' } });
+    void act(() => vi.advanceTimersByTime(250));
+    navigation.search = 'q=mon';
+    rerender(<SearchField enabled />);
+    expect(screen.getByRole('searchbox')).toHaveValue(' mon ');
+  });
+  it('keeps pending rows and newer typing until the server navigation completes', async () => {
     const response = deferred<string>();
     let navigate!: (response: Promise<string>) => void;
     function Result({ promise }: { promise: Promise<string> | undefined }) {
@@ -69,7 +152,7 @@ describe('SearchField', () => {
       );
     }
     navigation.replace.mockImplementation(() => navigate(response.promise));
-    render(<Page />);
+    const { rerender } = render(<Page />);
     fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'monitor' } });
     await act(async () => {
       fireEvent.submit(screen.getByRole('search'));
@@ -79,10 +162,18 @@ describe('SearchField', () => {
     expect(screen.getByText('Previous rows')).toBeVisible();
     expect(screen.queryByText('Loading')).not.toBeInTheDocument();
     await act(async () => {
+      fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'monitor updated' } });
+      await Promise.resolve();
+    });
+    await act(async () => {
+      navigation.search = 'order=7&q=monitor';
+      window.history.replaceState({}, '', '/orders?order=7&q=monitor');
       response.resolve('New rows');
       await response.promise;
     });
     await waitFor(() => expect(screen.getByRole('search')).not.toHaveAttribute('data-pending'));
+    rerender(<Page />);
     expect(screen.getByText('New rows')).toBeVisible();
+    expect(screen.getByRole('searchbox')).toHaveValue('monitor updated');
   });
 });

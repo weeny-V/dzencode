@@ -2,22 +2,12 @@
 
 import './SearchField.scss';
 
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import {
-  type FormEvent,
-  startTransition,
-  useEffect,
-  useId,
-  useOptimistic,
-  useRef,
-  useState,
-} from 'react';
+import { useId } from 'react';
 
-import { withParam } from '@/shared/lib/searchParams';
 import { CloseIcon } from '@/shared/ui/icons';
 
-const DEBOUNCE_MS = 250;
+import { useSearchField } from './useSearchField';
 
 /** A disabled copy of the field, shown while the real one waits for the address (and on pages without a search). */
 export function SearchFieldPlaceholder({ title }: { title?: string }) {
@@ -48,52 +38,20 @@ interface SearchFieldProps {
  * Mount it with `key={pathname}`: moving to another page starts with an empty field.
  */
 export function SearchField({ enabled }: SearchFieldProps) {
+  const field = useSearchField();
+  return <SearchFieldView enabled={enabled} {...field} />;
+}
+
+function SearchFieldView({
+  enabled,
+  value,
+  pending,
+  change,
+  clear,
+  submit,
+}: SearchFieldProps & ReturnType<typeof useSearchField>) {
   const t = useTranslations('SearchField');
   const id = useId();
-  const pathname = usePathname();
-  const router = useRouter();
-  const urlValue = useSearchParams().get('q') ?? '';
-
-  const [value, setValue] = useState(urlValue);
-  const [pending, setPending] = useOptimistic(false);
-  const [seenUrlValue, setSeenUrlValue] = useState(urlValue);
-  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-
-  // The address changed from outside (a "reset the search" link, the back button): show it in the field.
-  // While the visitor types, the address follows the field, so nothing is overwritten.
-  if (urlValue !== seenUrlValue) {
-    setSeenUrlValue(urlValue);
-    if (urlValue !== value.trim()) setValue(urlValue);
-  }
-
-  useEffect(() => () => clearTimeout(timer.current), []);
-
-  const apply = (text: string) => {
-    // Read the address now, not when the timer was set: other parameters may have changed meanwhile.
-    const query = withParam(new URLSearchParams(window.location.search), 'q', text.trim());
-    startTransition(() => {
-      setPending(true);
-      router.replace(`${pathname}${query}`, { scroll: false });
-    });
-  };
-
-  const change = (text: string) => {
-    setValue(text);
-    clearTimeout(timer.current);
-    timer.current = setTimeout(() => apply(text), DEBOUNCE_MS);
-  };
-
-  const clear = () => {
-    clearTimeout(timer.current);
-    setValue('');
-    apply('');
-  };
-
-  const submit = (event: FormEvent) => {
-    event.preventDefault();
-    clearTimeout(timer.current);
-    apply(value);
-  };
 
   return (
     <form
